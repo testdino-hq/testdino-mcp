@@ -1,13 +1,9 @@
 # Installation Guide for testdino-mcp
 
-This step-by-step guide will help you install and configure the TestDino MCP server. We provide comprehensive setup instructions for **Cursor** and **Claude Desktop**.
+This step-by-step guide will help you install and configure the TestDino MCP server. We provide comprehensive setup instructions for **Cursor**.
 
-> **Platform Support**: 
-> - ✅ **Cursor**: Fully supported with comprehensive setup instructions
-> - ✅ **Claude Desktop**: Fully supported with comprehensive setup instructions
-> - 🔜 **VS Code**: Coming soon
->
-> The server uses the standard MCP protocol, so it may work with other MCP-compatible clients, but official support and documentation will be added in future releases.
+
+The server uses the standard MCP protocol, so it may work with other MCP-compatible clients, but official support and documentation will be added in future releases.
 
 ## Quick Start
 

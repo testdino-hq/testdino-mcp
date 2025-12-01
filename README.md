@@ -1,4 +1,4 @@
-# TestDino MCP Server
+# TestDino MCP
 
 A Model Context Protocol (MCP) server that connects TestDino to AI agents. This server enables you to interact with your TestDino test data directly through natural language commands.
 
@@ -33,10 +33,31 @@ The server provides 6 powerful tools:
 5. **`get_testcase_details`** - Get detailed information about a specific test case.
 6. **`upload_latest_local_test_runs`** - Upload your local Playwright test results.
 
-## Installation
 
-The easiest way is to use npx - no installation needed! Just configure it in Cursor or any other MCP compatible platform.
+### Installation Options
 
+#### There are mainly 3 options to use TestDino MCP:
+
+**Option 1: Via npx (Recommended - No Installation)**
+- No installation required
+- Automatically downloads and runs when needed
+- Always uses the latest version
+- Configured in any MCP compatible platform
+
+**Option 2: Global Installation**
+```bash
+npm install -g testdino-mcp
+```
+- Install once, use in any project
+- Requires Node.js 18+ and npm
+- Use command: `testdino-mcp`
+
+**Option 3: Project Installation**
+```bash
+npm install testdino-mcp
+```
+- Installed in your project's `node_modules`
+- Use command: `npx testdino-mcp`
 
 ## Integration
 
