@@ -26,8 +26,8 @@ import {
 async function main() {
   const server = new Server(
     {
-      name: "@testdino/mcp",
-      version: "1.0.0",
+      name: "testdino-mcp",
+      version: "1.0.1",
     },
     {
       capabilities: {
