@@ -1327,7 +1327,7 @@ When adding new tools to the MCP server:
 
 ## Version History
 
-- **v1.0.0**: 
+- **v1.0.2**: 
   - Initial release with `hello` (now `health`) and `upload_latest_local_test_runs` tools
   - Added `list_testruns` tool for filtering and listing test runs
   - Added `list_testcase` tool for listing test cases in a run
