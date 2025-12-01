@@ -40,22 +40,16 @@ If you want to contribute or modify the code:
 
 2. **Install dependencies**
    ```bash
-   bun install
-   # or
    npm install
    ```
 
 3. **Build the project**
    ```bash
-   bun run build
-   # or
    npm run build
    ```
 
 4. **Run the server**
    ```bash
-   bun run start
-   # or
    npm start
    ```
 
@@ -266,14 +260,14 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 ### Scripts
 
-- `bun run build` - Compile TypeScript to JavaScript
-- `bun run start` - Run the compiled server
-- `bun run dev` - Run with tsx for development
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run start` - Run the compiled server
+- `npm run dev` - Run with tsx for development
 
 ## Requirements
 
 - Node.js 18.0.0 or higher
-- Bun (for package management)
+- NPM (for package management)
 
 ## License
 
