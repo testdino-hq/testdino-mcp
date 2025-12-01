@@ -1,4 +1,4 @@
-# Installation Guide for @testdino/mcp
+# Installation Guide for testdino-mcp
 
 This step-by-step guide will help you install and configure the TestDino MCP server. We provide comprehensive setup instructions for **Cursor** and **Claude Desktop**.
 
@@ -11,11 +11,9 @@ This step-by-step guide will help you install and configure the TestDino MCP ser
 
 ## Quick Start
 
-**For most users**: You don't need to install anything! The MCP server runs automatically via npx when configured. We provide detailed setup instructions for **Cursor** and **Claude Desktop**. Choose your platform below:
+You don't need to install anything! The MCP server runs automatically via npx when configured. We provide detailed setup instructions for **Cursor** and **Claude Desktop**. Choose your platform below:
 - [Cursor Integration](#cursor-integration)
 - [Claude Desktop Integration](#claude-desktop-integration)
-
-**For developers** who want to modify the code or run it locally, see the installation options below.
 
 ### Installation Options
 
@@ -27,7 +25,7 @@ This step-by-step guide will help you install and configure the TestDino MCP ser
 
 **Option 2: Global Installation**
 ```bash
-npm install -g @testdino/mcp
+npm install -g testdino-mcp
 ```
 - Install once, use in any project
 - Requires Node.js 18+ and npm
@@ -35,7 +33,7 @@ npm install -g @testdino/mcp
 
 **Option 3: Project Installation**
 ```bash
-npm install @testdino/mcp
+npm install testdino-mcp
 ```
 - Installed in your project's `node_modules`
 - Use command: `npx testdino-mcp`
@@ -72,9 +70,9 @@ Open or create the `mcp.json` file and add this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "npx",
-      "args": ["-y", "@testdino/mcp"],
+      "args": ["-y", "testdino-mcp"],
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
       }
@@ -89,7 +87,7 @@ Open or create the `mcp.json` file and add this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -168,8 +166,8 @@ The API key authenticates your requests to TestDino. Without it, most tools won'
 
 ### "Package not found"
 - Make sure you're connected to the internet
-- Verify the package name: `@testdino/mcp`
-- Try: `npm view @testdino/mcp` to check if it's published
+- Verify the package name: `testdino-mcp`
+- Try: `npm view testdino-mcp` to check if it's published
 
 ### "Command not found" (after global install)
 - Make sure npm's global bin directory is in your PATH
@@ -226,9 +224,9 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "npx",
-      "args": ["-y", "@testdino/mcp"],
+      "args": ["-y", "testdino-mcp"],
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
       }
@@ -243,7 +241,7 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -293,8 +291,5 @@ VS Code MCP extension support is planned for future releases. We'll provide deta
 
 ## Support
 
-For issues or questions:
-- Check the package on npm: https://www.npmjs.com/package/@testdino/mcp
-- Review the README.md in the package
 - Contact TestDino support
 

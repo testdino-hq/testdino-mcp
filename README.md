@@ -24,34 +24,8 @@ All through simple conversational commands.
 
 ## Installation
 
-### For End Users (Recommended)
-
 The easiest way is to use npx - no installation needed! Just configure it in Cursor or Claude Desktop (see [Integration](#integration) below).
 
-### For Developers
-
-If you want to contribute or modify the code:
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd client_mcp
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Build the project**
-   ```bash
-   npm run build
-   ```
-
-4. **Run the server**
-   ```bash
-   npm start
-   ```
 
 ## Integration
 
@@ -77,9 +51,9 @@ If you want to contribute or modify the code:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "npx",
-      "args": ["-y", "@testdino/mcp"],
+      "args": ["-y", "testdino-mcp"],
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
       }
@@ -101,7 +75,7 @@ If you want to contribute or modify the code:
 If you prefer to install globally instead of using npx:
 
 ```bash
-npm install -g @testdino/mcp
+npm install -g testdino-mcp
 ```
 
 Then use this configuration:
@@ -109,7 +83,7 @@ Then use this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -139,9 +113,9 @@ Then use this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "npx",
-      "args": ["-y", "@testdino/mcp"],
+      "args": ["-y", "testdino-mcp"],
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
       }
@@ -163,7 +137,7 @@ Then use this configuration:
 If you prefer to install globally instead of using npx:
 
 ```bash
-npm install -g @testdino/mcp
+npm install -g testdino-mcp
 ```
 
 Then use this configuration:
@@ -171,7 +145,7 @@ Then use this configuration:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -236,27 +210,6 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 - "Upload my Playwright test results"
 - "Upload test results from the ./test-results directory"
 
-## Development
-
-### Project Structure
-
-```
-.
-├── src/
-│   ├── index.ts          # Main server implementation
-│   ├── tools/            # Tool implementations
-│   │   ├── health.ts
-│   │   ├── testruns/     # Test run tools
-│   │   └── testcases/    # Test case tools
-│   └── lib/              # Utilities and helpers
-├── docs/
-│   ├── TOOLS.md          # Complete tool documentation
-│   └── INSTALLATION.md    # Installation guide
-├── dist/                 # Compiled JavaScript (generated)
-├── package.json
-├── tsconfig.json
-└── README.md
-```
 
 ### Scripts
 
@@ -268,8 +221,3 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 - Node.js 18.0.0 or higher
 - NPM (for package management)
-
-## License
-
-MIT
-

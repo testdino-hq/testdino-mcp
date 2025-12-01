@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This comprehensive guide covers all available tools in the `@testdino/mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
+This comprehensive guide covers all available tools in the `testdino-mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
 
 > **Platform Support**: This documentation and examples are currently optimized for **Cursor**. Support for **Claude Desktop** and **VS Code** is planned for future releases. The tools work with any MCP-compatible client, but setup instructions focus on Cursor.
 
@@ -54,7 +54,7 @@ Before using this tool with API key validation, configure your TestDino API key 
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -165,7 +165,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -445,7 +445,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -731,7 +731,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
@@ -1127,7 +1127,7 @@ Before using this tool, you must configure your TestDino API key in `.cursor/mcp
 ```json
 {
   "mcpServers": {
-    "testdino": {
+    "TestDino": {
       "command": "testdino-mcp",
       "env": {
         "TESTDINO_API_KEY": "your_testdino_api_key_here"
