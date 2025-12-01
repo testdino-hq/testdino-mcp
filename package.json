@@ -1,6 +1,6 @@
 {
-  "name": "@testdino/mcp",
-  "version": "1.0.0",
+  "name": "testdino-mcp",
+  "version": "1.0.1",
   "description": "A MCP server for TestDino",
   "type": "module",
   "main": "dist/index.js",
