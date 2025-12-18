@@ -12,6 +12,10 @@ export const getTestCaseDetailsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       testcase_id: {
         type: "string",
         description: "Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.",
@@ -29,7 +33,7 @@ export const getTestCaseDetailsTool = {
         description: "Test run counter number. Required when using testcase_name (if testrun_id is not provided) to specify which test run's test case you want. Example: 43.",
       },
     },
-    required: [],
+    required: ["projectId"],
   },
 };
 
@@ -40,7 +44,7 @@ export async function handleGetTestCaseDetails(args: any) {
   if (!token) {
     throw new Error(
       "Missing TESTDINO_API_KEY environment variable. " +
-        "Please configure it in your .cursor/mcp.json file under the 'env' section."
+      "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
 
@@ -54,20 +58,22 @@ export async function handleGetTestCaseDetails(args: any) {
   if (!hasTestCaseId && !hasTestCaseName) {
     throw new Error(
       "Either 'testcase_id' or 'testcase_name' must be provided. " +
-        "If using 'testcase_name', you must also provide either 'testrun_id' or 'counter' to specify which test run's test case you want."
+      "If using 'testcase_name', you must also provide either 'testrun_id' or 'counter' to specify which test run's test case you want."
     );
   }
 
   if (hasTestCaseName && !hasTestRunId && !hasCounter) {
     throw new Error(
       "When using 'testcase_name', you must also provide either 'testrun_id' or 'counter' to specify which test run's test case you want. " +
-        "This is required because test cases can have the same name across different test runs."
+      "This is required because test cases can have the same name across different test runs."
     );
   }
 
   try {
     // Build query parameters
-    const queryParams: Record<string, string> = {};
+    const queryParams: Record<string, string> = {
+      projectId: String(args.projectId),
+    };
 
     if (args.testcase_id) {
       queryParams.testcaseid = String(args.testcase_id);

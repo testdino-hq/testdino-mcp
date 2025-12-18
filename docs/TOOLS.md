@@ -12,16 +12,24 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - **What you'll get back**: Expected response formats
 - **Troubleshooting**: Common issues and solutions
 
-**Prerequisites**: Most tools require a `TESTDINO_API_KEY` configured in your `.cursor/mcp.json` file. See the [Installation Guide](./INSTALLATION.md) for setup instructions.
+**Prerequisites**: Most tools require a Personal Access Token (PAT) configured as `TESTDINO_API_KEY` in your `.cursor/mcp.json` file. The PAT provides access to all organizations and projects you have permissions for. See the [Installation Guide](./INSTALLATION.md) for setup instructions.
 
 ## Table of Contents
 
+**Test Execution & Results:**
 - [health](#health)
 - [list_testruns](#list_testruns)
 - [get_run_details](#get_run_details)
 - [list_testcase](#list_testcase)
 - [get_testcase_details](#get_testcase_details)
-- [upload_latest_local_test_runs](#upload_latest_local_test_runs)
+
+**Test Case Management:**
+- [list_manual_test_cases](#list_manual_test_cases)
+- [get_manual_test_case](#get_manual_test_case)
+- [create_manual_test_case](#create_manual_test_case)
+- [update_manual_test_case](#update_manual_test_case)
+- [list_manual_test_suites](#list_manual_test_suites)
+- [create_manual_test_suite](#create_manual_test_suite)
 
 ---
 
@@ -41,11 +49,9 @@ This is the perfect tool to use when troubleshooting connection issues or verify
 
 ### Parameters
 
-| Parameter | Type   | Required | Description                    |
-|-----------|--------|----------|--------------------------------|
-| `name`     | string | Yes       | The name to greet              |
+**No parameters required.** The health tool now automatically displays your account information and available organizations/projects.
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter. The PAT provides access to all your organizations and projects.
 
 ### Configuration
 
@@ -116,14 +122,14 @@ This is your MCP server responding.
 
 ### Prerequisites
 
-- **API Key (Optional)**: For full validation, configure `TESTDINO_API_KEY` in `.cursor/mcp.json`
+- **Personal Access Token (PAT)**: For full validation, configure `TESTDINO_API_KEY` in `.cursor/mcp.json`. The PAT provides access to all your organizations and projects.
 - **Internet Connectivity**: Required for API key validation
 
 ### Technical Details
 
 - **API Endpoint**: `/api/mcp/hello`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable (if configured)
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable (Personal Access Token)
 - **Response Format**: Text with project information
 
 ---
@@ -1326,6 +1332,18 @@ When adding new tools to the MCP server:
 ---
 
 ## Version History
+
+- **v1.0.3**: 
+  - **Removed**: `upload_latest_local_test_runs` tool
+  - **Added**: Manual test case management tools:
+    - `list_manual_test_cases` - Search and list manual test cases with filtering
+    - `get_manual_test_case` - Get detailed manual test case information
+    - `create_manual_test_case` - Create new manual test cases
+    - `update_manual_test_case` - Update existing manual test cases
+    - `list_manual_test_suites` - List test suite hierarchy
+    - `create_manual_test_suite` - Create new test suites
+  - **Updated**: `health` tool now displays account info and organizations without requiring name parameter
+  - **Fixed**: Manual test case endpoints now use correct RESTful paths (`/test-cases` instead of `/list-manualtest-cases`)
 
 - **v1.0.2**: 
   - Initial release with `hello` (now `health`) and `upload_latest_local_test_runs` tools

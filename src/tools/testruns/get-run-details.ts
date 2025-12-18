@@ -13,6 +13,10 @@ export const getRunDetailsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       testrun_id: {
         type: "string",
         description:
@@ -24,7 +28,8 @@ export const getRunDetailsTool = {
           "Filter by test run counter (sequential number).",
       },
     },
-    
+    required: ["projectId"],
+
   },
 };
 
@@ -35,14 +40,16 @@ export async function handleGetRunDetails(args: any) {
   if (!token) {
     throw new Error(
       "Missing TESTDINO_API_KEY environment variable. " +
-        "Please configure it in your .cursor/mcp.json file under the 'env' section."
+      "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
 
   try {
     // Build query parameters
-    const params: any = {};
-      
+    const params: any = {
+      projectId: String(args.projectId),
+    };
+
     if (args.testrun_id) {
       params.testrun_id = String(args.testrun_id);
     }

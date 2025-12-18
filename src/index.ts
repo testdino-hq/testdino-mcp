@@ -15,19 +15,29 @@ import {
   handleListTestRuns,
   getRunDetailsTool,
   handleGetRunDetails,
-  uploadLatestLocalTestRunsTool,
-  handleUploadLatestLocalTestRuns,
   listTestCasesTool,
   handleListTestCases,
   getTestCaseDetailsTool,
   handleGetTestCaseDetails,
+  listManualTestCasesTool,
+  handleListManualTestCases,
+  getManualTestCaseTool,
+  handleGetManualTestCase,
+  createManualTestCaseTool,
+  handleCreateManualTestCase,
+  updateManualTestCaseTool,
+  handleUpdateManualTestCase,
+  listManualTestSuitesTool,
+  handleListManualTestSuites,
+  createManualTestSuiteTool,
+  handleCreateManualTestSuite,
 } from "./tools/index.js";
 
 async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.2",
+      version: "1.0.3",
     },
     {
       capabilities: {
@@ -43,9 +53,14 @@ async function main() {
     healthTool,
     listTestRunsTool,
     getRunDetailsTool,
-    uploadLatestLocalTestRunsTool,
     listTestCasesTool,
     getTestCaseDetailsTool,
+    listManualTestCasesTool,
+    getManualTestCaseTool,
+    createManualTestCaseTool,
+    updateManualTestCaseTool,
+    listManualTestSuitesTool,
+    createManualTestSuiteTool,
   ];
 
   /**
@@ -74,16 +89,36 @@ async function main() {
       return await handleGetRunDetails(args);
     }
 
-    if (name === "upload_latest_local_test_runs") {
-      return await handleUploadLatestLocalTestRuns(args);
-    }
-
     if (name === "list_testcase") {
       return await handleListTestCases(args);
     }
 
     if (name === "get_testcase_details") {
       return await handleGetTestCaseDetails(args);
+    }
+
+    if (name === "list_manual_test_cases") {
+      return await handleListManualTestCases(args);
+    }
+
+    if (name === "get_manual_test_case") {
+      return await handleGetManualTestCase(args);
+    }
+
+    if (name === "create_manual_test_case") {
+      return await handleCreateManualTestCase(args);
+    }
+
+    if (name === "update_manual_test_case") {
+      return await handleUpdateManualTestCase(args);
+    }
+
+    if (name === "list_manual_test_suites") {
+      return await handleListManualTestSuites(args);
+    }
+
+    if (name === "create_manual_test_suite") {
+      return await handleCreateManualTestSuite(args);
     }
 
     throw new Error(`Unknown tool: ${name}`);

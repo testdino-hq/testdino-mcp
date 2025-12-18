@@ -77,7 +77,7 @@ Open or create the `mcp.json` file and add this configuration:
 }
 ```
 
-**Critical**: Replace `your_testdino_api_key_here` with the actual API key you copied in Step 1.
+**Critical**: Replace `your_testdino_api_key_here` with the actual Personal Access Token (PAT) you copied in Step 1.
 
 **If you installed globally** (Option 2 above), use this instead:
 ```json
@@ -102,14 +102,14 @@ Open or create the `mcp.json` file and add this configuration:
 ### Step 5: Verify It's Working
 
 1. **Check MCP Status**: Go to **Settings → MCP** and verify "testdino" appears in the list
-2. **Test the Connection**: Ask Cursor: *"Check TestDino health"* or *"Validate my TestDino API key"*
-3. **Expected Response**: You should see your project name and ID, confirming the connection works
+2. **Test the Connection**: Ask Cursor: *"Check TestDino health"* or *"Validate my TestDino PAT"*
+3. **Expected Response**: You should see your account name, available organizations, and projects, confirming the connection works
 
 If you see an error, check the [Troubleshooting](#troubleshooting) section below.
 
 ## Available Tools Overview
 
-Once installed and configured, the MCP server provides 6 powerful tools:
+Once installed and configured, the MCP server provides 11 powerful tools:
 
 | Tool | Purpose | When to Use |
 |------|---------|-------------|
@@ -118,37 +118,50 @@ Once installed and configured, the MCP server provides 6 powerful tools:
 | `get_run_details` | Get complete test run overview | Analyzing a specific test run |
 | `list_testcase` | List test cases in a run | Finding failed or flaky tests |
 | `get_testcase_details` | Deep dive into a test case | Debugging test failures |
-| `upload_latest_local_test_runs` | Upload local test results | After running Playwright tests locally |
+| `list_manual_test_cases` | Search and list manual test cases | Finding manual test cases with filters |
+| `get_manual_test_case` | Get manual test case details | Reviewing test steps and metadata |
+| `create_manual_test_case` | Create new manual test case | Documenting new test scenarios |
+| `update_manual_test_case` | Update existing test case | Modifying test case details |
+| `list_manual_test_suites` | List test suite hierarchy | Finding suite IDs for organization |
+| `create_manual_test_suite` | Create new test suite | Organizing test cases |
 
 **Quick Examples:**
 - *"Check TestDino health"* - Verify your setup
 - *"Show me my last 5 test runs"* - Browse recent runs
 - *"What tests failed in test run X?"* - Analyze failures
-- *"Upload my Playwright test results"* - Upload local tests
+- *"List all manual test cases"* - View manual tests
+- *"Create a new manual test case"* - Document test scenarios
 
-**Note:** All tools (except `health` without API key) require `TESTDINO_API_KEY` to be configured. See [API Key Configuration](#api-key-configuration) below.
+**Note:** All tools require `TESTDINO_API_KEY` (Personal Access Token) to be configured. The PAT provides access to all organizations and projects you have permissions for. See [API Key Configuration](#api-key-configuration) below.
 
 For complete documentation with all parameters and detailed examples, see [TOOLS.md](./TOOLS.md).
 
-## API Key Configuration
+## Personal Access Token (PAT) Configuration
 
-### Why You Need an API Key
+### Why You Need a PAT
 
-The API key authenticates your requests to TestDino. Without it, most tools won't work. The key is stored securely in your local `mcp.json` file and never shared.
+The Personal Access Token (PAT) authenticates your requests to TestDino and provides access to all organizations and projects you have permissions for. Without it, tools won't work. The PAT is stored securely in your local `mcp.json` file and never shared.
 
-### How to Get Your API Key
+### How to Get Your PAT
 
 1. **Log in** to [TestDino](https://testdino.com)
-2. **Navigate** to **Settings → API Keys**
-3. **Generate** a new key or **copy** an existing one
+2. **Navigate** to **Settings → Personal Access Tokens**
+3. **Generate** a new token or **copy** an existing one
 4. **Add it** to your `mcp.json` configuration (see [Cursor Integration](#cursor-integration) above)
+
+### What the PAT Provides
+
+- **Multi-Organization Access**: One PAT works across all your organizations
+- **Multi-Project Access**: Automatically access all projects you have permissions for
+- **Role-Based Permissions**: Your access level (read/write) is determined by your role in each project
+- **No Project ID Required**: The health tool will show you all available organizations and projects
 
 ### Security Best Practices
 
-- ✅ **Do**: Store your API key in `mcp.json` (it's local to your machine)
-- ✅ **Do**: Use project-specific configs for different keys per project
-- ❌ **Don't**: Commit `mcp.json` with your API key to version control
-- ❌ **Don't**: Share your API key with others
+- ✅ **Do**: Store your PAT in `mcp.json` (it's local to your machine)
+- ✅ **Do**: Use the same PAT across all your projects
+- ❌ **Don't**: Commit `mcp.json` with your PAT to version control
+- ❌ **Don't**: Share your PAT with others
 
 **Tip**: Add `.cursor/mcp.json` to your `.gitignore` if you store API keys there.
 
@@ -231,7 +244,7 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
 }
 ```
 
-**Critical**: Replace `your_testdino_api_key_here` with the actual API key you copied in Step 1.
+**Critical**: Replace `your_testdino_api_key_here` with the actual Personal Access Token (PAT) you copied in Step 1.
 
 **If you installed globally** (Option 2 above), use this instead:
 ```json
@@ -256,8 +269,8 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
 ### Step 5: Verify It's Working
 
 1. **Check MCP Status**: In Claude Desktop, you can verify the MCP server is connected by checking the connection status
-2. **Test the Connection**: Ask Claude: *"Check TestDino health"* or *"Validate my TestDino API key"*
-3. **Expected Response**: You should see your project name and ID, confirming the connection works
+2. **Test the Connection**: Ask Claude: *"Check TestDino health"* or *"Validate my TestDino PAT"*
+3. **Expected Response**: You should see your account name, available organizations, and projects, confirming the connection works
 
 If you see an error, check the [Troubleshooting](#troubleshooting) section below.
 

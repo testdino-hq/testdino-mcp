@@ -13,6 +13,10 @@ export const listTestRunsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       by_branch: {
         type: "string",
         description: "Filter by git branch name (e.g., 'main', 'develop', 'feature/login').",
@@ -49,7 +53,7 @@ export const listTestRunsTool = {
         default: false,
       },
     },
-    required: [],
+    required: ["projectId"],
   },
 };
 
@@ -60,12 +64,14 @@ export async function handleListTestRuns(args: any) {
   if (!token) {
     throw new Error(
       "Missing TESTDINO_API_KEY environment variable. " +
-        "Please configure it in your .cursor/mcp.json file under the 'env' section."
+      "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
 
   try {
-    const params: any = {};
+    const params: any = {
+      projectId: String(args.projectId),
+    };
 
     if (args?.by_branch) {
       params.by_branch = String(args.by_branch);

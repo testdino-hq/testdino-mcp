@@ -13,6 +13,10 @@ export const listTestCasesTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       by_testrun_id: {
         type: "string",
         description: "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all).",
@@ -99,7 +103,7 @@ export const listTestCasesTool = {
         default: false,
       },
     },
-    required: [],
+    required: ["projectId"],
   },
 };
 
@@ -110,7 +114,7 @@ export async function handleListTestCases(args: any) {
   if (!token) {
     throw new Error(
       "Missing TESTDINO_API_KEY environment variable. " +
-        "Please configure it in your .cursor/mcp.json file under the 'env' section."
+      "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
 
@@ -138,7 +142,9 @@ export async function handleListTestCases(args: any) {
   }
 
   try {
-    const params: any = {};
+    const params: any = {
+      projectId: String(args.projectId),
+    };
 
     if (args?.by_testrun_id) {
       params.by_testrun_id = String(args.by_testrun_id);

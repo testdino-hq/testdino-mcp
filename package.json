@@ -1,6 +1,6 @@
 {
   "name": "testdino-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "mcpName": "io.github.testdino-inc/testdino-mcp",
   "type": "module",
   "main": "dist/index.js",
@@ -8,8 +8,8 @@
     "testdino-mcp": "dist/index.js"
   },
   "repository": {
-     "type" : "git" ,
-     "url" : "https://github.com/testdino-inc/testdino-mcp"
+    "type": "git",
+    "url": "https://github.com/testdino-inc/testdino-mcp"
   },
   "description": "A MCP server for TestDino.",
   "homepage": "https://docs.testdino.com/testdino-mcp/overview/",
@@ -17,7 +17,10 @@
     "build": "tsc",
     "start": "tsx dist/index.js",
     "dev": "tsx src/index.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "keywords": [
     "mcp",
@@ -30,7 +33,10 @@
     "@modelcontextprotocol/sdk": "^0.5.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },

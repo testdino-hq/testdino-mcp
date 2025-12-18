@@ -17,13 +17,13 @@ export function getBaseUrl(): string {
  */
 function buildQueryString(params: Record<string, string | number | boolean | undefined | null>): string {
   const queryParams = new URLSearchParams();
-  
+
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null) {
       queryParams.append(key, String(value));
     }
   }
-  
+
   const queryString = queryParams.toString();
   return queryString ? `?${queryString}` : "";
 }
@@ -34,9 +34,10 @@ function buildQueryString(params: Record<string, string | number | boolean | und
 export const endpoints = {
   /**
    * List test runs with filters
-   * GET /api/mcp/list-testruns
+   * GET /api/mcp/:projectId/list-testruns
    */
   listTestRuns: (params?: {
+    projectId?: string;
     by_branch?: string;
     by_time_interval?: string;
     by_author?: string;
@@ -48,28 +49,34 @@ export const endpoints = {
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
-    const queryString = params ? buildQueryString(params) : "";
-    return `${baseUrl}/api/mcp/list-testruns${queryString}`;
+    const projectId = params?.projectId || '';
+    const { projectId: _, ...queryParams } = params || {};
+    const queryString = queryParams ? buildQueryString(queryParams) : "";
+    return `${baseUrl}/api/mcp/${projectId}/list-testruns${queryString}`;
   },
 
   /**
    * Get detailed test run information by test run ID(s) - supports batch operations
-   * GET /api/mcp/get-run-details
+   * GET /api/mcp/:projectId/get-run-details
+   * @param params.projectId - Required: Project ID
    * @param params.testrun_id - Optional: Single ID or comma-separated IDs (max 20). Example: 'run1' or 'run1,run2,run3'
    * @param params.counter - Optional: Filter by test run counter number
    */
   getRunDetails: (params: {
+    projectId: string;
     testrun_id?: string; // Optional: Single ID or comma-separated IDs for batch (max 20)
     counter?: number;
   }): string => {
     const baseUrl = getBaseUrl();
-    const queryString = buildQueryString(params);
-    return `${baseUrl}/api/mcp/get-run-details${queryString}`;
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/get-run-details${queryString}`;
   },
 
   /**
    * List test cases with comprehensive filtering options
-   * GET /api/mcp/list-testcase
+   * GET /api/mcp/:projectId/list-testcase
+   * @param params.projectId - Required: Project ID
    * @param params.by_testrun_id - Optional: Single ID or comma-separated IDs (max 20). Required unless using counter, by_pages, or by_branch
    * @param params.counter - Optional: Test run counter number. Alternative to by_testrun_id
    * @param params.by_status - Optional: passed, failed, skipped, or flaky
@@ -92,6 +99,7 @@ export const endpoints = {
    * @param params.get_all - Optional: Get all results
    */
   listTestCases: (params?: {
+    projectId?: string;
     by_testrun_id?: string; // Single ID or comma-separated IDs for batch (max 20)
     counter?: number;
     by_status?: string;
@@ -114,27 +122,33 @@ export const endpoints = {
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
-    const queryString = params ? buildQueryString(params) : "";
-    return `${baseUrl}/api/mcp/list-testcase${queryString}`;
+    const projectId = params?.projectId || '';
+    const { projectId: _, ...queryParams } = params || {};
+    const queryString = queryParams ? buildQueryString(queryParams) : "";
+    return `${baseUrl}/api/mcp/${projectId}/list-testcase${queryString}`;
   },
 
   /**
    * Get detailed test case information
-   * GET /api/mcp/get-testcase-details
+   * GET /api/mcp/:projectId/get-testcase-details
+   * @param params.projectId - Required: Project ID
    * @param params.testcaseid - Optional: Test case ID (can be used alone)
    * @param params.by_title - Optional: Test case name/title (must be combined with by_testrun_id or counter)
    * @param params.by_testrun_id - Optional: Test run ID (required when using by_title)
    * @param params.counter - Optional: Test run counter (required when using by_title if by_testrun_id not provided)
    */
   getTestCaseDetails: (params?: {
+    projectId?: string;
     testcaseid?: string; // Test case ID (can be used alone)
     by_title?: string; // Test case name (must be combined with by_testrun_id or counter)
     by_testrun_id?: string; // Test run ID (required when using by_title)
     counter?: string | number; // Test run counter (required when using by_title if by_testrun_id not provided)
   }): string => {
     const baseUrl = getBaseUrl();
-    const queryString = params ? buildQueryString(params) : "";
-    return `${baseUrl}/api/mcp/get-testcase-details${queryString}`;
+    const projectId = params?.projectId || '';
+    const { projectId: _, ...queryParams } = params || {};
+    const queryString = queryParams ? buildQueryString(queryParams) : "";
+    return `${baseUrl}/api/mcp/${projectId}/get-testcase-details${queryString}`;
   },
 
   /**
@@ -144,5 +158,84 @@ export const endpoints = {
   hello: (): string => {
     const baseUrl = getBaseUrl();
     return `${baseUrl}/api/mcp/hello`;
+  },
+
+  /**
+   * List manual test cases with filtering
+   * GET /api/mcp/manual-tests/:projectId/test-cases
+   */
+  listManualTestCases: (params?: {
+    projectId: string;
+    search?: string;
+    suiteId?: string;
+    status?: string;
+    priority?: string;
+    severity?: string;
+    type?: string;
+    layer?: string;
+    behavior?: string;
+    automationStatus?: string;
+    tags?: string;
+    isFlaky?: boolean;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params || {};
+    const queryString = queryParams ? buildQueryString(queryParams) : "";
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases${queryString}`;
+  },
+
+  /**
+   * Get manual test case details
+   * GET /api/mcp/manual-tests/:projectId/test-cases/:caseId
+   */
+  getManualTestCase: (params: {
+    projectId: string;
+    caseId: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, caseId } = params;
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases/${caseId}`;
+  },
+
+  /**
+   * Create manual test case
+   * POST /api/mcp/manual-tests/:projectId/test-cases
+   */
+  createManualTestCase: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases`;
+  },
+
+  /**
+   * Update manual test case
+   * PATCH /api/mcp/manual-tests/:projectId/test-cases/:caseId
+   */
+  updateManualTestCase: (projectId: string, caseId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases/${caseId}`;
+  },
+
+  /**
+   * List manual test suites
+   * GET /api/mcp/manual-tests/:projectId/test-suites
+   */
+  listManualTestSuites: (params?: {
+    projectId: string;
+    parentSuiteId?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params || {};
+    const queryString = queryParams ? buildQueryString(queryParams) : "";
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-suites${queryString}`;
+  },
+
+  /**
+   * Create manual test suite
+   * POST /api/mcp/manual-tests/:projectId/test-suites
+   */
+  createManualTestSuite: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-suites`;
   },
 };
