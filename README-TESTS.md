@@ -144,4 +144,3 @@ When adding a new tool:
 3. **Coverage**: Aim for high code coverage
 4. **Speed**: Tests should run quickly
 5. **Maintainability**: Keep tests simple and readable
-

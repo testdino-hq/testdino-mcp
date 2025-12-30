@@ -66,7 +66,7 @@ async function main() {
   /**
    * Respond to tool listing
    */
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
+  server.setRequestHandler(ListToolsRequestSchema, () => {
     return { tools };
   });
 
@@ -82,43 +82,63 @@ async function main() {
     }
 
     if (name === "list_testruns") {
-      return await handleListTestRuns(args);
+      return await handleListTestRuns(
+        args as Parameters<typeof handleListTestRuns>[0]
+      );
     }
 
     if (name === "get_run_details") {
-      return await handleGetRunDetails(args);
+      return await handleGetRunDetails(
+        args as Parameters<typeof handleGetRunDetails>[0]
+      );
     }
 
     if (name === "list_testcase") {
-      return await handleListTestCases(args);
+      return await handleListTestCases(
+        args as Parameters<typeof handleListTestCases>[0]
+      );
     }
 
     if (name === "get_testcase_details") {
-      return await handleGetTestCaseDetails(args);
+      return await handleGetTestCaseDetails(
+        args as Parameters<typeof handleGetTestCaseDetails>[0]
+      );
     }
 
     if (name === "list_manual_test_cases") {
-      return await handleListManualTestCases(args);
+      return await handleListManualTestCases(
+        args as Parameters<typeof handleListManualTestCases>[0]
+      );
     }
 
     if (name === "get_manual_test_case") {
-      return await handleGetManualTestCase(args);
+      return await handleGetManualTestCase(
+        args as Parameters<typeof handleGetManualTestCase>[0]
+      );
     }
 
     if (name === "create_manual_test_case") {
-      return await handleCreateManualTestCase(args);
+      return await handleCreateManualTestCase(
+        args as Parameters<typeof handleCreateManualTestCase>[0]
+      );
     }
 
     if (name === "update_manual_test_case") {
-      return await handleUpdateManualTestCase(args);
+      return await handleUpdateManualTestCase(
+        args as Parameters<typeof handleUpdateManualTestCase>[0]
+      );
     }
 
     if (name === "list_manual_test_suites") {
-      return await handleListManualTestSuites(args);
+      return await handleListManualTestSuites(
+        args as Parameters<typeof handleListManualTestSuites>[0]
+      );
     }
 
     if (name === "create_manual_test_suite") {
-      return await handleCreateManualTestSuite(args);
+      return await handleCreateManualTestSuite(
+        args as Parameters<typeof handleCreateManualTestSuite>[0]
+      );
     }
 
     throw new Error(`Unknown tool: ${name}`);

@@ -5,14 +5,16 @@
 export interface RequestOptions {
   method?: string;
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
 }
 
 export async function apiRequest(
   url: string,
   options: RequestOptions = {}
 ): Promise<Response> {
-  const { method = "GET", headers = {}, body } = options;
+  const method = options.method ?? "GET";
+  const headers = options.headers ?? {};
+  const body = options.body;
 
   const response = await fetch(url, {
     method,
@@ -26,12 +28,12 @@ export async function apiRequest(
   return response;
 }
 
-export async function apiRequestJson<T = any>(
+export async function apiRequestJson<T = unknown>(
   url: string,
   options: RequestOptions = {}
 ): Promise<T> {
   const response = await apiRequest(url, options);
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(
@@ -41,4 +43,3 @@ export async function apiRequestJson<T = any>(
 
   return response.json() as T;
 }
-

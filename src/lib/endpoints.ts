@@ -15,7 +15,9 @@ export function getBaseUrl(): string {
 /**
  * Build query string from parameters object
  */
-function buildQueryString(params: Record<string, string | number | boolean | undefined | null>): string {
+function buildQueryString(
+  params: Record<string, string | number | boolean | undefined | null>
+): string {
   const queryParams = new URLSearchParams();
 
   for (const [key, value] of Object.entries(params)) {
@@ -49,7 +51,7 @@ export const endpoints = {
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
-    const projectId = params?.projectId || '';
+    const projectId = params?.projectId || "";
     const { projectId: _, ...queryParams } = params || {};
     const queryString = queryParams ? buildQueryString(queryParams) : "";
     return `${baseUrl}/api/mcp/${projectId}/list-testruns${queryString}`;
@@ -122,7 +124,7 @@ export const endpoints = {
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
-    const projectId = params?.projectId || '';
+    const projectId = params?.projectId || "";
     const { projectId: _, ...queryParams } = params || {};
     const queryString = queryParams ? buildQueryString(queryParams) : "";
     return `${baseUrl}/api/mcp/${projectId}/list-testcase${queryString}`;
@@ -145,7 +147,7 @@ export const endpoints = {
     counter?: string | number; // Test run counter (required when using by_title if by_testrun_id not provided)
   }): string => {
     const baseUrl = getBaseUrl();
-    const projectId = params?.projectId || '';
+    const projectId = params?.projectId || "";
     const { projectId: _, ...queryParams } = params || {};
     const queryString = queryParams ? buildQueryString(queryParams) : "";
     return `${baseUrl}/api/mcp/${projectId}/get-testcase-details${queryString}`;
