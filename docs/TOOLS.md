@@ -378,7 +378,6 @@ Error: Failed to list test runs: [error message]
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
 - **Response Format**: JSON
-- **Custom API URL**: Set `TESTDINO_API_URL` environment variable in `mcp.json` to override base URL
 
 ### Related Documentation
 
@@ -691,7 +690,6 @@ Error: Failed to list test cases: [error message]
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
 - **Response Format**: JSON
-- **Custom API URL**: Set `TESTDINO_API_URL` environment variable in `mcp.json` to override base URL
 
 ### Related Documentation
 
@@ -842,7 +840,6 @@ Error: Failed to retrieve test case details: [error message]
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
 - **Response Format**: JSON
-- **Custom API URL**: Set `TESTDINO_API_URL` environment variable in `mcp.json` to override base URL
 
 ### Related Documentation
 
@@ -1310,7 +1307,6 @@ Error: Missing required parameter: testrun_id
 - **Method**: GET for both endpoints
 - **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
 - **Response Format**: JSON with formatted markdown summary
-- **Custom API URL**: Set `TESTDINO_API_URL` environment variable in `mcp.json` to override base URL
 
 ### Related Documentation
 
