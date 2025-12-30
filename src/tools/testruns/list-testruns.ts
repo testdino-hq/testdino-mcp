@@ -6,6 +6,30 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
+interface ListTestRunsArgs {
+  projectId: string;
+  by_branch?: string;
+  by_time_interval?: string;
+  by_author?: string;
+  by_commit?: string;
+  by_environment?: string;
+  limit?: number;
+  page?: number;
+  get_all?: boolean;
+}
+
+interface ListTestRunsParams {
+  projectId: string;
+  by_branch?: string;
+  by_time_interval?: string;
+  by_author?: string;
+  by_commit?: string;
+  by_environment?: string;
+  limit?: number;
+  page?: number;
+  get_all?: string;
+}
+
 export const listTestRunsTool = {
   name: "list_testruns",
   description:
@@ -13,17 +37,24 @@ export const listTestRunsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       by_branch: {
         type: "string",
-        description: "Filter by git branch name (e.g., 'main', 'develop', 'feature/login').",
+        description:
+          "Filter by git branch name (e.g., 'main', 'develop', 'feature/login').",
       },
       by_time_interval: {
         type: "string",
-        description: "Filter by time: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or '2024-01-01,2024-01-31' (date range).",
+        description:
+          "Filter by time: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or '2024-01-01,2024-01-31' (date range).",
       },
       by_author: {
         type: "string",
-        description: "Filter by commit author name (case-insensitive, partial match).",
+        description:
+          "Filter by commit author name (case-insensitive, partial match).",
       },
       by_commit: {
         type: "string",
@@ -31,7 +62,8 @@ export const listTestRunsTool = {
       },
       by_environment: {
         type: "string",
-        description: "Filter by environment. Example: 'production', 'staging', 'development'.",
+        description:
+          "Filter by environment. Example: 'production', 'staging', 'development'.",
       },
       limit: {
         type: "number",
@@ -49,11 +81,11 @@ export const listTestRunsTool = {
         default: false,
       },
     },
-    required: [],
+    required: ["projectId"],
   },
 };
 
-export async function handleListTestRuns(args: any) {
+export async function handleListTestRuns(args?: ListTestRunsArgs) {
   // Read API key from environment variable (set in mcp.json) or from args
   const token = getApiKey(args);
 
@@ -64,8 +96,14 @@ export async function handleListTestRuns(args: any) {
     );
   }
 
+  if (!args?.projectId) {
+    throw new Error("projectId is required");
+  }
+
   try {
-    const params: any = {};
+    const params: ListTestRunsParams = {
+      projectId: String(args.projectId),
+    };
 
     if (args?.by_branch) {
       params.by_branch = String(args.by_branch);
@@ -82,9 +120,6 @@ export async function handleListTestRuns(args: any) {
     if (args?.by_environment) {
       params.by_environment = String(args.by_environment);
     }
-    if (args?.by_environment) {
-      params.by_environment = String(args.by_environment);
-    }
     if (args?.limit !== undefined) {
       params.limit = Number(args.limit);
     }
@@ -97,7 +132,7 @@ export async function handleListTestRuns(args: any) {
 
     const listTestRunsUrl = endpoints.listTestRuns(params);
 
-    const response = await apiRequestJson(listTestRunsUrl, {
+    const response = await apiRequestJson<unknown>(listTestRunsUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -111,10 +146,8 @@ export async function handleListTestRuns(args: any) {
         },
       ],
     };
-  } catch (error: any) {
-    throw new Error(
-      `Failed to list test runs: ${error?.message || String(error)}`
-    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to list test runs: ${errorMessage}`);
   }
 }
-

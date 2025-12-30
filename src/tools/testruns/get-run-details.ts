@@ -6,6 +6,18 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
+interface GetRunDetailsArgs {
+  projectId: string;
+  testrun_id?: string;
+  counter?: number;
+}
+
+interface GetRunDetailsParams {
+  projectId: string;
+  testrun_id?: string;
+  counter?: number;
+}
+
 export const getRunDetailsTool = {
   name: "get_run_details",
   description:
@@ -13,6 +25,10 @@ export const getRunDetailsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       testrun_id: {
         type: "string",
         description:
@@ -20,15 +36,14 @@ export const getRunDetailsTool = {
       },
       counter: {
         type: "number",
-        description:
-          "Filter by test run counter (sequential number).",
+        description: "Filter by test run counter (sequential number).",
       },
     },
-    
+    required: ["projectId"],
   },
 };
 
-export async function handleGetRunDetails(args: any) {
+export async function handleGetRunDetails(args?: GetRunDetailsArgs) {
   // Read API key from environment variable (set in mcp.json) or from args
   const token = getApiKey(args);
 
@@ -39,10 +54,16 @@ export async function handleGetRunDetails(args: any) {
     );
   }
 
+  if (!args?.projectId) {
+    throw new Error("projectId is required");
+  }
+
   try {
     // Build query parameters
-    const params: any = {};
-      
+    const params: GetRunDetailsParams = {
+      projectId: String(args.projectId),
+    };
+
     if (args.testrun_id) {
       params.testrun_id = String(args.testrun_id);
     }
@@ -53,7 +74,7 @@ export async function handleGetRunDetails(args: any) {
 
     const runDetailsUrl = endpoints.getRunDetails(params);
 
-    const response = await apiRequestJson(runDetailsUrl, {
+    const response = await apiRequestJson<unknown>(runDetailsUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -69,10 +90,8 @@ export async function handleGetRunDetails(args: any) {
         },
       ],
     };
-  } catch (error: any) {
-    throw new Error(
-      `Failed to retrieve test run details: ${error?.message || String(error)}`
-    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to retrieve test run details: ${errorMessage}`);
   }
 }
-

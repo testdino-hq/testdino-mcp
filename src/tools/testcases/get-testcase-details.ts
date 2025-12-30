@@ -5,6 +5,14 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
+interface GetTestCaseDetailsArgs {
+  projectId: string;
+  testcase_id?: string;
+  testcase_name?: string;
+  testrun_id?: string;
+  counter?: number;
+}
+
 export const getTestCaseDetailsTool = {
   name: "get_testcase_details",
   description:
@@ -12,28 +20,36 @@ export const getTestCaseDetailsTool = {
   inputSchema: {
     type: "object",
     properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (Required). The TestDino project identifier.",
+      },
       testcase_id: {
         type: "string",
-        description: "Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.",
+        description:
+          "Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.",
       },
       testcase_name: {
         type: "string",
-        description: "Test case name/title. Must be combined with either testrun_id or counter to identify which test run's test case you want. Example: 'Verify user can logout and login'.",
+        description:
+          "Test case name/title. Must be combined with either testrun_id or counter to identify which test run's test case you want. Example: 'Verify user can logout and login'.",
       },
       testrun_id: {
         type: "string",
-        description: "Test run ID. Required when using testcase_name to specify which test run's test case you want. Example: 'test_run_6901b2abc6b187e63f536a6b'.",
+        description:
+          "Test run ID. Required when using testcase_name to specify which test run's test case you want. Example: 'test_run_6901b2abc6b187e63f536a6b'.",
       },
       counter: {
         type: "number",
-        description: "Test run counter number. Required when using testcase_name (if testrun_id is not provided) to specify which test run's test case you want. Example: 43.",
+        description:
+          "Test run counter number. Required when using testcase_name (if testrun_id is not provided) to specify which test run's test case you want. Example: 43.",
       },
     },
-    required: [],
+    required: ["projectId"],
   },
 };
 
-export async function handleGetTestCaseDetails(args: any) {
+export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
   // Read API key from environment variable (set in mcp.json) or from args
   const token = getApiKey(args);
 
@@ -67,7 +83,9 @@ export async function handleGetTestCaseDetails(args: any) {
 
   try {
     // Build query parameters
-    const queryParams: Record<string, string> = {};
+    const queryParams: Record<string, string> = {
+      projectId: String(args.projectId),
+    };
 
     if (args.testcase_id) {
       queryParams.testcaseid = String(args.testcase_id);
@@ -87,7 +105,7 @@ export async function handleGetTestCaseDetails(args: any) {
       queryParams as Parameters<typeof endpoints.getTestCaseDetails>[0]
     );
 
-    const response = await apiRequestJson(testCaseDetailsUrl, {
+    const response = await apiRequestJson<unknown>(testCaseDetailsUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -101,10 +119,8 @@ export async function handleGetTestCaseDetails(args: any) {
         },
       ],
     };
-  } catch (error: any) {
-    throw new Error(
-      `Failed to retrieve test case details: ${error?.message || String(error)}`
-    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to retrieve test case details: ${errorMessage}`);
   }
 }
-
