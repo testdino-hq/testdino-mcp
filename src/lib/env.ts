@@ -1,6 +1,6 @@
 
 export function getApiUrl(): string {
-  return  "https://staging-api.testdino.com";
+  return  "http://localhost:3000";
 }
 
 export function getApiKey(args?: any): string | undefined {
