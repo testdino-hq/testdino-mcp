@@ -1,9 +1,14 @@
-
 export function getApiUrl(): string {
-  return  "http://localhost:3000";
+  return "https://api.testdino.com";
 }
 
-export function getApiKey(args?: any): string | undefined {
-  return process.env.TESTDINO_API_KEY || args?.token;
+export function getApiKey(args?: unknown): string | undefined {
+  const tokenFromArgs =
+    args &&
+    typeof args === "object" &&
+    "token" in args &&
+    typeof args.token === "string"
+      ? args.token
+      : undefined;
+  return process.env.TESTDINO_API_KEY || tokenFromArgs;
 }
-

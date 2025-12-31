@@ -5,32 +5,23 @@ export default {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   testEnvironment: "node",
-  testMatch: [
-    "**/__tests__/**/*.test.ts",
-    "**/?(*.)+(spec|test).ts"
-  ],
-  collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/**/*.d.ts",
-    "!src/index.ts"
-  ],
+  testMatch: ["**/__tests__/**/*.test.ts", "**/?(*.)+(spec|test).ts"],
+  collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/index.ts"],
   coverageDirectory: "coverage",
-  coverageReporters: [
-    "text",
-    "lcov",
-    "html"
-  ],
+  coverageReporters: ["text", "lcov", "html"],
   setupFilesAfterEnv: ["<rootDir>/__tests__/setup.ts"],
   testTimeout: 10000,
   transform: {
-    "^.+\\.ts$": ["ts-jest", {
-      useESM: true
-    }]
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        useESM: true,
+      },
+    ],
   },
   globals: {
     "ts-jest": {
-      useESM: true
-    }
-  }
+      useESM: true,
+    },
+  },
 };
-

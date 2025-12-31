@@ -17,7 +17,7 @@ export const healthTool = {
   },
 };
 
-export async function handleHealth(args: any) {
+export async function handleHealth(args?: Record<string, unknown>) {
   // Validate API key and get user info using /api/mcp/hello endpoint
   try {
     // Read API key from environment variable (set in mcp.json) or from args
@@ -77,7 +77,11 @@ export async function handleHealth(args: any) {
     const responseData = response.data || response;
 
     // Type guard to check if we have the expected data structure
-    if (!responseData || typeof responseData === "string" || !('user' in responseData)) {
+    if (
+      !responseData ||
+      typeof responseData === "string" ||
+      !("user" in responseData)
+    ) {
       return {
         content: [
           {
@@ -128,7 +132,10 @@ export async function handleHealth(args: any) {
     } else {
       // Calculate totals
       const totalOrgs = data.access.length;
-      const totalProjects = data.access.reduce((sum, org) => sum + (org.projects?.length || 0), 0);
+      const totalProjects = data.access.reduce(
+        (sum, org) => sum + (org.projects?.length || 0),
+        0
+      );
 
       output += `📊 **Access Summary**\n`;
       output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
@@ -179,16 +186,15 @@ export async function handleHealth(args: any) {
         },
       ],
     };
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: "text",
-          text: `❌ **Error validating API key**\n\n${error?.message || String(error)}\n\nPlease check your API key and try again.`,
+          text: `❌ **Error validating API key**\n\n${errorMessage}\n\nPlease check your API key and try again.`,
         },
       ],
     };
   }
 }
-
-
