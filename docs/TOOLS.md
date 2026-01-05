@@ -23,6 +23,7 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - [get_run_details](#get_run_details)
 - [list_testcase](#list_testcase)
 - [get_testcase_details](#get_testcase_details)
+- [debug_testcase](#debug_testcase)
 
 **Test Case Management:**
 
@@ -897,6 +898,327 @@ Error: Failed to retrieve test case details: [error message]
 
 - [TestDino API Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## debug_testcase
+
+**Purpose**: Debug a specific test case by fetching aggregated historical execution and failure data from the TestDino API to provide AI-assisted root-cause analysis and fix suggestions.
+
+### Description
+
+This tool is designed for AI-assisted debugging of test case failures. It calls the TestDino API which aggregates historical execution data for a specific test case across multiple test runs and returns:
+
+- **Failure Pattern Analysis**: Common error categories, messages, and locations
+- **Execution History**: Attempts, retries, and duration patterns
+- **Timeline Analysis**: Failure timeline across test runs
+- **Debugging Prompt**: AI-friendly context for root-cause analysis (provided by the API endpoint)
+- **Attachment Metadata**: Available debugging artifacts (screenshots, videos, traces)
+
+**Important**: The `debugging_prompt` is part of the structured data returned by the TestDino API endpoint. It is common for all debug requests and is generated server-side, so there's no need to generate it client-side.
+
+Unlike `get_testcase_details` which shows details for a single execution, `debug_testcase` analyzes patterns across multiple executions to help identify:
+- Recurring failure patterns
+- Flaky test behavior
+- Browser-specific issues
+- Common error locations in code
+- Retry patterns
+
+**AI Integration**: The tool returns structured data with debugging-oriented prompts (from the API), enabling AI clients (Cursor, Claude, ChatGPT, etc.) to:
+- Identify failure patterns automatically
+- Explain likely root causes
+- Suggest fixes or improvements
+- Correlate failures with test code (when AI has access to source code)
+
+### Parameters
+
+| Parameter       | Type   | Required | Description                                                                                                                              |
+| --------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`    | string | Yes      | Project ID or Project Name (Required). The TestDino project identifier.                                                                  |
+| `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login'. The API performs case-insensitive matching.      |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**Basic Debug:**
+
+```json
+{
+  "name": "debug_testcase",
+  "arguments": {
+    "projectId": "project_123",
+    "testcase_name": "Verify user login"
+  }
+}
+```
+
+**Debug with Project Name:**
+
+```json
+{
+  "name": "debug_testcase",
+  "arguments": {
+    "projectId": "My Test Project",
+    "testcase_name": "Checkout flow"
+  }
+}
+```
+
+**Natural Language Examples:**
+
+- "Debug test case 'Verify user login'"
+- "Analyze failures for 'Checkout flow' test case"
+- "What are the failure patterns for 'API authentication' test?"
+- "Debug 'User registration' test case"
+
+### Response Format
+
+The tool returns a structured JSON response with:
+
+**Test Metadata:**
+- `title`: Test case name
+- `total_executions`: Total number of executions found
+- `failed_count`: Number of failed executions
+- `flaky_count`: Number of flaky executions
+- `passed_count`: Number of passed executions
+- `skipped_count`: Number of skipped executions
+
+**Execution History:**
+- `attempts`: Total number of attempts (including retries)
+- `retries`: Number of executions that required retries
+- `average_duration`: Average test duration
+- `min_duration`: Minimum test duration
+- `max_duration`: Maximum test duration
+
+**Error Patterns:**
+- `error_categories`: Object mapping error categories to occurrence counts
+- `common_error_messages`: Array of most common error messages with counts
+- `error_locations`: Array of most common failure locations (file:line) with counts
+- `browser_specific_failures`: Object mapping browser names to failure counts (if applicable)
+
+**Failure Timeline:**
+- Array of failed/flaky executions with:
+  - `testrun_id`: Test run identifier
+  - `testrun_counter`: Test run counter number
+  - `timestamp`: Execution timestamp
+  - `status`: Execution status
+  - `error_message`: Error message (truncated)
+  - `error_category`: Error category
+  - `artifacts_available`: Boolean indicating if debugging artifacts are available
+
+**Debugging Prompt:**
+- Pre-formatted text prompt provided by the API endpoint (common for all debug requests)
+- Includes:
+  - Summary statistics
+  - Error pattern analysis
+  - Flakiness indicators
+  - Retry analysis
+  - Recommended actions
+
+**Attachments Metadata:**
+- `total_with_screenshots`: Number of executions with screenshots
+- `total_with_videos`: Number of executions with videos
+- `total_with_traces`: Number of executions with traces
+
+**Test Run Context:**
+- `branches`: Array of branches where test executed
+- `environments`: Array of environments where test executed
+- `commits`: Array of commits where test executed
+- `time_range`: Time interval filter applied (if any)
+
+### Example Response
+
+```json
+{
+  "test_metadata": {
+    "title": "Verify user login",
+    "total_executions": 45,
+    "failed_count": 12,
+    "flaky_count": 3,
+    "passed_count": 30,
+    "skipped_count": 0
+  },
+  "execution_history": {
+    "attempts": 52,
+    "retries": 7,
+    "average_duration": 45.3,
+    "min_duration": 12.1,
+    "max_duration": 89.7
+  },
+  "error_patterns": {
+    "error_categories": {
+      "timeout_issues": 8,
+      "element_not_found": 4
+    },
+    "common_error_messages": [
+      {
+        "message": "Test timeout of 60000ms exceeded",
+        "count": 8
+      },
+      {
+        "message": "Element not found: #login-button",
+        "count": 4
+      }
+    ],
+    "error_locations": [
+      {
+        "file": "tests/login.spec.ts",
+        "line": "42",
+        "count": 6
+      }
+    ],
+    "browser_specific_failures": {
+      "firefox": 5,
+      "chromium": 7
+    }
+  },
+  "failure_timeline": [
+    {
+      "testrun_id": "test_run_123",
+      "testrun_counter": 100,
+      "timestamp": "2024-01-15T10:30:00Z",
+      "status": "failed",
+      "error_message": "Test timeout of 60000ms exceeded",
+      "error_category": "timeout_issues",
+      "artifacts_available": true
+    }
+  ],
+  "debugging_prompt": "Debugging context for test case: \"Verify user login\"\n\n**Summary:**\n- Total executions analyzed: 45\n- Failed: 12 (26.7%)\n- Flaky: 3 (6.7%)\n- Passed: 30 (66.7%)\n- Overall failure rate: 33.3%\n\n**Error Patterns Detected:**\n- Most common error category: timeout_issues (8 occurrences)\n- Most common error: \"Test timeout of 60000ms exceeded\" (8 times)\n- Most common failure location: tests/login.spec.ts:42 (6 times)\n- Browser-specific issue: chromium has 7 failures\n\n**Recommended Actions:**\n1. Investigate the most common error: \"Test timeout of 60000ms exceeded\"\n2. Check the code at tests/login.spec.ts:42 for potential issues\n3. Address flakiness by improving test stability (waits, selectors, timing)\n4. Review available artifacts (8 screenshots, 5 videos) for visual debugging\n5. If you have access to the test code, correlate these failure patterns with the test implementation\n\nNote: This debugging_prompt is provided by the TestDino API endpoint and is common for all debug requests.",
+  "attachments_metadata": {
+    "total_with_screenshots": 8,
+    "total_with_videos": 5,
+    "total_with_traces": 3
+  },
+  "test_run_context": {
+    "branches": ["main", "develop"],
+    "environments": ["production", "staging"],
+    "commits": ["abc123", "def456"],
+    "time_range": "weekly"
+  }
+}
+```
+
+### Use Cases
+
+- **Root Cause Analysis**: Identify why a test case is failing repeatedly
+- **Flaky Test Detection**: Analyze patterns to identify flaky behavior
+- **Pattern Recognition**: Find common error categories and messages
+- **Browser-Specific Issues**: Identify browser-specific failure patterns
+- **Code Location Analysis**: Find specific file/line locations where failures occur
+- **Historical Trend Analysis**: Understand how test stability changes over time
+- **AI-Assisted Debugging**: Provide context for AI tools to suggest fixes
+- **Retry Pattern Analysis**: Understand retry behavior and success rates
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Required Parameters:**
+
+```
+Error: projectId is required
+```
+
+```
+Error: testcase_name is required
+```
+
+**No Test Cases Found:**
+
+```json
+{
+  "test_metadata": {
+    "title": "Verify user login",
+    "total_executions": 0,
+    "failed_count": 0,
+    "flaky_count": 0,
+    "passed_count": 0,
+    "skipped_count": 0
+  },
+  "message": "No test case executions found matching \"Verify user login\". Try adjusting the search name or time interval filters.",
+  "debugging_prompt": "No historical data available for test case \"Verify user login\". This could mean:\n1. The test case name doesn't match exactly\n2. No test runs have executed this test case in the specified time range\n3. Try using a broader time interval or removing filters"
+}
+```
+
+**API Request Failed:**
+
+```
+Error: Failed to debug test case: [error message]
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Test Case History**: At least one test run should have executed the test case (for meaningful analysis)
+4. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/mcp/:projectId/debug-testcase?testcase_name=<name>`
+- **Method**: GET
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON with aggregated debugging data
+- **Data Processing**: The API endpoint performs all aggregation and pattern detection server-side
+- **Debugging Prompt**: The `debugging_prompt` field is generated by the API endpoint and is common for all debug requests
+
+### AI Integration Notes
+
+**Code-Aware Debugging:**
+
+When the AI client has access to the Playwright project source code, it can:
+
+1. **Read Test Files**: Access the actual test implementation
+2. **Correlate Failures**: Match error locations with test code
+3. **Analyze Locators**: Check if locators in error messages match test code
+4. **Review Waits**: Analyze wait strategies and timing issues
+5. **Check Assertions**: Review assertion logic for potential issues
+
+**Example AI Workflow:**
+
+1. User asks: "Why is 'Verify user login' failing?"
+2. AI calls `debug_testcase` to get failure patterns
+3. AI reads `tests/login.spec.ts` (if accessible)
+4. AI correlates error location `tests/login.spec.ts:42` with actual code
+5. AI provides specific fix suggestions based on code + failure patterns
+
+**Debugging Prompt Format:**
+
+The `debugging_prompt` field is formatted specifically for AI consumption, providing:
+- Structured summary
+- Pattern identification
+- Actionable recommendations
+- Context for code correlation
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+- [get_testcase_details](#get_testcase_details) - For single execution details
+- [list_testcase](#list_testcase) - For finding test cases across runs
 
 ---
 

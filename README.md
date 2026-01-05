@@ -18,6 +18,7 @@ All through simple conversational commands.
 - **🔍 Health Check**: Verify your API connection and validate your TestDino API key.
 - **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options.
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, and execution steps.
+- **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts.
 - **📤 Test Upload**: Automatically upload Playwright test results from your local machine to TestDino.
 - **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization.
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
@@ -27,7 +28,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 11 powerful tools:
+The server provides 12 powerful tools:
 
 **Test Execution & Results:**
 
@@ -36,6 +37,7 @@ The server provides 11 powerful tools:
 3. **`get_run_details`** - Get comprehensive details about a specific test run.
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, and more).
 5. **`get_testcase_details`** - Get detailed information about a specific test case.
+6. **`debug_testcase`** - Debug a test case by aggregating historical failure data, identifying patterns, and providing AI-friendly debugging context for root-cause analysis.
 
 **Test Case Management:** 6. **`list_manual_test_cases`** - Search and list manual test cases with filtering (project, suite, status, priority, severity, type, tags, etc.). 7. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps and custom fields. 8. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, and metadata. 9. **`update_manual_test_case`** - Update existing manual test cases (title, steps, status, priority, etc.). 10. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. 11. **`create_manual_test_suite`** - Create new test suite folders to organize test cases.
 
@@ -168,12 +170,26 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 - "Show me test cases from the main branch that took more than 100 seconds"
 - "Find all timeout issues in test cases from commit abc123"
 
+**Debugging Test Failures:**
+
+- "Debug test case 'Verify user login'"
+- "Analyze failures for 'Checkout flow' test case"
+- "What are the failure patterns for 'API authentication' test?"
+- "Debug 'User registration' test case"
+
 **Managing Manual Test Cases:**
 
 - "List all manual test cases in project X"
 - "Create a new manual test case for login feature"
 - "Show me all critical priority test cases"
 - "Update test case TC-123 to mark it as deprecated"
+
+## Documentation
+
+- **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all available tools
+- **[Architecture Documentation](./docs/ARCHITECTURE.md)**: Deep dive into the debug tool architecture
+- **[Architecture Diagrams](./docs/ARCHITECTURE_DIAGRAMS.md)**: Visual diagrams and flowcharts
 
 ## Requirements
 

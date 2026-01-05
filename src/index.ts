@@ -19,6 +19,8 @@ import {
   handleListTestCases,
   getTestCaseDetailsTool,
   handleGetTestCaseDetails,
+  debugTestCaseTool,
+  handleDebugTestCase,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -55,6 +57,7 @@ async function main() {
     getRunDetailsTool,
     listTestCasesTool,
     getTestCaseDetailsTool,
+    debugTestCaseTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -102,6 +105,12 @@ async function main() {
     if (name === "get_testcase_details") {
       return await handleGetTestCaseDetails(
         args as Parameters<typeof handleGetTestCaseDetails>[0]
+      );
+    }
+
+    if (name === "debug_testcase") {
+      return await handleDebugTestCase(
+        args as Parameters<typeof handleDebugTestCase>[0]
       );
     }
 

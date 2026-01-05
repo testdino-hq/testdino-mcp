@@ -58,6 +58,7 @@ export async function handleHealth(args?: Record<string, unknown>) {
             projectName: string;
             modules: {
               testRuns: boolean;
+              manualTestCases: boolean;
             };
             permissions: {
               canRead: boolean;
@@ -112,6 +113,7 @@ export async function handleHealth(args?: Record<string, unknown>) {
           projectName: string;
           modules: {
             testRuns: boolean;
+            manualTestCases: boolean;
           };
           permissions: {
             canRead: boolean;
@@ -159,6 +161,9 @@ export async function handleHealth(args?: Record<string, unknown>) {
 
             if (project.modules.testRuns) {
               output += `       • Modules: Test Runs ✓\n`;
+            }
+            if (project.modules.manualTestCases) {
+              output += `       • Modules: Test Case Management ✓\n`;
             }
             output += `\n`;
           });

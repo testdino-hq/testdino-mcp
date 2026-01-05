@@ -240,4 +240,21 @@ export const endpoints = {
     const baseUrl = getBaseUrl();
     return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-suites`;
   },
+
+  /**
+   * Debug test case - returns aggregated debug data with debugging_prompt
+   * GET /api/mcp/:projectId/debug-testcase
+   * @param params.projectId - Required: Project ID or Project Name
+   * @param params.testcase_name - Required: Test case name/title
+   * Note: The debugging_prompt is provided by the API endpoint as part of the structured response
+   */
+  debugTestCase: (params: {
+    projectId: string;
+    testcase_name: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, testcase_name } = params;
+    const queryParams = new URLSearchParams({ testcase_name });
+    return `${baseUrl}/api/mcp/${projectId}/debug-testcase?${queryParams.toString()}`;
+  },
 };
