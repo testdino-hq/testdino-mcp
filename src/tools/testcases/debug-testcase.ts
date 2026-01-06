@@ -41,7 +41,7 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
 
   if (!token) {
     throw new Error(
-      "Missing TESTDINO_API_KEY environment variable. " +
+      "Missing TESTDINO_PAT (PAT) environment variable. " +
         "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }

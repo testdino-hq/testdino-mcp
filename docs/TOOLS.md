@@ -12,7 +12,7 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - **What you'll get back**: Expected response formats
 - **Troubleshooting**: Common issues and solutions
 
-**Prerequisites**: Most tools require a Personal Access Token (PAT) configured as `TESTDINO_API_KEY` in your `.cursor/mcp.json` file. The PAT provides access to all organizations and projects you have permissions for. See the [Installation Guide](./INSTALLATION.md) for setup instructions.
+**Prerequisites**: Most tools require a Personal Access Token (PAT) configured as `TESTDINO_PAT` in your `.cursor/mcp.json` file. The PAT provides access to all organizations and projects you have permissions for. See the [Installation Guide](./INSTALLATION.md) for setup instructions.
 
 ## Table of Contents
 
@@ -38,14 +38,14 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 
 ## health
 
-**Purpose**: Verify your connection to TestDino and validate your API key configuration.
+**Purpose**: Verify your connection to TestDino and validate your PAT configuration.
 
 ### Description
 
 The health tool is your first step after installation. It checks if:
 
 - The MCP server is running correctly
-- Your API key is configured properly
+- Your PAT is configured properly
 - You can successfully connect to TestDino
 - Your project information is accessible
 
@@ -55,11 +55,11 @@ This is the perfect tool to use when troubleshooting connection issues or verify
 
 **No parameters required.** The health tool now automatically displays your account information and available organizations/projects.
 
-**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter. The PAT provides access to all your organizations and projects.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter. The PAT provides access to all your organizations and projects.
 
 ### Configuration
 
-Before using this tool with API key validation, configure your TestDino API key in `.cursor/mcp.json`:
+Before using this tool with PAT validation, configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -67,7 +67,7 @@ Before using this tool with API key validation, configure your TestDino API key 
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -87,57 +87,57 @@ Before using this tool with API key validation, configure your TestDino API key 
 }
 ```
 
-**Response (with API key configured):**
+**Response (with PAT configured):**
 
 ```
 Hello, testdino-mcp! 👋
 
 This is your MCP server responding.
 
-✅ API key validated successfully!
+✅ PAT validated successfully!
 Project Name: My Test Project
 Project ID: proj_690ded10f1fb81a3ca1bbc50
 ```
 
-**Response (without API key):**
+**Response (without PAT):**
 
 ```
 Hello, testdino-mcp! 👋
 
 This is your MCP server responding.
 
-⚠️ No TESTDINO_API_KEY available to verify
+⚠️ No TESTDINO_PAT available to verify
 ```
 
 ### Use Cases
 
 - Testing MCP server connectivity
-- Validating API key configuration
+- Validating PAT configuration
 - Verifying project access
 - Troubleshooting authentication issues
 
 ### Error Handling
 
-**API Key Validation Error:**
+**PAT Validation Error:**
 
 ```
 Hello, testdino-mcp! 👋
 
 This is your MCP server responding.
 
-❌ Error validating API key: [error message]
+❌ Error validating PAT: [error message]
 ```
 
 ### Prerequisites
 
-- **Personal Access Token (PAT)**: For full validation, configure `TESTDINO_API_KEY` in `.cursor/mcp.json`. The PAT provides access to all your organizations and projects.
-- **Internet Connectivity**: Required for API key validation
+- **Personal Access Token (PAT)**: For full validation, configure `TESTDINO_PAT` in `.cursor/mcp.json`. The PAT provides access to all your organizations and projects.
+- **Internet Connectivity**: Required for PAT validation
 
 ### Technical Details
 
 - **API Endpoint**: `/api/mcp/hello`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable (Personal Access Token)
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: Text with project information
 
 ---
@@ -171,11 +171,11 @@ Perfect for answering questions like "What tests ran on the develop branch?" or 
 | `page`             | number  | No       | 1       | Page number for pagination                                                                                                                                      |
 | `get_all`          | boolean | No       | false   | Get all results up to 1000 (default: false)                                                                                                                     |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -183,7 +183,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -373,10 +373,10 @@ The tool returns a JSON response with:
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -388,21 +388,21 @@ Error: Failed to list test runs: [error message]
 
 ### Prerequisites
 
-1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
-3. **Internet Connectivity**: Required to access TestDino API
+1. **TestDino Account**: Valid account with Testruns
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
+3. **Internet Connectivity**: Required to access TestDino Information
 4. **Test Runs**: At least one test run should exist in your TestDino project
 
 ### Technical Details
 
 - **API Endpoint**: `/api/test-runs`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON
 
 ### Related Documentation
 
-- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 
 ---
@@ -463,11 +463,11 @@ All other parameters are optional filters that can be combined to narrow down re
 | `page`              | number  | No       | Page number for pagination (default: 1).                                                                                                                                                                                           |
 | `get_all`           | boolean | No       | Get all results up to 1000 (default: false).                                                                                                                                                                                       |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -475,7 +475,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -700,10 +700,10 @@ The tool returns a JSON response with test case information including:
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -721,21 +721,21 @@ Error: Failed to list test cases: [error message]
 
 ### Prerequisites
 
-1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+1. **TestDino Account**: Valid account with Testrun access
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Test Run Identification**: Either a test run ID/counter OR at least one test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)
-4. **Internet Connectivity**: Required to access TestDino API
+4. **Internet Connectivity**: Required to access TestDino account
 
 ### Technical Details
 
 - **API Endpoint**: `/api/test-cases`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON
 
 ### Related Documentation
 
-- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 
 ---
@@ -770,11 +770,11 @@ Use this when you need to debug a failing test or understand exactly what happen
 | `testrun_id`    | string | No       | Test run ID. Required when using testcase_name to specify which test run's test case you want. Example: 'test_run_6901b2abc6b187e63f536a6b'.                           |
 | `counter`       | number | No       | Test run counter number. Required when using testcase_name (if testrun_id is not provided) to specify which test run's test case you want. Example: 43.                |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -782,7 +782,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -853,10 +853,10 @@ The tool returns a JSON response with comprehensive test case information includ
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -882,28 +882,28 @@ Error: Failed to retrieve test case details: [error message]
 
 ### Prerequisites
 
-1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+1. **TestDino Account**: Valid account with Testrun access
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Test Case ID**: A valid test case identifier
-4. **Internet Connectivity**: Required to access TestDino API
+4. **Internet Connectivity**: Required to access TestDino account
 
 ### Technical Details
 
 - **API Endpoint**: `/api/test-cases/{testcaseid}`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON
 
 ### Related Documentation
 
-- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 
 ---
 
 ## debug_testcase
 
-**Purpose**: Debug a specific test case by fetching aggregated historical execution and failure data from the TestDino API to provide AI-assisted root-cause analysis and fix suggestions.
+**Purpose**: Debug a specific test case by fetching aggregated historical execution and failure data from the TestDino reports to provide AI-assisted root-cause analysis and fix suggestions.
 
 ### Description
 
@@ -937,11 +937,11 @@ Unlike `get_testcase_details` which shows details for a single execution, `debug
 | `projectId`    | string | Yes      | Project ID or Project Name (Required). The TestDino project identifier.                                                                  |
 | `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login'. The API performs case-insensitive matching.      |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -949,7 +949,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -1129,10 +1129,10 @@ The tool returns a structured JSON response with:
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -1171,16 +1171,16 @@ Error: Failed to debug test case: [error message]
 
 ### Prerequisites
 
-1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+1. **TestDino Account**: Valid account with Testrun access
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Test Case History**: At least one test run should have executed the test case (for meaningful analysis)
-4. **Internet Connectivity**: Required to access TestDino API
+4. **Internet Connectivity**: Required to access TestDino account
 
 ### Technical Details
 
 - **API Endpoint**: `/api/mcp/:projectId/debug-testcase?testcase_name=<name>`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON with aggregated debugging data
 - **Data Processing**: The API endpoint performs all aggregation and pattern detection server-side
 - **Debugging Prompt**: The `debugging_prompt` field is generated by the API endpoint and is common for all debug requests
@@ -1215,7 +1215,7 @@ The `debugging_prompt` field is formatted specifically for AI consumption, provi
 
 ### Related Documentation
 
-- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 - [get_testcase_details](#get_testcase_details) - For single execution details
 - [list_testcase](#list_testcase) - For finding test cases across runs
@@ -1241,12 +1241,12 @@ This bridges the gap between local testing and centralized test management, allo
 
 | Parameter    | Type    | Required | Default               | Description                                                          |
 | ------------ | ------- | -------- | --------------------- | -------------------------------------------------------------------- |
-| `token`      | string  | No       | -                     | TestDino API token (optional if TESTDINO_API_KEY is set in mcp.json) |
+| `token`      | string  | No       | -                     | TestDino PAT (optional if TESTDINO_PAT is set in mcp.json) |
 | `reportDir`  | string  | No       | `./playwright-report` | Path to the Playwright report directory                              |
 | `uploadHtml` | boolean | No       | `true`                | Whether to upload HTML report as well                                |
 | `runtime`    | string  | No       | `development`         | TestDino runtime environment (development, staging, or production)   |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`. You can also pass it as the `token` parameter if needed.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. You can also pass it as the `token` parameter if needed.
 
 ### How It Works
 
@@ -1268,7 +1268,7 @@ This bridges the gap between local testing and centralized test management, allo
 
 ### Example Usage
 
-**Basic Upload (using API key from mcp.json):**
+**Basic Upload (using PAT from mcp.json):**
 
 ```json
 {
@@ -1364,7 +1364,7 @@ Please ensure the Playwright report has been generated at: ./playwright-report
 **Missing Token:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section, or provide it as the 'token' argument.
 ```
 
@@ -1394,7 +1394,7 @@ Error: STRICT METADATA VALIDATION FAILED
    - A configured remote (for repository name)
    - A valid branch
 
-3. **TestDino Token**: A valid API token from TestDino platform (configured in `mcp.json` as `TESTDINO_API_KEY` or passed as `token` parameter)
+3. **TestDino Token**: A valid PAT from TestDino platform (configured in `mcp.json` as `TESTDINO_PAT` or passed as `token` parameter)
 
 4. **Internet Connectivity**: Required to upload to TestDino servers
 
@@ -1434,7 +1434,7 @@ Error: STRICT METADATA VALIDATION FAILED
 
 **Solutions**:
 
-- Verify your TestDino API token is correct
+- Verify your TestDino PAT token is correct
 - Check token hasn't expired
 - Ensure token has upload permissions
 
@@ -1445,7 +1445,7 @@ Error: STRICT METADATA VALIDATION FAILED
 - **Path Resolution**: Supports both relative and absolute paths
 - **Search Depth**: Searches up to 15 directory levels from common locations
 - **Runtime Environment**: Set via `runtime` parameter or `TESTDINO_RUNTIME` environment variable (development, staging, production)
-- **API Key Source**: Automatically reads from `TESTDINO_API_KEY` environment variable if available
+- **PAT Source**: Automatically reads from `TESTDINO_PAT` environment variable if available
 
 ### Related Documentation
 
@@ -1480,7 +1480,7 @@ Use this when you want a full picture of what happened in a specific test run, n
 | `testrun_id` | string | No       | -       | Test run ID(s). Can be a single ID or comma-separated IDs for batch operations (max 20). Example: 'test_run_xyz123' or 'run1,run2,run3'. Optional if using `counter`. |
 | `counter`    | number | No       | -       | Filter by test run counter number. The counter is a sequential number assigned to each test run. Optional if using `testrun_id`.                                      |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter.
+**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter.
 
 ### Response Data Structure
 
@@ -1514,7 +1514,7 @@ The tool returns structured data including:
 
 ### Configuration
 
-Before using this tool, you must configure your TestDino API key in `.cursor/mcp.json`:
+Before using this tool, you must configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -1522,7 +1522,7 @@ Before using this tool, you must configure your TestDino API key in `.cursor/mcp
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -1663,8 +1663,8 @@ Error: Failed to fetch test run details: 404 Not Found
 
 Please check:
 
-1. TESTDINO_API_KEY is configured in .cursor/mcp.json under the 'env' section
-2. Your TestDino API key is valid
+1. TESTDINO_PAT is configured in .cursor/mcp.json under the 'env' section
+2. Your TestDino PAT is valid
 3. You have internet connectivity
 4. The API endpoint is accessible
 5. The run ID exists in your project
@@ -1672,10 +1672,10 @@ Please check:
 
 ```
 
-**Missing API Key:**
+**Missing PAT:**
 ```
 
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 
 ```
@@ -1689,15 +1689,15 @@ Error: Missing required parameter: testrun_id
 
 ### Prerequisites
 
-1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+1. **TestDino Account**: Valid account with Testrun access
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Test Runs**: At least one test run must exist in your TestDino project
-4. **Internet Connectivity**: Required to access TestDino API
+4. **Internet Connectivity**: Required to access TestDino account
 5. **Valid Run ID**: You must know the specific test run ID you want to retrieve
 
 ### How It Works
 
-1. **Project Validation**: The tool first calls `/api/projects` to validate your API key and retrieve project information
+1. **Project Validation**: The tool first calls `/api/projects` to validate your PAT and retrieve project information
 2. **Run Retrieval**: After successful project validation, it fetches the specific test run details using the provided run ID
 3. **Data Formatting**: The response is formatted as markdown with project info, test statistics, error categories, and detailed test case information
 
@@ -1706,12 +1706,12 @@ Error: Missing required parameter: testrun_id
 - **Project API Endpoint**: `https://api.testdino.com/api/projects`
 - **Run Details API Endpoint**: `https://api.testdino.com/api/test-runs/details?run_id={runId}`
 - **Method**: GET for both endpoints
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON with formatted markdown summary
 
 ### Related Documentation
 
-- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 
 ---
@@ -1748,8 +1748,8 @@ When adding new tools to the MCP server:
   - Added `list_testcase` tool for listing test cases in a run
   - Added `get_testcase_details` tool for detailed test case information
   - Added `get_run_details` tool for comprehensive test run information
-  - Updated `health` tool (formerly `hello`) with API key validation
-  - All tools support automatic API key reading from `TESTDINO_API_KEY` environment variable
+  - Updated `health` tool (formerly `hello`) with PAT validation
+  - All tools support automatic PAT reading from `TESTDINO_PAT` environment variable
   - Added `runtime` parameter to upload tool for environment selection
   - Improved workspace detection and report directory search
 

@@ -10,5 +10,5 @@ export function getApiKey(args?: unknown): string | undefined {
     typeof args.token === "string"
       ? args.token
       : undefined;
-  return process.env.TESTDINO_API_KEY || tokenFromArgs;
+  return process.env.TESTDINO_PAT || tokenFromArgs;
 }

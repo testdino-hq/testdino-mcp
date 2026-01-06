@@ -40,12 +40,12 @@ export const listManualTestSuitesTool = {
 export async function handleListManualTestSuites(
   args?: ListManualTestSuitesArgs
 ) {
-  // Read API key from environment variable (set in mcp.json) or from args
+  // Read PAT from environment variable (set in mcp.json) or from args
   const token = getApiKey(args);
 
   if (!token) {
     throw new Error(
-      "Missing TESTDINO_API_KEY environment variable. " +
+      "Missing TESTDINO_PAT environment variable. " +
         "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }

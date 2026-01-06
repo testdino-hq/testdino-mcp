@@ -154,7 +154,7 @@ export const endpoints = {
   },
 
   /**
-   * Hello/health check endpoint - validates API key and returns project name
+   * Hello/health check endpoint - validates PAT and returns access information
    * GET /api/mcp/hello
    */
   hello: (): string => {

@@ -17,7 +17,7 @@
       },
       "environmentVariables": [
         {
-          "description": "Your API key for the service",
+          "description": "Your PAT for the service",
           "isRequired": true,
           "format": "string",
           "isSecret": true,

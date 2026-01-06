@@ -14,8 +14,7 @@ This MCP server bridges the gap between your TestDino test management platform a
 All through simple conversational commands.
 
 ## Features
-
-- **🔍 Health Check**: Verify your API connection and validate your TestDino API key.
+- **🔍 Health Check**: Verify your connection and validate your TestDino PAT.
 - **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options.
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, and execution steps.
 - **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts.
@@ -24,7 +23,7 @@ All through simple conversational commands.
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents.
 - **⚡ Easy Setup**: Install and configure in minutes with npx.
-- **🔐 Secure**: API key stored securely in your local configuration.
+- **🔐 Secure**: PAT stored securely in your local configuration.
 
 ### Available Tools
 
@@ -32,7 +31,7 @@ The server provides 12 powerful tools:
 
 **Test Execution & Results:**
 
-1. **`health`** - Verify your connection and validate your API key.
+1. **`health`** - Verify your connection and validate your PAT.
 2. **`list_testruns`** - Browse test runs with filters (branch, time, author, commit, environment).
 3. **`get_run_details`** - Get comprehensive details about a specific test run.
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, and more).
@@ -98,14 +97,14 @@ npm install testdino-mcp
       "command": "npx",
       "args": ["-y", "testdino-mcp"],
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
 }
 ```
 
-**Important**: Replace `your_testdino_api_key_here` with your actual Personal Access Token (PAT) from Step 1.
+**Important**: Replace `Your PAT here` with your actual Personal Access Token (PAT) from Step 1.
 
 #### Step 3: Restart and Verify
 
@@ -129,7 +128,7 @@ Then use this configuration:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -140,7 +139,7 @@ The server uses the standard MCP protocol, so it will work with other MCP-compat
 
 ## Usage
 
-Once configured, simply talk to your AI assistant in natural language. **Important**: Tools require your Personal Access Token (PAT) configured as `TESTDINO_API_KEY` in `mcp.json`. The PAT automatically provides access to all organizations and projects you have permissions for.
+Once configured, simply talk to your AI assistant in natural language. **Important**: Tools require your Personal Access Token (PAT) configured as `TESTDINO_PAT` in `mcp.json`. The PAT automatically provides access to all organizations and projects you have permissions for.
 
 ### Example Commands
 
@@ -149,7 +148,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 **Connection & Setup:**
 
 - "Check if my TestDino connection is working"
-- "Validate my TestDino API key"
+- "Validate my TestDino PAT"
 
 **Exploring Test Runs:**
 
@@ -172,10 +171,10 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 **Debugging Test Failures:**
 
-- "Debug test case 'Verify user login'"
-- "Analyze failures for 'Checkout flow' test case"
+- "Debug test case 'Verify user login' in The Project ABC"
+- "Analyze failures for 'Checkout flow' test case in project ABC"
 - "What are the failure patterns for 'API authentication' test?"
-- "Debug 'User registration' test case"
+- "Debug 'User registration' test case inside proj_123"
 
 **Managing Manual Test Cases:**
 
