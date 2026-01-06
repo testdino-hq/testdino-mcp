@@ -1,6 +1,6 @@
 {
   "name": "testdino-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "mcpName": "io.github.testdino-inc/testdino-mcp",
   "type": "module",
   "main": "dist/index.js",
@@ -36,7 +36,7 @@
   "author": "TestDino",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
-    "testdino-mcp": "file:testdino-mcp-1.0.3.tgz"
+    "testdino-mcp": "file:testdino-mcp-1.0.4.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
