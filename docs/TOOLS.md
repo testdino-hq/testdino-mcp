@@ -1685,7 +1685,7 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 
 Error: Missing required parameter: testrun_id
 
-```
+````
 
 ### Prerequisites
 
@@ -1712,6 +1712,1013 @@ Error: Missing required parameter: testrun_id
 ### Related Documentation
 
 - [TestDino Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## list_manual_test_cases
+
+**Purpose**: Search and list manual test cases with comprehensive filtering options for QA testing, auditing, or test case management.
+
+### Description
+
+This tool helps you discover and explore manual test cases in your TestDino project. You can filter by:
+
+- **Search**: Match against title, description, or case ID
+- **Suite**: Filter by specific test suite
+- **Status**: Filter by status (actual, draft, deprecated)
+- **Priority**: Filter by priority level (critical, high, medium, low)
+- **Severity**: Filter by severity level (critical, major, minor, trivial)
+- **Type**: Filter by test type (functional, smoke, regression, security, performance, e2e)
+- **Layer**: Filter by test layer (e2e, api, unit)
+- **Behavior**: Filter by behavior type (positive, negative, destructive)
+- **Automation Status**: Filter by automation status (automated, manual, not_automated)
+- **Tags**: Filter by tags (comma-separated)
+- **Flaky Status**: Filter by flaky test status
+
+Perfect for finding specific test cases for execution, review, or management.
+
+### Parameters
+
+| Parameter          | Type    | Required | Default | Description                                                                                                                                    |
+| ------------------ | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                      |
+| `search`           | string  | No       | -       | Search term to match against title, description, or caseId. Example: 'login' or 'TC-123'.                                                       |
+| `suiteId`          | string  | No       | -       | Filter by specific test suite ID. Use list_manual_test_suites to find suite IDs.                                                              |
+| `status`           | string  | No       | -       | Filter by test case status. Options: 'actual', 'draft', 'deprecated'.                                                                          |
+| `priority`         | string  | No       | -       | Filter by priority level. Options: 'critical', 'high', 'medium', 'low'.                                                                       |
+| `severity`         | string  | No       | -       | Filter by severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                                                    |
+| `type`             | string  | No       | -       | Filter by test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                                     |
+| `layer`            | string  | No       | -       | Filter by test layer. Options: 'e2e', 'api', 'unit'.                                                                                          |
+| `behavior`         | string  | No       | -       | Filter by test behavior type. Options: 'positive', 'negative', 'destructive'.                                                                  |
+| `automationStatus` | string  | No       | -       | Filter by automation status. Options: 'automated', 'manual', 'not_automated'.                                                                   |
+| `tags`             | string  | No       | -       | Filter by tags (comma-separated list). Example: 'smoke,regression' or 'critical'.                                                              |
+| `isFlaky`          | boolean | No       | -       | Filter test cases marked as flaky. Set to true to show only flaky tests, false for non-flaky.                                                  |
+| `limit`            | number  | No       | 50      | Maximum number of results to return (max: 1000).                                                                                              |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+````
+
+### Example Usage
+
+**List All Manual Test Cases:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50"
+  }
+}
+```
+
+**Search by Keyword:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "search": "login"
+  }
+}
+```
+
+**Filter by Suite and Status:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "suiteId": "suite_123",
+    "status": "actual"
+  }
+}
+```
+
+**Filter by Priority and Type:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "priority": "critical",
+    "type": "smoke"
+  }
+}
+```
+
+**Filter by Tags:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "tags": "smoke,regression"
+  }
+}
+```
+
+**Complex Filter:**
+
+```json
+{
+  "name": "list_manual_test_cases",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "priority": "high",
+    "severity": "major",
+    "layer": "e2e",
+    "behavior": "positive",
+    "limit": 100
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with an array of manual test cases, each containing:
+
+- Test case ID and title
+- Description and status
+- Priority, severity, and type
+- Suite information
+- Steps, preconditions, and postconditions
+- Tags and metadata
+- Automation status
+
+### Use Cases
+
+- **Test Execution Planning**: Find test cases to execute based on priority, type, or tags
+- **Test Case Auditing**: Review test cases by status, suite, or other criteria
+- **Quality Assurance**: Filter test cases for specific testing scenarios
+- **Test Organization**: Find test cases within specific suites
+- **Flaky Test Management**: Identify and manage flaky test cases
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Project ID:**
+
+```
+Error: projectId is required
+```
+
+**API Request Failed:**
+
+```
+Error: Failed to list manual test cases: [error message]
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-cases`
+- **Method**: GET
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## get_manual_test_case
+
+**Purpose**: Retrieve detailed information of a single manual test case, including steps, custom fields, preconditions, and all metadata.
+
+### Description
+
+This tool provides comprehensive details about a specific manual test case. Use this to:
+
+- Review complete test case information before execution
+- Understand test steps and expected results
+- Check preconditions and postconditions
+- Review metadata like priority, severity, and type
+- Access custom fields and tags
+
+Perfect for getting all the information needed to execute a manual test case or review its details.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                                                       |
+| ----------- | ------ | -------- | --------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                           |
+| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'. |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**Get Test Case by ID:**
+
+```json
+{
+  "name": "get_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123"
+  }
+}
+```
+
+**Get Test Case by Internal ID:**
+
+```json
+{
+  "name": "get_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "test_case_6901b2abc6b187e63f536a6b"
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with comprehensive test case information including:
+
+- Test case ID, title, and description
+- Status, priority, severity, and type
+- Suite information
+- Test steps with actions and expected results
+- Preconditions and postconditions
+- Tags and custom fields
+- Automation status
+- Creation and update timestamps
+
+### Use Cases
+
+- **Test Execution**: Get complete test case details before execution
+- **Test Review**: Review test case structure and steps
+- **Documentation**: Access test case documentation and metadata
+- **Test Maintenance**: Review test case details for updates
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Required Parameters:**
+
+```
+Error: projectId is required
+Error: caseId is required
+```
+
+**Test Case Not Found:**
+
+```
+Error: Failed to get manual test case details: 404 Not Found
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Test Case ID**: Valid test case identifier (internal \_id or human-readable ID)
+5. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-cases/{caseId}`
+- **Method**: GET
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## create_manual_test_case
+
+**Purpose**: Create a new manual test case with steps, preconditions, postconditions, and metadata.
+
+### Description
+
+This tool allows you to create new manual test cases in your TestDino project. You can specify:
+
+- **Basic Information**: Title, description, suite
+- **Test Steps**: Array of steps with actions, expected results, and optional test data
+- **Preconditions**: Prerequisites required before test execution
+- **Postconditions**: Expected state after test execution
+- **Metadata**: Priority, severity, type, layer, behavior
+
+Use this to document new test scenarios, features, or requirements as they are developed.
+
+### Parameters
+
+| Parameter        | Type   | Required | Description                                                                                                              |
+| ---------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `projectId`      | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                  |
+| `title`          | string | Yes      | Test case title (Required). A clear, descriptive title for the test case.                                                |
+| `suiteId`        | string | Yes      | Test suite ID (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite IDs. |
+| `description`    | string | No       | Detailed description of what this test case validates.                                                                   |
+| `preconditions`  | string | No       | Prerequisites or setup required before executing this test case.                                                         |
+| `postconditions` | string | No       | Expected state or cleanup actions after executing this test case.                                                        |
+| `steps`          | array  | No       | Array of test steps. Each step should have action, expectedResult, and optional data fields.                             |
+| `priority`       | string | No       | Test case priority level. Options: 'critical', 'high', 'medium', 'low'.                                                  |
+| `severity`       | string | No       | Test case severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                              |
+| `type`           | string | No       | Test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                          |
+| `layer`          | string | No       | Test layer. Options: 'e2e', 'api', 'unit'.                                                                               |
+| `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive'.                                                      |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Test Steps Structure
+
+Each step in the `steps` array should have:
+
+- `action` (required): The action to perform in this step
+- `expectedResult` (required): The expected outcome of this action
+- `data` (optional): Optional test data for this step
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**Basic Test Case:**
+
+```json
+{
+  "name": "create_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "title": "Verify user can login with valid credentials",
+    "suiteId": "suite_123"
+  }
+}
+```
+
+**Test Case with Steps:**
+
+```json
+{
+  "name": "create_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "title": "Verify user can login with valid credentials",
+    "suiteId": "suite_123",
+    "description": "Test that users can successfully login with valid email and password",
+    "preconditions": "User account exists with valid credentials",
+    "steps": [
+      {
+        "action": "Navigate to login page",
+        "expectedResult": "Login page is displayed"
+      },
+      {
+        "action": "Enter valid email address",
+        "expectedResult": "Email field is populated",
+        "data": "user@example.com"
+      },
+      {
+        "action": "Enter valid password",
+        "expectedResult": "Password field is populated",
+        "data": "SecurePassword123"
+      },
+      {
+        "action": "Click login button",
+        "expectedResult": "User is redirected to dashboard"
+      }
+    ],
+    "priority": "high",
+    "type": "functional",
+    "layer": "e2e"
+  }
+}
+```
+
+**Test Case with Full Metadata:**
+
+```json
+{
+  "name": "create_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "title": "Verify login fails with invalid password",
+    "suiteId": "suite_123",
+    "description": "Test that login fails when incorrect password is provided",
+    "preconditions": "User account exists",
+    "postconditions": "User remains on login page with error message",
+    "steps": [
+      {
+        "action": "Enter valid email",
+        "expectedResult": "Email field is populated"
+      },
+      {
+        "action": "Enter invalid password",
+        "expectedResult": "Password field is populated",
+        "data": "WrongPassword"
+      },
+      {
+        "action": "Click login button",
+        "expectedResult": "Error message is displayed"
+      }
+    ],
+    "priority": "medium",
+    "severity": "major",
+    "type": "functional",
+    "layer": "e2e",
+    "behavior": "negative"
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with the created test case information, including:
+
+- Test case ID (internal \_id and human-readable ID)
+- All provided fields
+- Creation timestamp
+- Suite information
+
+### Use Cases
+
+- **Feature Documentation**: Document test cases for new features
+- **Test Planning**: Create test cases during test planning phase
+- **Requirement Coverage**: Create test cases to cover requirements
+- **Test Case Migration**: Import test cases from other systems
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Required Parameters:**
+
+```
+Error: projectId is required
+Error: title is required
+Error: suiteId is required
+```
+
+**Invalid Suite ID:**
+
+```
+Error: Failed to create manual test case: Suite not found
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Suite ID**: Valid test suite identifier (use `list_manual_test_suites` to find suite IDs)
+5. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-cases`
+- **Method**: POST
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## update_manual_test_case
+
+**Purpose**: Update an existing manual test case. Modify test case details, steps, status, priority, or any other fields.
+
+### Description
+
+This tool allows you to update existing manual test cases. You can modify:
+
+- **Basic Information**: Title, description
+- **Test Steps**: Add, modify, or remove steps
+- **Preconditions/Postconditions**: Update prerequisites or expected outcomes
+- **Status**: Change status (actual, draft, deprecated)
+- **Metadata**: Update priority, severity, type, layer, behavior
+
+Use this to keep test cases up-to-date as requirements change or to fix errors in existing test cases.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                                                                                                                                            |
+| ----------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                |
+| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                      |
+| `updates`   | object | Yes      | Object containing the fields to update. Can include: title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, etc. |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Updates Object Properties
+
+The `updates` object can contain any of the following fields:
+
+- `title` (string): Updated test case title
+- `description` (string): Updated description
+- `preconditions` (string): Updated preconditions
+- `postconditions` (string): Updated postconditions
+- `steps` (array): Updated test steps array (each step has action, expectedResult, optional data)
+- `status` (string): Updated status. Options: 'actual', 'draft', 'deprecated'
+- `priority` (string): Updated priority. Options: 'critical', 'high', 'medium', 'low'
+- `severity` (string): Updated severity. Options: 'critical', 'major', 'minor', 'trivial'
+- `type` (string): Updated type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'
+- `layer` (string): Updated layer. Options: 'e2e', 'api', 'unit'
+- `behavior` (string): Updated behavior. Options: 'positive', 'negative', 'destructive'
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**Update Status:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "status": "deprecated"
+    }
+  }
+}
+```
+
+**Update Title and Priority:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "title": "Updated test case title",
+      "priority": "critical"
+    }
+  }
+}
+```
+
+**Update Test Steps:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "steps": [
+        {
+          "action": "Navigate to login page",
+          "expectedResult": "Login page is displayed"
+        },
+        {
+          "action": "Enter credentials",
+          "expectedResult": "Credentials are entered",
+          "data": "user@example.com"
+        },
+        {
+          "action": "Click login",
+          "expectedResult": "User is logged in"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Multiple Updates:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "description": "Updated description with new requirements",
+      "priority": "high",
+      "severity": "major",
+      "status": "actual",
+      "preconditions": "Updated preconditions"
+    }
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with the updated test case information.
+
+### Use Cases
+
+- **Test Maintenance**: Update test cases as requirements change
+- **Status Management**: Mark test cases as deprecated or update their status
+- **Step Updates**: Modify test steps when processes change
+- **Metadata Updates**: Update priority, severity, or other metadata
+- **Bug Fixes**: Correct errors in test case documentation
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Required Parameters:**
+
+```
+Error: projectId is required
+Error: caseId is required
+Error: updates object is required
+```
+
+**Test Case Not Found:**
+
+```
+Error: Failed to update manual test case: 404 Not Found
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Test Case ID**: Valid test case identifier (internal \_id or human-readable ID)
+5. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-cases/{caseId}`
+- **Method**: PATCH
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## list_manual_test_suites
+
+**Purpose**: List the test suite hierarchy to help users find suite IDs for test case creation and organization.
+
+### Description
+
+This tool helps you navigate the test suite structure in your TestDino project. Use this to:
+
+- Find suite IDs needed for creating test cases
+- Understand the organization of your test suites
+- Navigate nested suite hierarchies
+- Plan test case organization
+
+Test suites can be nested, and you can list root-level suites or children of a specific parent suite.
+
+### Parameters
+
+| Parameter       | Type   | Required | Description                                                                                                          |
+| --------------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                              |
+| `parentSuiteId` | string | No       | Optional parent suite ID to fetch only children of a specific suite. If not provided, returns the root-level suites. |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**List Root-Level Suites:**
+
+```json
+{
+  "name": "list_manual_test_suites",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50"
+  }
+}
+```
+
+**List Children of a Parent Suite:**
+
+```json
+{
+  "name": "list_manual_test_suites",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "parentSuiteId": "suite_123"
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with an array of test suites, each containing:
+
+- Suite ID
+- Suite name
+- Parent suite information (if nested)
+- Child suites (if any)
+- Suite metadata
+
+### Use Cases
+
+- **Test Organization**: Understand how test suites are organized
+- **Suite Discovery**: Find suite IDs for test case creation
+- **Hierarchy Navigation**: Navigate nested suite structures
+- **Planning**: Plan test case organization before creation
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Project ID:**
+
+```
+Error: projectId is required
+```
+
+**API Request Failed:**
+
+```
+Error: Failed to list manual test suites: [error message]
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-suites`
+- **Method**: GET
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
+- [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## create_manual_test_suite
+
+**Purpose**: Create a new test suite folder to organize test cases.
+
+### Description
+
+This tool allows you to create new test suites to organize your manual test cases. Test suites can be:
+
+- **Root-level**: Created at the top level of your project
+- **Nested**: Created as children of existing suites (by providing a `parentSuiteId`)
+
+Use this to create logical groupings for related test cases, such as:
+
+- Feature-based suites (e.g., "Login Tests", "Payment Tests")
+- Module-based suites (e.g., "API Tests", "UI Tests")
+- Environment-based suites (e.g., "Production Tests", "Staging Tests")
+
+### Parameters
+
+| Parameter       | Type   | Required | Description                                                                                                             |
+| --------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                 |
+| `name`          | string | Yes      | Suite name (Required). A descriptive name for the test suite.                                                           |
+| `parentSuiteId` | string | No       | Optional parent suite ID to create this suite as a child of another suite. If not provided, creates a root-level suite. |
+
+**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+
+### Configuration
+
+Configure your TestDino API key in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "testdino-mcp",
+      "env": {
+        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Example Usage
+
+**Create Root-Level Suite:**
+
+```json
+{
+  "name": "create_manual_test_suite",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "name": "Authentication Tests"
+  }
+}
+```
+
+**Create Nested Suite:**
+
+```json
+{
+  "name": "create_manual_test_suite",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "name": "Login Tests",
+    "parentSuiteId": "suite_123"
+  }
+}
+```
+
+**Create Feature-Based Suite:**
+
+```json
+{
+  "name": "create_manual_test_suite",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "name": "Payment Processing Tests"
+  }
+}
+```
+
+### Response Format
+
+The tool returns a JSON response with the created suite information, including:
+
+- Suite ID (needed for creating test cases in this suite)
+- Suite name
+- Parent suite information (if nested)
+- Creation timestamp
+
+### Use Cases
+
+- **Test Organization**: Create logical groupings for test cases
+- **Feature Testing**: Organize tests by feature or module
+- **Team Organization**: Create suites for different teams or projects
+- **Test Planning**: Set up suite structure before creating test cases
+
+### Error Handling
+
+**Missing API Key:**
+
+```
+Error: Missing TESTDINO_API_KEY environment variable.
+Please configure it in your .cursor/mcp.json file under the 'env' section.
+```
+
+**Missing Required Parameters:**
+
+```
+Error: projectId is required
+Error: name is required
+```
+
+**Invalid Parent Suite:**
+
+```
+Error: Failed to create manual test suite: Parent suite not found
+```
+
+### Prerequisites
+
+1. **TestDino Account**: Valid account with API access
+2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+3. **Project ID**: Valid TestDino project identifier
+4. **Parent Suite ID** (optional): Valid parent suite identifier if creating a nested suite
+5. **Internet Connectivity**: Required to access TestDino API
+
+### Technical Details
+
+- **API Endpoint**: `/api/test-suites`
+- **Method**: POST
+- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Response Format**: JSON
+
+### Related Documentation
+
+- [TestDino API Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
 
 ---
@@ -1752,5 +2759,7 @@ When adding new tools to the MCP server:
   - All tools support automatic PAT reading from `TESTDINO_PAT` environment variable
   - Added `runtime` parameter to upload tool for environment selection
   - Improved workspace detection and report directory search
+
+```
 
 ```

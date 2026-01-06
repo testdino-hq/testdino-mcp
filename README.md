@@ -38,7 +38,14 @@ The server provides 12 powerful tools:
 5. **`get_testcase_details`** - Get detailed information about a specific test case.
 6. **`debug_testcase`** - Debug a test case by aggregating historical failure data, identifying patterns, and providing AI-friendly debugging context for root-cause analysis.
 
-**Test Case Management:** 6. **`list_manual_test_cases`** - Search and list manual test cases with filtering (project, suite, status, priority, severity, type, tags, etc.). 7. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps and custom fields. 8. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, and metadata. 9. **`update_manual_test_case`** - Update existing manual test cases (title, steps, status, priority, etc.). 10. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. 11. **`create_manual_test_suite`** - Create new test suite folders to organize test cases.
+**Test Case Management:**
+
+6. **`list_manual_test_cases`** - Search and list manual test cases with filtering (project, suite, status, priority, severity, type, tags, etc.).
+7. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps and custom fields.
+8. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, and metadata.
+9. **`update_manual_test_case`** - Update existing manual test cases (title, steps, status, priority, etc.).
+10. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization.
+11. **`create_manual_test_suite`** - Create new test suite folders to organize test cases.
 
 ### Installation Options
 
@@ -178,10 +185,14 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 **Managing Manual Test Cases:**
 
-- "List all manual test cases in project X"
-- "Create a new manual test case for login feature"
-- "Show me all critical priority test cases"
+- "List all manual test cases in project proj_123"
+- "Search for manual test cases with tag 'smoke' in project proj_123"
+- "Show me all critical priority manual test cases in project proj_123"
+- "Get details for manual test case TC-123 in project proj_123"
+- "Create a new manual test case for login feature in suite suite_456"
 - "Update test case TC-123 to mark it as deprecated"
+- "List all test suites in project proj_123"
+- "Create a new test suite called 'Authentication Tests' in project proj_123"
 
 ## Documentation
 
