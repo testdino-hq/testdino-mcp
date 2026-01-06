@@ -1,0 +1,36 @@
+# TestDino MCP - AI Assistant Guidelines
+
+## Documentation Reference
+
+When working with TestDino MCP tools, **ALWAYS** refer to the following documentation:
+
+1. **Primary Reference**: `docs/skill.md` - This file contains:
+   - Tool selection patterns and decision trees
+   - Common workflows and best practices
+   - Parameter requirements and usage patterns
+   - Error handling guidelines
+   - Tool selection flow charts
+
+## Key Guidelines
+
+- **Always start with `health()` tool** to get project IDs before making other tool calls
+- **Use filters** to narrow results instead of fetching everything
+- **Refer to `docs/skill.md`** for tool selection patterns when user asks about test runs, test cases, or debugging
+- **Follow the decision trees** in `docs/skill.md` to determine which tool to use
+- **Check parameter requirements** in `docs/skill.md` before making tool calls
+
+## Tool Usage Patterns
+
+When the user asks about:
+- **Test runs**: Check `docs/skill.md` section "When User Asks About Test Runs"
+- **Test cases**: Check `docs/skill.md` section "When User Asks About Test Cases"  
+- **Debugging**: Use `debug_testcase` tool and refer to patterns in `docs/skill.md`
+- **Manual test cases**: Check `docs/skill.md` section "When User Asks About Manual Test Cases"
+
+## Important Notes
+
+- The `skill.md` file is the primary guide for AI agents using TestDino MCP tools
+- Always consult it when determining tool selection and workflow
+- Follow the best practices outlined in the skills guide
+- Use the decision trees to make appropriate tool choices
+
