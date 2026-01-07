@@ -90,23 +90,51 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 **Response (with PAT configured):**
 
 ```
-Hello, testdino-mcp! 👋
+✅ **TestDino Connection Successful!**
 
-This is your MCP server responding.
+👤 **Account**: Kriti Verma
+🔑 **PAT**: Test yess
 
-✅ PAT validated successfully!
-Project Name: My Test Project
-Project ID: proj_690ded10f1fb81a3ca1bbc50
+📊 **Access Summary**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Organizations: 2 | Projects: 5
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**1. New pricing testing**
+   📋 Org ID: `org_694f7891040b0d665bb2e643`
+   📁 Projects (3):
+
+   1.1 👁️ **testing**
+       • Project ID: `project_694f9ef4461b86957958db05`
+       • Access: Read (project_viewer)
+       • Modules: Test Runs ✓
+       • Modules: Test Case Management ✓
+
+   ─────────────────────────────────────
+
+**2. testdino**
+   📋 Org ID: `org_693127439c57308af3fb2836`
+   📁 Projects (2):
+
+   2.1 ✏️ **playwright-sample-tests**
+       • Project ID: `project_6931274a9c57308af3fb284b`
+       • Access: Write (owner)
+       • Modules: Test Runs ✓
+       • Modules: Test Case Management ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Hello👋 Kriti!
+You can use organisation Id and project Id in other MCP tools.
+Happy Testing!😀
 ```
 
 **Response (without PAT):**
 
 ```
-Hello, testdino-mcp! 👋
+❌ **Error**: Missing TESTDINO_PAT environment variable.
 
-This is your MCP server responding.
-
-⚠️ No TESTDINO_PAT available to verify
+Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
 ### Use Cases
@@ -934,8 +962,8 @@ Unlike `get_testcase_details` which shows details for a single execution, `debug
 
 | Parameter       | Type   | Required | Description                                                                                                                              |
 | --------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`    | string | Yes      | Project ID or Project Name (Required). The TestDino project identifier.                                                                  |
-| `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login'. The API performs case-insensitive matching.      |
+| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                  |
+| `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'. |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
@@ -970,14 +998,14 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
-**Debug with Project Name:**
+**Debug with Full Test Case Name (including browser tag):**
 
 ```json
 {
   "name": "debug_testcase",
   "arguments": {
-    "projectId": "My Test Project",
-    "testcase_name": "Checkout flow"
+    "projectId": "project_6931274a9c57308af3fb284b",
+    "testcase_name": "Verify that User Can Complete the Journey from Login to Order Placement @webkit"
   }
 }
 ```
@@ -991,130 +1019,166 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ### Response Format
 
-The tool returns a structured JSON response with:
+The tool returns a structured JSON response with the following top-level structure:
 
-**Test Metadata:**
-- `title`: Test case name
+```json
+{
+  "success": true,
+  "message": "Debug data retrieved successfully",
+  "Prompt": "You are a senior test automation engineer...",
+  "data": {
+    "test_metadata": { ... },
+    "historical_data": [ ... ]
+  }
+}
+```
+
+**Top-Level Fields:**
+- `success`: Boolean indicating if the request was successful
+- `message`: Status message from the API
+- `Prompt`: Pre-formatted debugging prompt from the API (common for all debug requests) - provides guidance for AI analysis
+- `data`: Contains the actual debugging data
+
+**Test Metadata (`data.test_metadata`):**
+- `title`: Test case name/title
 - `total_executions`: Total number of executions found
 - `failed_count`: Number of failed executions
 - `flaky_count`: Number of flaky executions
 - `passed_count`: Number of passed executions
 - `skipped_count`: Number of skipped executions
 
-**Execution History:**
-- `attempts`: Total number of attempts (including retries)
-- `retries`: Number of executions that required retries
-- `average_duration`: Average test duration
-- `min_duration`: Minimum test duration
-- `max_duration`: Maximum test duration
-
-**Error Patterns:**
-- `error_categories`: Object mapping error categories to occurrence counts
-- `common_error_messages`: Array of most common error messages with counts
-- `error_locations`: Array of most common failure locations (file:line) with counts
-- `browser_specific_failures`: Object mapping browser names to failure counts (if applicable)
-
-**Failure Timeline:**
-- Array of failed/flaky executions with:
-  - `testrun_id`: Test run identifier
-  - `testrun_counter`: Test run counter number
-  - `timestamp`: Execution timestamp
-  - `status`: Execution status
-  - `error_message`: Error message (truncated)
-  - `error_category`: Error category
-  - `artifacts_available`: Boolean indicating if debugging artifacts are available
-
-**Debugging Prompt:**
-- Pre-formatted text prompt provided by the API endpoint (common for all debug requests)
-- Includes:
-  - Summary statistics
-  - Error pattern analysis
-  - Flakiness indicators
-  - Retry analysis
-  - Recommended actions
-
-**Attachments Metadata:**
-- `total_with_screenshots`: Number of executions with screenshots
-- `total_with_videos`: Number of executions with videos
-- `total_with_traces`: Number of executions with traces
-
-**Test Run Context:**
-- `branches`: Array of branches where test executed
-- `environments`: Array of environments where test executed
-- `commits`: Array of commits where test executed
-- `time_range`: Time interval filter applied (if any)
+**Historical Data (`data.historical_data`):**
+Array of historical execution records, each containing:
+- `_id`: Test case execution ID
+- `title`: Test case name
+- `status`: Execution status (failed, passed, skipped, flaky)
+- `startTime`: Execution start timestamp
+- `duration`: Execution duration in milliseconds
+- `testRun`: Object with test run information:
+  - `_id`: Test run ID
+  - `counter`: Test run counter number
+  - `branch`: Git branch name (if available)
+  - `commit`: Git commit hash (if available)
+  - `author`: Commit author (if available)
+  - `environment`: Environment name (if available)
+- `testSuite`: Object with suite information:
+  - `name`: Test suite name
+  - `fileName`: Test file name
+  - `filePath`: Test file path
+- `browserId`: Browser used (chromium, firefox, webkit, etc.)
+- `errorCategory`: Primary error category (timeout_issues, element_not_found, etc.)
+- `allErrors`: Array of all error objects with:
+  - `message`: Error message
+  - `stack`: Stack trace
+  - `location`: Error location (file, line, column)
+- `attempts`: Array of attempt objects, each containing:
+  - `status`: Attempt status
+  - `duration`: Attempt duration
+  - `startTime`: Attempt start time
+  - `endTime`: Attempt end time
+  - `retryNumber`: Retry number (0 for first attempt)
+  - `error`: Error object with message, stack, and location
+  - `allErrors`: Array of all errors for this attempt
+  - `attachments`: Array of available artifacts (screenshots, videos, traces)
+- `metadata`: Additional metadata (categories, dependencies, annotations, tags)
+- `console`: Console logs (if available)
+- `parameters`: Test parameters (if any)
 
 ### Example Response
 
+The tool returns a JSON response with the following structure:
+
 ```json
 {
-  "test_metadata": {
-    "title": "Verify user login",
-    "total_executions": 45,
-    "failed_count": 12,
-    "flaky_count": 3,
-    "passed_count": 30,
-    "skipped_count": 0
-  },
-  "execution_history": {
-    "attempts": 52,
-    "retries": 7,
-    "average_duration": 45.3,
-    "min_duration": 12.1,
-    "max_duration": 89.7
-  },
-  "error_patterns": {
-    "error_categories": {
-      "timeout_issues": 8,
-      "element_not_found": 4
+  "success": true,
+  "message": "Debug data retrieved successfully",
+  "Prompt": "You are a senior test automation engineer integrated with TestDino via MCP. Your goal is to identify the real root cause of failing tests (not just add timeouts) and propose the most effective next actions...",
+  "data": {
+    "test_metadata": {
+      "title": "Verify that User Can Complete the Journey from Login to Order Placement @webkit",
+      "total_executions": 18,
+      "failed_count": 18,
+      "flaky_count": 0,
+      "passed_count": 0,
+      "skipped_count": 0
     },
-    "common_error_messages": [
+    "historical_data": [
       {
-        "message": "Test timeout of 60000ms exceeded",
-        "count": 8
-      },
-      {
-        "message": "Element not found: #login-button",
-        "count": 4
+        "_id": "test_case_695e2a2214f6470a83ddcb85",
+        "title": "Verify that User Can Complete the Journey from Login to Order Placement @webkit",
+        "status": "failed",
+        "startTime": "2026-01-07T09:39:00.525Z",
+        "duration": 37412,
+        "testRun": {
+          "_id": "test_run_695e2a2114f6470a83ddcb69",
+          "counter": 38,
+          "branch": null,
+          "commit": null,
+          "author": null,
+          "environment": "local"
+        },
+        "testSuite": {
+          "name": "product.spec.js",
+          "fileName": "product.spec.js"
+        },
+        "browserId": "webkit",
+        "errorCategory": "timeout_issues",
+        "allErrors": [
+          {
+            "message": "Error: expect(locator).toBeVisible() failed...",
+            "stack": "Error: expect(locator).toBeVisible() failed...",
+            "location": {
+              "file": "D:\\playwright-sample-tests-javascript\\pages\\CheckoutPage.js",
+              "column": 76,
+              "line": 277
+            }
+          }
+        ],
+        "attempts": [
+          {
+            "status": "failed",
+            "duration": 37412,
+            "retryNumber": 0,
+            "error": {
+              "message": "Error: expect(locator).toBeVisible() failed...",
+              "location": {
+                "file": "D:\\playwright-sample-tests-javascript\\pages\\CheckoutPage.js",
+                "line": 277
+              }
+            },
+            "attachments": [
+              {
+                "name": "screenshot",
+                "contentType": "image/png",
+                "path": "https://testdinostr.blob.core.windows.net/...",
+                "valid": true
+              },
+              {
+                "name": "video",
+                "contentType": "video/webm",
+                "path": "https://testdinostr.blob.core.windows.net/...",
+                "valid": true
+              }
+            ]
+          }
+        ]
       }
-    ],
-    "error_locations": [
-      {
-        "file": "tests/login.spec.ts",
-        "line": "42",
-        "count": 6
-      }
-    ],
-    "browser_specific_failures": {
-      "firefox": 5,
-      "chromium": 7
-    }
-  },
-  "failure_timeline": [
-    {
-      "testrun_id": "test_run_123",
-      "testrun_counter": 100,
-      "timestamp": "2024-01-15T10:30:00Z",
-      "status": "failed",
-      "error_message": "Test timeout of 60000ms exceeded",
-      "error_category": "timeout_issues",
-      "artifacts_available": true
-    }
-  ],
-  "debugging_prompt": "Debugging context for test case: \"Verify user login\"\n\n**Summary:**\n- Total executions analyzed: 45\n- Failed: 12 (26.7%)\n- Flaky: 3 (6.7%)\n- Passed: 30 (66.7%)\n- Overall failure rate: 33.3%\n\n**Error Patterns Detected:**\n- Most common error category: timeout_issues (8 occurrences)\n- Most common error: \"Test timeout of 60000ms exceeded\" (8 times)\n- Most common failure location: tests/login.spec.ts:42 (6 times)\n- Browser-specific issue: chromium has 7 failures\n\n**Recommended Actions:**\n1. Investigate the most common error: \"Test timeout of 60000ms exceeded\"\n2. Check the code at tests/login.spec.ts:42 for potential issues\n3. Address flakiness by improving test stability (waits, selectors, timing)\n4. Review available artifacts (8 screenshots, 5 videos) for visual debugging\n5. If you have access to the test code, correlate these failure patterns with the test implementation\n\nNote: This debugging_prompt is provided by the TestDino API endpoint and is common for all debug requests.",
-  "attachments_metadata": {
-    "total_with_screenshots": 8,
-    "total_with_videos": 5,
-    "total_with_traces": 3
-  },
-  "test_run_context": {
-    "branches": ["main", "develop"],
-    "environments": ["production", "staging"],
-    "commits": ["abc123", "def456"],
-    "time_range": "weekly"
+    ]
   }
 }
 ```
+
+**Key Response Fields:**
+- `success`: Boolean indicating if the request was successful
+- `message`: Status message
+- `Prompt`: Pre-formatted debugging prompt from the API (common for all debug requests)
+- `data.test_metadata`: Summary statistics about the test case
+- `data.historical_data`: Array of historical execution records, each containing:
+  - Test case details (ID, title, status, duration)
+  - Test run information (ID, counter, branch, commit, author, environment)
+  - Error details (messages, stack traces, file locations)
+  - Attempt information (status, retries, errors)
+  - Artifacts (screenshots, videos, traces)
 
 ### Use Cases
 
@@ -1179,6 +1243,7 @@ Error: Failed to debug test case: [error message]
 ### Technical Details
 
 - **API Endpoint**: `/api/mcp/:projectId/debug-testcase?testcase_name=<name>`
+- **Error Handling**: Returns structured error messages if PAT is missing, projectId is invalid, or testcase_name is not found
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON with aggregated debugging data
@@ -1756,11 +1821,11 @@ Perfect for finding specific test cases for execution, review, or management.
 | `isFlaky`          | boolean | No       | -       | Filter test cases marked as flaky. Set to true to show only flaky tests, false for non-flaky.                                                  |
 | `limit`            | number  | No       | 50      | Maximum number of results to return (max: 1000).                                                                                              |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -1768,12 +1833,12 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
 }
-````
+```
 
 ### Example Usage
 
@@ -1876,10 +1941,10 @@ The tool returns a JSON response with an array of manual test cases, each contai
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -1898,7 +1963,7 @@ Error: Failed to list manual test cases: [error message]
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section. The PAT provides access to all organizations and projects you have permissions for.
 3. **Project ID**: Valid TestDino project identifier
 4. **Internet Connectivity**: Required to access TestDino API
 
@@ -1906,7 +1971,7 @@ Error: Failed to list manual test cases: [error message]
 
 - **API Endpoint**: `/api/test-cases`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation
@@ -1939,11 +2004,11 @@ Perfect for getting all the information needed to execute a manual test case or 
 | `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                           |
 | `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'. |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -1951,7 +2016,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -2006,10 +2071,10 @@ The tool returns a JSON response with comprehensive test case information includ
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -2029,7 +2094,7 @@ Error: Failed to get manual test case details: 404 Not Found
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
 4. **Test Case ID**: Valid test case identifier (internal \_id or human-readable ID)
 5. **Internet Connectivity**: Required to access TestDino API
@@ -2038,7 +2103,7 @@ Error: Failed to get manual test case details: 404 Not Found
 
 - **API Endpoint**: `/api/test-cases/{caseId}`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation
@@ -2081,7 +2146,7 @@ Use this to document new test scenarios, features, or requirements as they are d
 | `layer`          | string | No       | Test layer. Options: 'e2e', 'api', 'unit'.                                                                               |
 | `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive'.                                                      |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Test Steps Structure
 
@@ -2093,7 +2158,7 @@ Each step in the `steps` array should have:
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -2101,7 +2166,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -2215,10 +2280,10 @@ The tool returns a JSON response with the created test case information, includi
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -2239,7 +2304,7 @@ Error: Failed to create manual test case: Suite not found
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
 4. **Suite ID**: Valid test suite identifier (use `list_manual_test_suites` to find suite IDs)
 5. **Internet Connectivity**: Required to access TestDino API
@@ -2248,7 +2313,7 @@ Error: Failed to create manual test case: Suite not found
 
 - **API Endpoint**: `/api/test-cases`
 - **Method**: POST
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation
@@ -2282,7 +2347,7 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 | `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                      |
 | `updates`   | object | Yes      | Object containing the fields to update. Can include: title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, etc. |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Updates Object Properties
 
@@ -2302,7 +2367,7 @@ The `updates` object can contain any of the following fields:
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -2310,7 +2375,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -2412,10 +2477,10 @@ The tool returns a JSON response with the updated test case information.
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -2436,7 +2501,7 @@ Error: Failed to update manual test case: 404 Not Found
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
 4. **Test Case ID**: Valid test case identifier (internal \_id or human-readable ID)
 5. **Internet Connectivity**: Required to access TestDino API
@@ -2445,7 +2510,7 @@ Error: Failed to update manual test case: 404 Not Found
 
 - **API Endpoint**: `/api/test-cases/{caseId}`
 - **Method**: PATCH
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation
@@ -2477,11 +2542,11 @@ Test suites can be nested, and you can list root-level suites or children of a s
 | `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                              |
 | `parentSuiteId` | string | No       | Optional parent suite ID to fetch only children of a specific suite. If not provided, returns the root-level suites. |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -2489,7 +2554,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -2540,10 +2605,10 @@ The tool returns a JSON response with an array of test suites, each containing:
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -2562,7 +2627,7 @@ Error: Failed to list manual test suites: [error message]
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
 4. **Internet Connectivity**: Required to access TestDino API
 
@@ -2570,7 +2635,7 @@ Error: Failed to list manual test suites: [error message]
 
 - **API Endpoint**: `/api/test-suites`
 - **Method**: GET
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation
@@ -2605,11 +2670,11 @@ Use this to create logical groupings for related test cases, such as:
 | `name`          | string | Yes      | Suite name (Required). A descriptive name for the test suite.                                                           |
 | `parentSuiteId` | string | No       | Optional parent suite ID to create this suite as a child of another suite. If not provided, creates a root-level suite. |
 
-**Note:** The API key is automatically read from the `TESTDINO_API_KEY` environment variable configured in `.cursor/mcp.json`.
+**Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Configuration
 
-Configure your TestDino API key in `.cursor/mcp.json`:
+Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ```json
 {
@@ -2617,7 +2682,7 @@ Configure your TestDino API key in `.cursor/mcp.json`:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -2681,10 +2746,10 @@ The tool returns a JSON response with the created suite information, including:
 
 ### Error Handling
 
-**Missing API Key:**
+**Missing PAT:**
 
 ```
-Error: Missing TESTDINO_API_KEY environment variable.
+Error: Missing TESTDINO_PAT environment variable.
 Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
@@ -2704,7 +2769,7 @@ Error: Failed to create manual test suite: Parent suite not found
 ### Prerequisites
 
 1. **TestDino Account**: Valid account with API access
-2. **API Key Configuration**: `TESTDINO_API_KEY` must be set in `.cursor/mcp.json` under the `env` section
+2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
 4. **Parent Suite ID** (optional): Valid parent suite identifier if creating a nested suite
 5. **Internet Connectivity**: Required to access TestDino API
@@ -2713,7 +2778,7 @@ Error: Failed to create manual test suite: Parent suite not found
 
 - **API Endpoint**: `/api/test-suites`
 - **Method**: POST
-- **Authentication**: Bearer token from `TESTDINO_API_KEY` environment variable
+- **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
 
 ### Related Documentation

@@ -117,15 +117,16 @@ If you see an error, check the [Troubleshooting](#troubleshooting) section below
 
 ## Available Tools Overview
 
-Once installed and configured, the MCP server provides 11 powerful tools:
+Once installed and configured, the MCP server provides 12 powerful tools:
 
 | Tool                       | Purpose                           | When to Use                                     |
 | -------------------------- | --------------------------------- | ----------------------------------------------- |
-| `health`                   | Verify connection and PAT     | First thing after installation, troubleshooting |
+| `health`                   | Verify connection and PAT         | First thing after installation, troubleshooting |
 | `list_testruns`            | Browse and filter test runs       | Finding specific test executions                |
 | `get_run_details`          | Get complete test run overview    | Analyzing a specific test run                   |
-| `list_testcase`            | List test cases in a run          | Finding failed or flaky tests                   |
-| `get_testcase_details`     | Deep dive into a test case        | Debugging test failures                         |
+| `list_testcase`            | List test cases with filters      | Finding failed or flaky tests across runs       |
+| `get_testcase_details`     | Deep dive into a test case        | Debugging specific test failures                |
+| `debug_testcase`           | AI-assisted debugging with patterns| Root cause analysis, flaky test detection       |
 | `list_manual_test_cases`   | Search and list manual test cases | Finding manual test cases with filters          |
 | `get_manual_test_case`     | Get manual test case details      | Reviewing test steps and metadata               |
 | `create_manual_test_case`  | Create new manual test case       | Documenting new test scenarios                  |
@@ -135,13 +136,24 @@ Once installed and configured, the MCP server provides 11 powerful tools:
 
 **Quick Examples:**
 
-- _"Check TestDino health"_ - Verify your setup
+- _"Check TestDino health"_ - Verify your setup and get project IDs
 - _"Show me my last 5 test runs"_ - Browse recent runs
 - _"What tests failed in test run X?"_ - Analyze failures
+- _"Debug test case 'Verify user login' from testdino reports"_ - AI-assisted debugging with historical pattern analysis
+- _"Debug 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'"_ - Debug specific test case with browser tag
 - _"List all manual test cases"_ - View manual tests
 - _"Create a new manual test case"_ - Document test scenarios
 
 **Note:** All tools require `TESTDINO_PAT` (Personal Access Token) to be configured. The PAT provides access to all organizations and projects you have permissions for. See [PAT Configuration](#pat-configuration) below.
+
+**Special Feature - AI-Assisted Debugging:**
+
+The `debug_testcase` tool is particularly powerful for debugging failing tests. It:
+- Aggregates historical execution data across multiple test runs
+- Identifies failure patterns, error categories, and common error messages
+- Provides file and line numbers for error locations
+- Returns pre-formatted debugging prompts for AI analysis
+- Helps identify flaky test behavior and browser-specific issues
 
 For complete documentation with all parameters and detailed examples, see [TOOLS.md](./TOOLS.md).
 

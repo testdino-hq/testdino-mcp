@@ -14,16 +14,15 @@ This MCP server bridges the gap between your TestDino test management platform a
 All through simple conversational commands.
 
 ## Features
-- **🔍 Health Check**: Verify your connection and validate your TestDino PAT.
-- **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options.
-- **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, and execution steps.
-- **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts.
-- **📤 Test Upload**: Automatically upload Playwright test results from your local machine to TestDino.
-- **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization.
+- **🔍 Health Check**: Verify your connection and validate your TestDino PAT. Get account information and list all available organizations and projects.
+- **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options (branch, time, author, commit, environment).
+- **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, execution steps, and artifacts (screenshots, videos, traces).
+- **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts. Analyze patterns across multiple executions to identify root causes.
+- **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization (status, priority, severity, type, layer, behavior, tags).
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
-- **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents.
-- **⚡ Easy Setup**: Install and configure in minutes with npx.
-- **🔐 Secure**: PAT stored securely in your local configuration.
+- **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
+- **⚡ Easy Setup**: Install and configure in minutes with npx. No installation required!
+- **🔐 Secure**: PAT stored securely in your local configuration. One PAT provides access to all organizations and projects you have permissions for.
 
 ### Available Tools
 
@@ -31,21 +30,21 @@ The server provides 12 powerful tools:
 
 **Test Execution & Results:**
 
-1. **`health`** - Verify your connection and validate your PAT.
-2. **`list_testruns`** - Browse test runs with filters (branch, time, author, commit, environment).
-3. **`get_run_details`** - Get comprehensive details about a specific test run.
-4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, and more).
-5. **`get_testcase_details`** - Get detailed information about a specific test case.
-6. **`debug_testcase`** - Debug a test case by aggregating historical failure data, identifying patterns, and providing AI-friendly debugging context for root-cause analysis.
+1. **`health`** - Verify your connection and validate your PAT. Shows account information, available organizations, and projects with access permissions.
+2. **`list_testruns`** - Browse test runs with powerful filters (branch, time interval, author, commit, environment). Supports pagination and batch operations.
+3. **`get_run_details`** - Get comprehensive details about a specific test run including statistics, test suites, test cases, and metadata. Supports batch operations (comma-separated IDs, max 20).
+4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
+5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
+6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
 
 **Test Case Management:**
 
-6. **`list_manual_test_cases`** - Search and list manual test cases with filtering (project, suite, status, priority, severity, type, tags, etc.).
-7. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps and custom fields.
-8. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, and metadata.
-9. **`update_manual_test_case`** - Update existing manual test cases (title, steps, status, priority, etc.).
-10. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization.
-11. **`create_manual_test_suite`** - Create new test suite folders to organize test cases.
+7. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
+8. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
+9. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
+10. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
+11. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
+12. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
 
 ### Installation Options
 
@@ -178,10 +177,12 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 **Debugging Test Failures:**
 
-- "Debug test case 'Verify user login' in The Project ABC"
-- "Analyze failures for 'Checkout flow' test case in project ABC"
+- "Debug test case 'Verify user login' in project proj_123"
+- "Debug 'Verify that User Can Complete the Journey from Login to Order Placement @webkit' from testdino reports"
+- "Analyze failures for 'Checkout flow' test case in project proj_123"
 - "What are the failure patterns for 'API authentication' test?"
-- "Debug 'User registration' test case inside proj_123"
+- "Why is test case 'User registration' failing?"
+- "Debug test case 'Verify that user can login and logout successfully @chromium'"
 
 **Managing Manual Test Cases:**
 
@@ -196,12 +197,40 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 ## Documentation
 
-- **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all available tools
-- **[Architecture Documentation](./docs/ARCHITECTURE.md)**: Deep dive into the debug tool architecture
-- **[Architecture Diagrams](./docs/ARCHITECTURE_DIAGRAMS.md)**: Visual diagrams and flowcharts
+- **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 12 available tools with examples, parameters, and use cases
+- **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements
 
-- Node.js 18.0.0 or higher
-- NPM (for package management)
+- **Node.js**: Version 18.0.0 or higher
+- **NPM**: Latest version recommended (for package management)
+- **TestDino Account**: Valid account with test run access
+- **Personal Access Token (PAT)**: Required for authentication. Get it from TestDino Settings → Personal Access Tokens
+
+## Key Features Explained
+
+### AI-Assisted Debugging with `debug_testcase`
+
+The `debug_testcase` tool is a powerful feature that helps you understand why tests are failing by analyzing historical execution data:
+
+- **Historical Analysis**: Aggregates data from multiple test runs to identify patterns
+- **Failure Patterns**: Identifies common error categories, messages, and locations
+- **Browser-Specific Issues**: Detects browser-specific failure patterns
+- **Flaky Test Detection**: Analyzes retry patterns and flakiness indicators
+- **AI-Friendly Output**: Returns pre-formatted debugging prompts for AI analysis
+- **Code Correlation**: Provides file and line numbers for error locations, enabling AI to correlate with source code
+
+**Example Workflow:**
+1. Ask: "Debug test case 'Verify user login' from testdino reports"
+2. AI calls `debug_testcase` with projectId and testcase_name
+3. Tool returns historical data with failure patterns
+4. AI analyzes the data and correlates with your test code (if accessible)
+5. AI provides specific fix suggestions based on patterns and code analysis
+
+## Support
+
+- **Documentation**: See [docs/TOOLS.md](./docs/TOOLS.md) for complete tool documentation
+- **Installation Help**: See [docs/INSTALLATION.md](./docs/INSTALLATION.md) for detailed setup instructions
+- **TestDino Support**: [support@testdino.com](mailto:support@testdino.com)
+- **TestDino Documentation**: [https://docs.testdino.com](https://docs.testdino.com)
