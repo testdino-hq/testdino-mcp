@@ -35,8 +35,7 @@
   ],
   "author": "TestDino",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1",
-    "testdino-mcp": "file:testdino-mcp-1.0.4.tgz"
+    "@modelcontextprotocol/sdk": "^1.25.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
