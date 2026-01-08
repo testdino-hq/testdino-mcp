@@ -1,5 +1,5 @@
 export function getApiUrl(): string {
-  return "https://staging-api.testdino.com";
+  return "https://api.testdino.com";
 }
 
 export function getApiKey(args?: unknown): string | undefined {
