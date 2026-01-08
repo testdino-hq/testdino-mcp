@@ -43,14 +43,14 @@ npm install testdino-mcp
 
 Follow these steps to connect TestDino to Cursor:
 
-### Step 1: Get Your TestDino API Key
+### Step 1: Get Your TestDino PAT
 
 1. Log in to your [TestDino account](https://testdino.com)
-2. Navigate to **Settings → API Keys**
-3. Click **Generate New Key** or copy an existing key
-4. **Important**: Copy the key now - you'll need it in the next step
+2. Navigate to **User Settings → Personal Access Tokens**
+3. Generate a new PAT.
+4. **Important**: Copy the PAT now - you'll need it in the next step
 
-Your API key will look like: `trx_production_abc123...` or `trx_development_xyz789...`
+Your PAT will look like: `tpu...xyz`
 
 ### Step 2: Locate Your Cursor Configuration File
 
@@ -64,7 +64,7 @@ Your API key will look like: `trx_production_abc123...` or `trx_development_xyz7
 - Global config: `~/.cursor/mcp.json`
 - Project config: `.cursor/mcp.json` in your project root
 
-**Tip**: Use project config if you want different API keys per project, or global config for a single key across all projects.
+**Tip**: Use project config if you want different PATs per project, or global config for a single PAT across all projects.
 
 ### Step 3: Add the Configuration
 
@@ -77,14 +77,14 @@ Open or create the `mcp.json` file and add this configuration:
       "command": "npx",
       "args": ["-y", "testdino-mcp"],
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
 }
 ```
 
-**Critical**: Replace `your_testdino_api_key_here` with the actual Personal Access Token (PAT) you copied in Step 1.
+**Critical**: Replace `Your PAT here` with the actual Personal Access Token (PAT) you copied in Step 1.
 
 **If you installed globally** (Option 2 above), use this instead:
 
@@ -94,7 +94,7 @@ Open or create the `mcp.json` file and add this configuration:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
@@ -117,15 +117,16 @@ If you see an error, check the [Troubleshooting](#troubleshooting) section below
 
 ## Available Tools Overview
 
-Once installed and configured, the MCP server provides 11 powerful tools:
+Once installed and configured, the MCP server provides 12 powerful tools:
 
 | Tool                       | Purpose                           | When to Use                                     |
 | -------------------------- | --------------------------------- | ----------------------------------------------- |
-| `health`                   | Verify connection and API key     | First thing after installation, troubleshooting |
+| `health`                   | Verify connection and PAT         | First thing after installation, troubleshooting |
 | `list_testruns`            | Browse and filter test runs       | Finding specific test executions                |
 | `get_run_details`          | Get complete test run overview    | Analyzing a specific test run                   |
-| `list_testcase`            | List test cases in a run          | Finding failed or flaky tests                   |
-| `get_testcase_details`     | Deep dive into a test case        | Debugging test failures                         |
+| `list_testcase`            | List test cases with filters      | Finding failed or flaky tests across runs       |
+| `get_testcase_details`     | Deep dive into a test case        | Debugging specific test failures                |
+| `debug_testcase`           | AI-assisted debugging with patterns| Root cause analysis, flaky test detection       |
 | `list_manual_test_cases`   | Search and list manual test cases | Finding manual test cases with filters          |
 | `get_manual_test_case`     | Get manual test case details      | Reviewing test steps and metadata               |
 | `create_manual_test_case`  | Create new manual test case       | Documenting new test scenarios                  |
@@ -135,13 +136,24 @@ Once installed and configured, the MCP server provides 11 powerful tools:
 
 **Quick Examples:**
 
-- _"Check TestDino health"_ - Verify your setup
+- _"Check TestDino health"_ - Verify your setup and get project IDs
 - _"Show me my last 5 test runs"_ - Browse recent runs
 - _"What tests failed in test run X?"_ - Analyze failures
+- _"Debug test case 'Verify user login' from testdino reports"_ - AI-assisted debugging with historical pattern analysis
+- _"Debug 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'"_ - Debug specific test case with browser tag
 - _"List all manual test cases"_ - View manual tests
 - _"Create a new manual test case"_ - Document test scenarios
 
-**Note:** All tools require `TESTDINO_API_KEY` (Personal Access Token) to be configured. The PAT provides access to all organizations and projects you have permissions for. See [API Key Configuration](#api-key-configuration) below.
+**Note:** All tools require `TESTDINO_PAT` (Personal Access Token) to be configured. The PAT provides access to all organizations and projects you have permissions for. See [PAT Configuration](#pat-configuration) below.
+
+**Special Feature - AI-Assisted Debugging:**
+
+The `debug_testcase` tool is particularly powerful for debugging failing tests. It:
+- Aggregates historical execution data across multiple test runs
+- Identifies failure patterns, error categories, and common error messages
+- Provides file and line numbers for error locations
+- Returns pre-formatted debugging prompts for AI analysis
+- Helps identify flaky test behavior and browser-specific issues
 
 For complete documentation with all parameters and detailed examples, see [TOOLS.md](./TOOLS.md).
 
@@ -172,13 +184,13 @@ The Personal Access Token (PAT) authenticates your requests to TestDino and prov
 - ❌ **Don't**: Commit `mcp.json` with your PAT to version control
 - ❌ **Don't**: Share your PAT with others
 
-**Tip**: Add `.cursor/mcp.json` to your `.gitignore` if you store API keys there.
+**Tip**: Add `.cursor/mcp.json` to your `.gitignore` if you store PATs there.
 
 ## Requirements
 
 - **Node.js**: Version 18.0.0 or higher
 - **npm**: Latest version recommended
-- **TestDino Account**: Valid account with API access (for most tools)
+- **TestDino Account**: Valid account with Testruns
 
 ## Troubleshooting
 
@@ -218,14 +230,14 @@ The Personal Access Token (PAT) authenticates your requests to TestDino and prov
 
 Follow these steps to connect TestDino to Claude Desktop:
 
-### Step 1: Get Your TestDino API Key
+### Step 1: Get Your TestDino PAT
 
 1. Log in to your [TestDino account](https://testdino.com)
-2. Navigate to **Settings → API Keys**
-3. Click **Generate New Key** or copy an existing key
-4. **Important**: Copy the key now - you'll need it in the next step
+2. Navigate to **User Settings → Personal Access Tokens**
+3. Generate a new PAT
+4. **Important**: Copy the PAT now - you'll need it in the next step
 
-Your API key will look like: `trx_production_abc123...` or `trx_development_xyz789...`
+Your PAT will look like: `tpu...`
 
 ### Step 2: Locate Your Claude Desktop Configuration File
 
@@ -254,14 +266,14 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
       "command": "npx",
       "args": ["-y", "testdino-mcp"],
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }
 }
 ```
 
-**Critical**: Replace `your_testdino_api_key_here` with the actual Personal Access Token (PAT) you copied in Step 1.
+**Critical**: Replace `Your PAT here` with the actual Personal Access Token (PAT) you copied in Step 1.
 
 **If you installed globally** (Option 2 above), use this instead:
 
@@ -271,7 +283,7 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
     "TestDino": {
       "command": "testdino-mcp",
       "env": {
-        "TESTDINO_API_KEY": "your_testdino_api_key_here"
+        "TESTDINO_PAT": "Your PAT here"
       }
     }
   }

@@ -5,7 +5,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 // Import tools
 import {
@@ -19,6 +24,8 @@ import {
   handleListTestCases,
   getTestCaseDetailsTool,
   handleGetTestCaseDetails,
+  debugTestCaseTool,
+  handleDebugTestCase,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -33,15 +40,20 @@ import {
   handleCreateManualTestSuite,
 } from "./tools/index.js";
 
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.3",
+      version: "1.0.4",
     },
     {
       capabilities: {
         tools: {},
+        resources: {},
       },
     }
   );
@@ -55,6 +67,7 @@ async function main() {
     getRunDetailsTool,
     listTestCasesTool,
     getTestCaseDetailsTool,
+    debugTestCaseTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -68,6 +81,45 @@ async function main() {
    */
   server.setRequestHandler(ListToolsRequestSchema, () => {
     return { tools };
+  });
+
+  /**
+   * List available resources (documentation files)
+   */
+  server.setRequestHandler(ListResourcesRequestSchema, () => {
+    return {
+      resources: [
+        {
+          uri: "testdino://docs/skill.md",
+          name: "TestDino MCP Skills Guide",
+          description: "AI agent guide for using TestDino MCP tools - patterns, workflows, and best practices",
+          mimeType: "text/markdown",
+        }
+      ],
+    };
+  });
+
+  /**
+   * Read resource content
+   */
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const { uri } = request.params;
+
+    if (uri === "testdino://docs/skill.md") {
+      const skillPath = join(__dirname, "..", "docs", "skill.md");
+      const content = readFileSync(skillPath, "utf-8");
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "text/markdown",
+            text: content,
+          },
+        ],
+      };
+    }
+
+    throw new Error(`Unknown resource: ${uri}`);
   });
 
   /**
@@ -102,6 +154,12 @@ async function main() {
     if (name === "get_testcase_details") {
       return await handleGetTestCaseDetails(
         args as Parameters<typeof handleGetTestCaseDetails>[0]
+      );
+    }
+
+    if (name === "debug_testcase") {
+      return await handleDebugTestCase(
+        args as Parameters<typeof handleDebugTestCase>[0]
       );
     }
 

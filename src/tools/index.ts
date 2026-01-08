@@ -24,6 +24,10 @@ export {
   getTestCaseDetailsTool,
   handleGetTestCaseDetails,
 } from "./testcases/get-testcase-details.js";
+export {
+  debugTestCaseTool,
+  handleDebugTestCase,
+} from "./testcases/debug-testcase.js";
 
 // Manual test cases tools
 export {

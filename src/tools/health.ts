@@ -1,5 +1,5 @@
 /**
- * Health tool - Health check and API key validation
+ * Health tool - Health check and PAT validation
  */
 
 import { endpoints } from "../lib/endpoints.js";
@@ -9,7 +9,7 @@ import { getApiKey } from "../lib/env.js";
 export const healthTool = {
   name: "health",
   description:
-    "Check if your TestDino connection is working. Verifies your API key, shows your account information, and lists available organizations and projects. Use this first to make sure everything is set up correctly and to get organization/project IDs for other tools.",
+    "Check if your TestDino connection is working. Verifies your PAT, shows your account information, and lists available organizations and projects. Use this first to make sure everything is set up correctly and to get organization/project IDs for other tools.",
   inputSchema: {
     type: "object",
     properties: {},
@@ -18,9 +18,9 @@ export const healthTool = {
 };
 
 export async function handleHealth(args?: Record<string, unknown>) {
-  // Validate API key and get user info using /api/mcp/hello endpoint
+  // Validate PAT and get user info using /api/mcp/hello endpoint
   try {
-    // Read API key from environment variable (set in mcp.json) or from args
+    // Read PAT from environment variable (set in mcp.json) or from args
     const token = getApiKey(args);
 
     if (!token) {
@@ -28,7 +28,7 @@ export async function handleHealth(args?: Record<string, unknown>) {
         content: [
           {
             type: "text",
-            text: "❌ **Error**: Missing TESTDINO_API_KEY environment variable.\n\nPlease configure it in your .cursor/mcp.json file under the 'env' section.",
+            text: "❌ **Error**: Missing TESTDINO_PAT environment variable.\n\nPlease configure it in your .cursor/mcp.json file under the 'env' section.",
           },
         ],
       };
@@ -130,7 +130,7 @@ export async function handleHealth(args?: Record<string, unknown>) {
     output += `🔑 **PAT**: ${data.pat.name}\n\n`;
 
     if (!data.access || data.access.length === 0) {
-      output += `⚠️ **No Organizations Found**\n\nYour API key doesn't have access to any organizations or projects.\nPlease contact your administrator to grant access.`;
+      output += `⚠️ **No Organizations Found**\n\nYour PAT doesn't have access to any organizations or projects.\nPlease contact your administrator to grant access.`;
     } else {
       // Calculate totals
       const totalOrgs = data.access.length;
@@ -197,7 +197,7 @@ export async function handleHealth(args?: Record<string, unknown>) {
       content: [
         {
           type: "text",
-          text: `❌ **Error validating API key**\n\n${errorMessage}\n\nPlease check your API key and try again.`,
+          text: `❌ **Error validating PAT**\n\n${errorMessage}\n\nPlease check your PAT and try again.`,
         },
       ],
     };

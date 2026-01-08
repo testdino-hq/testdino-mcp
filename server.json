@@ -6,18 +6,18 @@
     "url": "https://github.com/testdino-inc/testdino-mcp",
     "source": "github"
   },
-  "version": "1.0.3 ",
+  "version": "1.0.4 ",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "testdino-mcp",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
-          "description": "Your API key for the service",
+          "description": "Your PAT for the service",
           "isRequired": true,
           "format": "string",
           "isSecret": true,

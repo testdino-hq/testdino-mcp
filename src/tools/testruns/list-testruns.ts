@@ -33,7 +33,7 @@ interface ListTestRunsParams {
 export const listTestRunsTool = {
   name: "list_testruns",
   description:
-    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('1d', '3d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last week.' The API key should be configured in mcp.json as TESTDINO_API_KEY environment variable.",
+    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('1d', '3d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last week.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
   inputSchema: {
     type: "object",
     properties: {
@@ -86,12 +86,12 @@ export const listTestRunsTool = {
 };
 
 export async function handleListTestRuns(args?: ListTestRunsArgs) {
-  // Read API key from environment variable (set in mcp.json) or from args
+  // Read PAT from environment variable (set in mcp.json) or from args
   const token = getApiKey(args);
 
   if (!token) {
     throw new Error(
-      "Missing TESTDINO_API_KEY environment variable. " +
+      "Missing TESTDINO_PAT environment variable. " +
         "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
