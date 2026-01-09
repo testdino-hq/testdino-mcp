@@ -1,6 +1,6 @@
 {
   "name": "testdino-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "mcpName": "io.github.testdino-inc/testdino-mcp",
   "type": "module",
   "main": "dist/index.js",
