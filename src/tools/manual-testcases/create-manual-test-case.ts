@@ -6,38 +6,63 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
-interface TestStep {
+interface ClassicTestStep {
   action: string;
   expectedResult: string;
   data?: string;
 }
 
+interface GherkinTestStep {
+  event: "Given" | "When" | "And" | "Then" | "But";
+  stepDescription: string;
+}
+
+type TestStep = ClassicTestStep | GherkinTestStep;
+
 interface CreateManualTestCaseArgs {
   projectId: string;
   title: string;
-  suiteId: string;
+  suiteName: string;
   description?: string;
+  status?: "Active" | "Draft" | "Deprecated";
+  testStepsDeclarationType?: "Classic" | "Gherkin";
   preconditions?: string;
   postconditions?: string;
   steps?: TestStep[];
-  priority?: "critical" | "high" | "medium" | "low";
-  severity?: "critical" | "major" | "minor" | "trivial";
+  priority?: "high" | "medium" | "low" | "Not set";
+  severity?: "Blocker" | "critical" | "major" | "Normal" | "minor" | "trivial" | "Not set";
   type?:
     | "functional"
     | "smoke"
     | "regression"
     | "security"
     | "performance"
-    | "e2e";
-  layer?: "e2e" | "api" | "unit";
-  behavior?: "positive" | "negative" | "destructive";
+    | "e2e"
+    | "Integration"
+    | "API"
+    | "Unit"
+    | "Accessability"
+    | "Compatibility"
+    | "Acceptance"
+    | "Exploratory"
+    | "Usability"
+    | "Other";
+  layer?: "e2e" | "api" | "unit" | "not set";
+  behavior?: "positive" | "negative" | "destructive" | "Not set";
+  automationStatus?: "Manual" | "Automated" | "To be automated";
+  tags?: string;
+  automation?: ("To be Automated" | "Is flaky" | "Muted")[];
+  attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB)
+  customFields?: Record<string, string>; // Custom fields as key-value pairs
 }
 
 interface CreateManualTestCaseBody {
   projectId: string;
   title: string;
-  suiteId: string;
+  suiteName: string;
   description?: string;
+  status?: string;
+  testStepsDeclarationType?: string;
   preconditions?: string;
   postconditions?: string;
   steps?: TestStep[];
@@ -46,6 +71,11 @@ interface CreateManualTestCaseBody {
   type?: string;
   layer?: string;
   behavior?: string;
+  automationStatus?: string;
+  tags?: string;
+  automation?: string[];
+  attachments?: string[];
+  customFields?: Record<string, string>;
 }
 
 export const createManualTestCaseTool = {
@@ -64,14 +94,24 @@ export const createManualTestCaseTool = {
         description:
           "Test case title (Required). A clear, descriptive title for the test case.",
       },
-      suiteId: {
+      suiteName: {
         type: "string",
         description:
-          "Test suite ID (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite IDs.",
+          "Test suite name (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite names.",
       },
       description: {
         type: "string",
         description: "Detailed description of what this test case validates.",
+      },
+      status: {
+        type: "string",
+        description: "Test case status.",
+        enum: ["Active", "Draft", "Deprecated"],
+      },
+      testStepsDeclarationType: {
+        type: "string",
+        description: "Type of test steps declaration format.",
+        enum: ["Classic", "Gherkin"],
       },
       preconditions: {
         type: "string",
@@ -86,35 +126,53 @@ export const createManualTestCaseTool = {
       steps: {
         type: "array",
         description:
-          "Array of test steps. Each step should have action, expectedResult, and optional data fields.",
+          "Array of test steps. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription.",
         items: {
           type: "object",
-          properties: {
-            action: {
-              type: "string",
-              description: "The action to perform in this step.",
+          oneOf: [
+            {
+              properties: {
+                action: {
+                  type: "string",
+                  description: "The action to perform in this step (Classic format).",
+                },
+                expectedResult: {
+                  type: "string",
+                  description: "The expected outcome of this action (Classic format).",
+                },
+                data: {
+                  type: "string",
+                  description: "Optional test data for this step (Classic format).",
+                },
+              },
+              required: ["action", "expectedResult"],
             },
-            expectedResult: {
-              type: "string",
-              description: "The expected outcome of this action.",
+            {
+              properties: {
+                event: {
+                  type: "string",
+                  description: "Gherkin event keyword (Gherkin format).",
+                  enum: ["Given", "When", "And", "Then", "But"],
+                },
+                stepDescription: {
+                  type: "string",
+                  description: "The step description (Gherkin format).",
+                },
+              },
+              required: ["event", "stepDescription"],
             },
-            data: {
-              type: "string",
-              description: "Optional test data for this step.",
-            },
-          },
-          required: ["action", "expectedResult"],
+          ],
         },
       },
       priority: {
         type: "string",
         description: "Test case priority level.",
-        enum: ["critical", "high", "medium", "low"],
+        enum: ["high", "medium", "low", "Not set"],
       },
       severity: {
         type: "string",
         description: "Test case severity level.",
-        enum: ["critical", "major", "minor", "trivial"],
+        enum: ["Blocker", "critical", "major", "Normal", "minor", "trivial", "Not set"],
       },
       type: {
         type: "string",
@@ -126,20 +184,60 @@ export const createManualTestCaseTool = {
           "security",
           "performance",
           "e2e",
+          "Integration",
+          "API",
+          "Unit",
+          "Accessability",
+          "Compatibility",
+          "Acceptance",
+          "Exploratory",
+          "Usability",
+          "Other",
         ],
       },
       layer: {
         type: "string",
         description: "Test layer.",
-        enum: ["e2e", "api", "unit"],
+        enum: ["e2e", "api", "unit", "not set"],
       },
       behavior: {
         type: "string",
         description: "Test behavior type.",
-        enum: ["positive", "negative", "destructive"],
+        enum: ["positive", "negative", "destructive", "Not set"],
+      },
+      automationStatus: {
+        type: "string",
+        description: "Automation status of the test case.",
+        enum: ["Manual", "Automated", "To be automated"],
+      },
+      tags: {
+        type: "string",
+        description: "Tags to add to your test cases.",
+      },
+      automation: {
+        type: "array",
+        description: "Automation checklist options.",
+        items: {
+          type: "string",
+          enum: ["To be Automated", "Is flaky", "Muted"],
+        },
+      },
+      attachments: {
+        type: "array",
+        description: "Array of attachment URLs or file paths (up to 10MB each).",
+        items: {
+          type: "string",
+        },
+      },
+      customFields: {
+        type: "object",
+        description: "Custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
+        additionalProperties: {
+          type: "string",
+        },
       },
     },
-    required: ["projectId", "title", "suiteId"],
+    required: ["projectId", "title", "suiteName"],
   },
 };
 
@@ -163,20 +261,26 @@ export async function handleCreateManualTestCase(
   if (!args?.title) {
     throw new Error("title is required");
   }
-  if (!args?.suiteId) {
-    throw new Error("suiteId is required");
+  if (!args?.suiteName) {
+    throw new Error("suiteName is required");
   }
 
   try {
     const body: CreateManualTestCaseBody = {
       projectId: String(args.projectId),
       title: String(args.title),
-      suiteId: String(args.suiteId),
+      suiteName: String(args.suiteName),
     };
 
     // Add optional fields
     if (args?.description) {
       body.description = String(args.description);
+    }
+    if (args?.status) {
+      body.status = String(args.status);
+    }
+    if (args?.testStepsDeclarationType) {
+      body.testStepsDeclarationType = String(args.testStepsDeclarationType);
     }
     if (args?.preconditions) {
       body.preconditions = String(args.preconditions);
@@ -201,6 +305,21 @@ export async function handleCreateManualTestCase(
     }
     if (args?.behavior) {
       body.behavior = String(args.behavior);
+    }
+    if (args?.automationStatus) {
+      body.automationStatus = String(args.automationStatus);
+    }
+    if (args?.tags) {
+      body.tags = String(args.tags);
+    }
+    if (args?.automation) {
+      body.automation = args.automation.map(String);
+    }
+    if (args?.attachments) {
+      body.attachments = args.attachments.map(String);
+    }
+    if (args?.customFields) {
+      body.customFields = args.customFields;
     }
 
     const createManualTestCaseUrl = endpoints.createManualTestCase(

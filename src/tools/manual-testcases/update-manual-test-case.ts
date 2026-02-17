@@ -6,30 +6,55 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
-interface TestStep {
+interface ClassicTestStep {
   action: string;
   expectedResult: string;
   data?: string;
 }
 
+interface GherkinTestStep {
+  event: "Given" | "When" | "And" | "Then" | "But";
+  stepDescription: string;
+}
+
+type TestStep = ClassicTestStep | GherkinTestStep;
+
 interface ManualTestCaseUpdates {
-  title?: string;
+  name?: string; // Updated test case name/title
   description?: string;
+  status?: "Active" | "Draft" | "Deprecated";
+  testStepsDeclarationType?: "Classic" | "Gherkin";
   preconditions?: string;
   postconditions?: string;
   steps?: TestStep[];
-  status?: "actual" | "draft" | "deprecated";
-  priority?: "critical" | "high" | "medium" | "low";
-  severity?: "critical" | "major" | "minor" | "trivial";
+  priority?: "high" | "medium" | "low" | "Not set";
+  severity?: "Blocker" | "critical" | "major" | "Normal" | "minor" | "trivial" | "Not set";
   type?:
     | "functional"
     | "smoke"
     | "regression"
     | "security"
     | "performance"
-    | "e2e";
-  layer?: "e2e" | "api" | "unit";
-  behavior?: "positive" | "negative" | "destructive";
+    | "e2e"
+    | "Integration"
+    | "API"
+    | "Unit"
+    | "Accessability"
+    | "Compatibility"
+    | "Acceptance"
+    | "Exploratory"
+    | "Usability"
+    | "Other";
+  layer?: "e2e" | "api" | "unit" | "not set";
+  behavior?: "positive" | "negative" | "destructive" | "Not set";
+  automationStatus?: "Manual" | "Automated" | "To be automated";
+  tags?: string;
+  automation?: ("To be Automated" | "Is flaky" | "Muted")[];
+  attachments?: {
+    add?: string[]; // Array of attachment URLs or file paths to add (up to 10MB each)
+    remove?: string[]; // Array of attachment IDs or URLs to remove
+  };
+  customFields?: Record<string, string>; // Custom fields as key-value pairs
 }
 
 interface UpdateManualTestCaseArgs {
@@ -57,15 +82,25 @@ export const updateManualTestCaseTool = {
       updates: {
         type: "object",
         description:
-          "Object containing the fields to update. Can include: title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, etc.",
+          "Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, automation, attachments, customFields, etc.",
         properties: {
-          title: {
+          name: {
             type: "string",
-            description: "Updated test case title.",
+            description: "Updated test case name/title.",
           },
           description: {
             type: "string",
             description: "Updated description.",
+          },
+          status: {
+            type: "string",
+            description: "Updated status.",
+            enum: ["Active", "Draft", "Deprecated"],
+          },
+          testStepsDeclarationType: {
+            type: "string",
+            description: "Updated test steps declaration type.",
+            enum: ["Classic", "Gherkin"],
           },
           preconditions: {
             type: "string",
@@ -77,30 +112,40 @@ export const updateManualTestCaseTool = {
           },
           steps: {
             type: "array",
-            description: "Updated test steps array.",
+            description: "Updated test steps array. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription.",
             items: {
               type: "object",
-              properties: {
-                action: { type: "string" },
-                expectedResult: { type: "string" },
-                data: { type: "string" },
-              },
+              oneOf: [
+                {
+                  properties: {
+                    action: { type: "string" },
+                    expectedResult: { type: "string" },
+                    data: { type: "string" },
+                  },
+                  required: ["action", "expectedResult"],
+                },
+                {
+                  properties: {
+                    event: {
+                      type: "string",
+                      enum: ["Given", "When", "And", "Then", "But"],
+                    },
+                    stepDescription: { type: "string" },
+                  },
+                  required: ["event", "stepDescription"],
+                },
+              ],
             },
-          },
-          status: {
-            type: "string",
-            description: "Updated status.",
-            enum: ["actual", "draft", "deprecated"],
           },
           priority: {
             type: "string",
             description: "Updated priority.",
-            enum: ["critical", "high", "medium", "low"],
+            enum: ["high", "medium", "low", "Not set"],
           },
           severity: {
             type: "string",
             description: "Updated severity.",
-            enum: ["critical", "major", "minor", "trivial"],
+            enum: ["Blocker", "critical", "major", "Normal", "minor", "trivial", "Not set"],
           },
           type: {
             type: "string",
@@ -112,17 +157,66 @@ export const updateManualTestCaseTool = {
               "security",
               "performance",
               "e2e",
+              "Integration",
+              "API",
+              "Unit",
+              "Accessability",
+              "Compatibility",
+              "Acceptance",
+              "Exploratory",
+              "Usability",
+              "Other",
             ],
           },
           layer: {
             type: "string",
             description: "Updated layer.",
-            enum: ["e2e", "api", "unit"],
+            enum: ["e2e", "api", "unit", "not set"],
           },
           behavior: {
             type: "string",
             description: "Updated behavior.",
-            enum: ["positive", "negative", "destructive"],
+            enum: ["positive", "negative", "destructive", "Not set"],
+          },
+          automationStatus: {
+            type: "string",
+            description: "Updated automation status.",
+            enum: ["Manual", "Automated", "To be automated"],
+          },
+          tags: {
+            type: "string",
+            description: "Updated tags.",
+          },
+          automation: {
+            type: "array",
+            description: "Updated automation checklist options.",
+            items: {
+              type: "string",
+              enum: ["To be Automated", "Is flaky", "Muted"],
+            },
+          },
+          attachments: {
+            type: "object",
+            description: "Add or remove attachments (up to 10MB each).",
+            properties: {
+              add: {
+                type: "array",
+                description: "Array of attachment URLs or file paths to add.",
+                items: { type: "string" },
+              },
+              remove: {
+                type: "array",
+                description: "Array of attachment IDs or URLs to remove.",
+                items: { type: "string" },
+              },
+            },
+          },
+          customFields: {
+            type: "object",
+            description: "Updated custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
+            additionalProperties: {
+              type: "string",
+            },
           },
         },
       },

@@ -9,12 +9,14 @@ import { getApiKey } from "../../lib/env.js";
 interface CreateManualTestSuiteArgs {
   projectId: string;
   name: string;
+  description?: string;
   parentSuiteId?: string;
 }
 
 interface CreateManualTestSuiteBody {
   projectId: string;
   name: string;
+  description?: string;
   parentSuiteId?: string;
 }
 
@@ -33,6 +35,10 @@ export const createManualTestSuiteTool = {
         type: "string",
         description:
           "Suite name (Required). A descriptive name for the test suite.",
+      },
+      description: {
+        type: "string",
+        description: "Description of the test suite.",
       },
       parentSuiteId: {
         type: "string",
@@ -71,7 +77,10 @@ export async function handleCreateManualTestSuite(
       name: String(args.name),
     };
 
-    // Add optional parent suite
+    // Add optional fields
+    if (args?.description) {
+      body.description = String(args.description);
+    }
     if (args?.parentSuiteId) {
       body.parentSuiteId = String(args.parentSuiteId);
     }
