@@ -5,6 +5,7 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import { processAttachments, FileData } from "../../lib/file-utils.js";
 
 interface ClassicTestStep {
   action: string;
@@ -52,7 +53,7 @@ interface CreateManualTestCaseArgs {
   automationStatus?: "Manual" | "Automated" | "To be automated";
   tags?: string;
   automation?: ("To be Automated" | "Is flaky" | "Muted")[];
-  attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB)
+  attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB) - will be processed to FileData objects
   customFields?: Record<string, string>; // Custom fields as key-value pairs
 }
 
@@ -74,7 +75,7 @@ interface CreateManualTestCaseBody {
   automationStatus?: string;
   tags?: string;
   automation?: string[];
-  attachments?: string[];
+  attachments?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
   customFields?: Record<string, string>;
 }
 
@@ -316,7 +317,8 @@ export async function handleCreateManualTestCase(
       body.automation = args.automation.map(String);
     }
     if (args?.attachments) {
-      body.attachments = args.attachments.map(String);
+      // Process attachments: convert local file paths to file data objects (same format as UI)
+      body.attachments = processAttachments(args.attachments.map(String));
     }
     if (args?.customFields) {
       body.customFields = args.customFields;

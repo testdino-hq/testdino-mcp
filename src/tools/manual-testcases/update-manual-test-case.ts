@@ -5,6 +5,7 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import { processAttachments, FileData } from "../../lib/file-utils.js";
 
 interface ClassicTestStep {
   action: string;
@@ -51,7 +52,7 @@ interface ManualTestCaseUpdates {
   tags?: string;
   automation?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: {
-    add?: string[]; // Array of attachment URLs or file paths to add (up to 10MB each)
+    add?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
     remove?: string[]; // Array of attachment IDs or URLs to remove
   };
   customFields?: Record<string, string>; // Custom fields as key-value pairs
@@ -250,10 +251,18 @@ export async function handleUpdateManualTestCase(
   }
 
   try {
+    // Process attachments if present: convert local file paths to file data objects (same format as UI)
+    const processedUpdates = { ...args.updates };
+    if (processedUpdates.attachments?.add) {
+      processedUpdates.attachments.add = processAttachments(
+        processedUpdates.attachments.add.map(String)
+      );
+    }
+
     const body = {
       projectId: String(args.projectId),
       caseId: String(args.caseId),
-      ...args.updates,
+      ...processedUpdates,
     };
 
     const updateManualTestCaseUrl = endpoints.updateManualTestCase(

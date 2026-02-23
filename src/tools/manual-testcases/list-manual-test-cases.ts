@@ -8,28 +8,38 @@ import { getApiKey } from "../../lib/env.js";
 
 interface ListManualTestCasesArgs {
   projectId: string;
+  time?: "last 1 hour" | "Last 5 hours" | "Yesterday" | "last 7 days";
   search?: string;
   suiteId?: string;
-  status?: "actual" | "draft" | "deprecated";
-  priority?: "critical" | "high" | "medium" | "low";
-  severity?: "critical" | "major" | "minor" | "trivial";
+  status?: "active" | "draft" | "deprecated";
+  priority?: "high" | "medium" | "low" | "Not set";
+  severity?: "Blocker" | "critical" | "major" | "Normal" | "minor" | "trivial" | "Not set";
   type?:
     | "functional"
     | "smoke"
     | "regression"
     | "security"
     | "performance"
-    | "e2e";
-  layer?: "e2e" | "api" | "unit";
-  behavior?: "positive" | "negative" | "destructive";
-  automationStatus?: "automated" | "manual" | "not_automated";
+    | "e2e"
+    | "Integration"
+    | "API"
+    | "Unit"
+    | "Accessability"
+    | "Compatibility"
+    | "Acceptance"
+    | "Exploratory"
+    | "Usability"
+    | "Other";
+  layer?: "e2e" | "api" | "unit" | "not set";
+  behavior?: "positive" | "negative" | "destructive" | "Not set";
+  automationStatus?: "Manual" | "Automated" | "To be automated";
   tags?: string;
-  isFlaky?: boolean;
   limit?: number;
 }
 
 interface ListManualTestCasesParams {
   projectId: string;
+  time?: string;
   search?: string;
   suiteId?: string;
   status?: string;
@@ -40,14 +50,13 @@ interface ListManualTestCasesParams {
   behavior?: string;
   automationStatus?: string;
   tags?: string;
-  isFlaky?: boolean;
   limit?: number;
 }
 
 export const listManualTestCasesTool = {
   name: "list_manual_test_cases",
   description:
-    "Search and list manual test cases with filtering capabilities. Use this to find specific manual test cases for QA testing, auditing, or test case management. Supports filtering by project, suite, status, priority, severity, type, layer, behavior, automation status, tags, and flaky status.",
+    "Search and list manual test cases with filtering capabilities. Use this to find specific manual test cases for QA testing, auditing, or test case management. Supports filtering by project, time, suite, status, priority, severity, type, layer, behavior, automation status, and tags.",
   inputSchema: {
     type: "object",
     properties: {
@@ -55,10 +64,15 @@ export const listManualTestCasesTool = {
         type: "string",
         description: "Project ID (Required). The TestDino project identifier.",
       },
+      time: {
+        type: "string",
+        description: "Filter by time interval.",
+        enum: ["last 1 hour", "Last 5 hours", "Yesterday", "last 7 days"],
+      },
       search: {
         type: "string",
         description:
-          "Search term to match against title, description, or caseId. Example: 'login' or 'TC-123'.",
+          "Search term to match against title or caseId. Example: 'login' or 'TC-123'.",
       },
       suiteId: {
         type: "string",
@@ -68,17 +82,17 @@ export const listManualTestCasesTool = {
       status: {
         type: "string",
         description: "Filter by test case status.",
-        enum: ["actual", "draft", "deprecated"],
+        enum: ["active", "draft", "deprecated"],
       },
       priority: {
         type: "string",
         description: "Filter by priority level.",
-        enum: ["critical", "high", "medium", "low"],
+        enum: ["high", "medium", "low", "Not set"],
       },
       severity: {
         type: "string",
         description: "Filter by severity level.",
-        enum: ["critical", "major", "minor", "trivial"],
+        enum: ["Blocker", "critical", "major", "Normal", "minor", "trivial", "Not set"],
       },
       type: {
         type: "string",
@@ -90,38 +104,42 @@ export const listManualTestCasesTool = {
           "security",
           "performance",
           "e2e",
+          "Integration",
+          "API",
+          "Unit",
+          "Accessability",
+          "Compatibility",
+          "Acceptance",
+          "Exploratory",
+          "Usability",
+          "Other",
         ],
       },
       layer: {
         type: "string",
         description: "Filter by test layer.",
-        enum: ["e2e", "api", "unit"],
+        enum: ["e2e", "api", "unit", "not set"],
       },
       behavior: {
         type: "string",
         description: "Filter by test behavior type.",
-        enum: ["positive", "negative", "destructive"],
+        enum: ["positive", "negative", "destructive", "Not set"],
       },
       automationStatus: {
         type: "string",
         description: "Filter by automation status.",
-        enum: ["automated", "manual", "not_automated"],
+        enum: ["Manual", "Automated", "To be automated"],
       },
       tags: {
         type: "string",
         description:
-          "Filter by tags (comma-separated list). Example: 'smoke,regression' or 'critical'.",
-      },
-      isFlaky: {
-        type: "boolean",
-        description:
-          "Filter test cases marked as flaky. Set to true to show only flaky tests, false for non-flaky.",
+          "Filter by tags. Can be a single tag or comma-separated tags. Example: 'smoke' or 'smoke,regression,login'.",
       },
       limit: {
         type: "number",
         description:
-          "Maximum number of results to return (default: 50, max: 1000).",
-        default: 50,
+          "Maximum number of results to return (default: 10, max: 1000).",
+        default: 10,
       },
     },
     required: ["projectId"],
@@ -152,6 +170,9 @@ export async function handleListManualTestCases(
     };
 
     // Add optional filters
+    if (args?.time) {
+      params.time = String(args.time);
+    }
     if (args?.search) {
       params.search = String(args.search);
     }
@@ -182,11 +203,10 @@ export async function handleListManualTestCases(
     if (args?.tags) {
       params.tags = String(args.tags);
     }
-    if (args?.isFlaky !== undefined) {
-      params.isFlaky = Boolean(args.isFlaky);
-    }
     if (args?.limit !== undefined) {
       params.limit = Number(args.limit);
+    } else {
+      params.limit = 10; // Default limit
     }
 
     const listManualTestCasesUrl = endpoints.listManualTestCases(params);
