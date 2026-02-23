@@ -35,7 +35,8 @@
   ],
   "author": "TestDino",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1"
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "docker": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

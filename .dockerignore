@@ -1,0 +1,45 @@
+# Node modules (will be installed in container)
+node_modules
+
+# Build output (will be built in container)
+dist
+
+# Git files
+.git
+.gitignore
+
+# Development files
+.vscode
+.cursorrules
+
+# Test files
+tests
+*.test.ts
+*.spec.ts
+jest.config.js
+coverage
+
+# CI/CD
+.github
+
+# Documentation (except docs folder which is needed)
+README.md
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.swp
+.DS_Store
+
+# Package tarball
+*.tgz
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.idea
