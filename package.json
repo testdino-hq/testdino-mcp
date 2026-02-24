@@ -1,7 +1,7 @@
 {
   "name": "testdino-mcp",
   "version": "1.0.5",
-  "mcpName": "io.github.testdino-inc/testdino-mcp",
+  "mcpName": "io.github.testdino-hq/testdino-mcp",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -9,10 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/testdino-inc/testdino-mcp"
+    "url": "https://github.com/testdino-hq/testdino-mcp"
   },
   "description": "A MCP server for TestDino.",
   "homepage": "https://docs.testdino.com/testdino-mcp/overview/",
+  "license": "MIT",
   "scripts": {
     "build": "tsc",
     "start": "tsx dist/index.js",
