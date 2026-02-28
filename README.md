@@ -190,7 +190,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 - "Search for manual test cases with tag 'smoke' in project proj_123"
 - "Show me all critical priority manual test cases in project proj_123"
 - "Get details for manual test case TC-123 in project proj_123"
-- "Create a new manual test case for login feature in suite suite_456"
+- "Create a new manual test case for login feature in suite Authentication Tests"
 - "Update test case TC-123 to mark it as deprecated"
 - "List all test suites in project proj_123"
 - "Create a new test suite called 'Authentication Tests' in project proj_123"
@@ -205,7 +205,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 - **Node.js**: Version 18.0.0 or higher
 - **NPM**: Latest version recommended (for package management)
-- **TestDino Account**: Valid account with test run access
+- **TestDino Account**: Valid account with Test Runs and/or Test Case Management access
 - **Personal Access Token (PAT)**: Required for authentication. Get it from TestDino Settings → Personal Access Tokens
 
 ## Key Features Explained

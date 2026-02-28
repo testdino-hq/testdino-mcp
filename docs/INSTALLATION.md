@@ -109,7 +109,7 @@ Open or create the `mcp.json` file and add this configuration:
 
 ### Step 5: Verify It's Working
 
-1. **Check MCP Status**: Go to **Settings → MCP** and verify "testdino" appears in the list
+1. **Check MCP Status**: Go to **Settings → MCP** and verify "TestDino" appears in the list
 2. **Test the Connection**: Ask Cursor: _"Check TestDino health"_ or _"Validate my TestDino PAT"_
 3. **Expected Response**: You should see your account name, available organizations, and projects, confirming the connection works
 
@@ -190,7 +190,7 @@ The Personal Access Token (PAT) authenticates your requests to TestDino and prov
 
 - **Node.js**: Version 18.0.0 or higher
 - **npm**: Latest version recommended
-- **TestDino Account**: Valid account with Testruns
+- **TestDino Account**: Valid account with Test Runs and/or Test Case Management access
 
 ## Troubleshooting
 

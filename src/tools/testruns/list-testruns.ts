@@ -33,7 +33,7 @@ interface ListTestRunsParams {
 export const listTestRunsTool = {
   name: "list_testruns",
   description:
-    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('1d', '3d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last week.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
+    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
   inputSchema: {
     type: "object",
     properties: {
@@ -49,7 +49,7 @@ export const listTestRunsTool = {
       by_time_interval: {
         type: "string",
         description:
-          "Filter by time: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or '2024-01-01,2024-01-31' (date range).",
+          "Filter by time interval. Supports: 'Latest' (most recent, no time filter), '1h' (last hour), '2h' (last 2 hours), '5h' (last 5 hours), '12h' (last 12 hours), '1d' (last day), '3d' (last 3 days), '5d' (last 5 days), 'weekly' (last 7 days), 'monthly' (last 30 days), 'last 1 hour', 'last day', 'last 5 days', or '2024-01-01,2024-01-31' (date range).",
       },
       by_author: {
         type: "string",

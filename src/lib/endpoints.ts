@@ -168,6 +168,7 @@ export const endpoints = {
    */
   listManualTestCases: (params?: {
     projectId: string;
+    time?: string;
     search?: string;
     suiteId?: string;
     status?: string;
@@ -178,7 +179,6 @@ export const endpoints = {
     behavior?: string;
     automationStatus?: string;
     tags?: string;
-    isFlaky?: boolean;
     limit?: number;
   }): string => {
     const baseUrl = getBaseUrl();
