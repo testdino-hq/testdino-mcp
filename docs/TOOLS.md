@@ -65,7 +65,8 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "npx",
+      "args": ["-y", "testdino-mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -74,6 +75,8 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 }
 ```
 
+**Note:** For global installation, use `"command": "testdino-mcp"` instead of npx. See [INSTALLATION.md](./INSTALLATION.md) for details.
+
 ### Example Usage
 
 **Request:**
@@ -81,9 +84,7 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 ```json
 {
   "name": "health",
-  "arguments": {
-    "name": "testdino-mcp"
-  }
+  "arguments": {}
 }
 ```
 
@@ -190,7 +191,8 @@ Perfect for answering questions like "What tests ran on the develop branch?" or 
 
 | Parameter          | Type    | Required | Default | Description                                                                                                                                                     |
 | ------------------ | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `by_branch`        | string  | No       | -       | Filter by git branch name((e.g., 'main', 'develop', 'feature/login'))                                                                                           |
+| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                        |
+| `by_branch`        | string  | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
 | `by_time_interval` | string  | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
 | `by_author`        | string  | No       | -       | Filter by commit author name (case-insensitive, partial match)                                                                                                  |
 | `by_commit`        | string  | No       | -       | Filter by git commit hash (full or partial)                                                                                                                     |
@@ -226,6 +228,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "name": "list_testruns",
   "arguments": {
+    "projectId": "project_6931274a9c57308af3fb284b",
     "limit": 10
   }
 }
@@ -1248,239 +1251,6 @@ Error: Failed to debug test case: [error message]
 
 ---
 
-## upload_latest_local_test_runs
-
-**Purpose**: Upload your local Playwright test results to TestDino for analysis and tracking.
-
-### Description
-
-After running Playwright tests locally, use this tool to upload the results to TestDino. The tool:
-
-- **Automatically finds** your Playwright report directory
-- **Detects git information** (branch, commit, author) from your repository
-- **Uploads test results** including JSON data and optionally HTML reports
-- **Creates a test run** in TestDino that you can then analyze with other tools
-
-This bridges the gap between local testing and centralized test management, allowing you to track local test runs alongside CI/CD runs.
-
-### Parameters
-
-| Parameter    | Type    | Required | Default               | Description                                                          |
-| ------------ | ------- | -------- | --------------------- | -------------------------------------------------------------------- |
-| `token`      | string  | No       | -                     | TestDino PAT (optional if TESTDINO_PAT is set in mcp.json) |
-| `reportDir`  | string  | No       | `./playwright-report` | Path to the Playwright report directory                              |
-| `uploadHtml` | boolean | No       | `true`                | Whether to upload HTML report as well                                |
-| `runtime`    | string  | No       | `development`         | TestDino runtime environment (development, staging, or production)   |
-
-**Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. You can also pass it as the `token` parameter if needed.
-
-### How It Works
-
-1. **Report Discovery**: The tool searches for the report directory in common locations:
-   - Documents folder
-   - Desktop folder
-   - Projects folder
-   - Current working directory
-   - Walks up the directory tree (up to 15 levels) to find the report
-
-2. **Git Detection**: Automatically finds the git repository root to extract:
-   - Git commit hash
-   - Git branch name
-   - Repository name
-
-3. **Upload Process**: Uses the `tdpw` CLI tool to upload:
-   - Test results (JSON format)
-   - HTML report (if `uploadHtml` is `true`)
-
-### Example Usage
-
-**Basic Upload (using PAT from mcp.json):**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {}
-}
-```
-
-**Upload with Token Parameter:**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {
-    "token": "trx_production_your_token_here"
-  }
-}
-```
-
-**Upload with Runtime Environment:**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {
-    "runtime": "staging"
-  }
-}
-```
-
-**Custom Report Directory:**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {
-    "token": "trx_production_your_token_here",
-    "reportDir": "./test-results/playwright-report"
-  }
-}
-```
-
-**JSON Only (No HTML):**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {
-    "token": "trx_production_your_token_here",
-    "uploadHtml": false
-  }
-}
-```
-
-**Full Example:**
-
-```json
-{
-  "name": "upload_latest_local_test_runs",
-  "arguments": {
-    "token": "trx_production_your_token_here",
-    "reportDir": "./playwright-report",
-    "uploadHtml": true
-  }
-}
-```
-
-### Success Response
-
-```
-✅ Report uploaded successfully!
-
-Output:
-[tdpw output messages]
-```
-
-### Error Handling
-
-The tool provides detailed error messages if something goes wrong:
-
-**Report Directory Not Found:**
-
-```
-❌ Upload failed.
-
-Error: Report directory does not exist: C:\path\to\playwright-report
-MCP server cwd: C:\Users\...
-Project root: C:\Users\...
-Searched in: Documents, Desktop, Projects, and current directory
-Please ensure the Playwright report has been generated at: ./playwright-report
-```
-
-**Missing Token:**
-
-```
-Error: Missing TESTDINO_PAT environment variable.
-Please configure it in your .cursor/mcp.json file under the 'env' section, or provide it as the 'token' argument.
-```
-
-**Git Metadata Issues:**
-
-```
-❌ Upload failed.
-
-Error: STRICT METADATA VALIDATION FAILED
-❌ Git commit hash missing or unknown
-❌ Git branch information missing or unknown
-❌ Repository name missing or unknown
-```
-
-### Prerequisites
-
-1. **Playwright Report**: You must have run Playwright tests and generated a report
-
-   ```bash
-   npx playwright test
-   # or
-   npx playwright test --reporter=html
-   ```
-
-2. **Git Repository**: Your project should be a git repository with:
-   - At least one commit
-   - A configured remote (for repository name)
-   - A valid branch
-
-3. **TestDino Token**: A valid PAT from TestDino platform (configured in `mcp.json` as `TESTDINO_PAT` or passed as `token` parameter)
-
-4. **Internet Connectivity**: Required to upload to TestDino servers
-
-### Troubleshooting
-
-#### Report Directory Not Found
-
-**Problem**: Tool can't find `playwright-report` directory
-
-**Solutions**:
-
-- Ensure you've run Playwright tests: `npx playwright test`
-- Check the report directory path is correct
-- Use absolute path if relative path doesn't work
-- Verify the report directory exists before calling the tool
-
-#### Git Metadata Missing
-
-**Problem**: Upload fails due to missing git information
-
-**Solutions**:
-
-- Initialize git repository: `git init`
-- Make at least one commit: `git commit -m "Initial commit"`
-- Configure git remote: `git remote add origin <url>`
-- Ensure you're on a valid branch: `git checkout -b main`
-
-#### Command Syntax Warning
-
-**Problem**: Deprecation warning about `tdpw` command syntax
-
-**Solution**: The tool now uses the correct syntax (`tdpw upload`). If you see this warning, update to the latest version of the MCP server.
-
-#### Token Invalid
-
-**Problem**: Authentication fails
-
-**Solutions**:
-
-- Verify your TestDino PAT token is correct
-- Check token hasn't expired
-- Ensure token has upload permissions
-
-### Technical Details
-
-- **Command Used**: `npx --yes tdpw upload <reportDir> --token=<token> [--upload-html]`
-- **Working Directory**: Automatically set to git repository root
-- **Path Resolution**: Supports both relative and absolute paths
-- **Search Depth**: Searches up to 15 directory levels from common locations
-- **Runtime Environment**: Set via `runtime` parameter or `TESTDINO_RUNTIME` environment variable (development, staging, production)
-- **PAT Source**: Automatically reads from `TESTDINO_PAT` environment variable if available
-
-### Related Documentation
-
-- [TestDino Documentation](https://docs.testdino.com)
-- [TestDino CLI Issues](https://github.com/testdino-inc/testdino-cli/issues)
-- [TestDino Support](mailto:support@testdino.com)
-
----
-
 ## get_run_details
 
 **Purpose**: Get a complete overview of a test run, including all test suites, test cases, statistics, and metadata.
@@ -1771,7 +1541,7 @@ Perfect for finding specific test cases for execution, review, or management.
 | `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                      |
 | `search`           | string  | No       | -       | Search term to match against title, description, or caseId. Example: 'login' or 'TC-123'.                                                       |
 | `suiteId`          | string  | No       | -       | Filter by specific test suite ID. Use list_manual_test_suites to find suite IDs.                                                              |
-| `status`           | string  | No       | -       | Filter by test case status. Options: 'actual', 'draft', 'deprecated'.                                                                          |
+| `status`           | string  | No       | -       | Filter by test case status. Options: 'active', 'draft', 'deprecated'.                                                                         |
 | `priority`         | string  | No       | -       | Filter by priority level. Options: 'critical', 'high', 'medium', 'low'.                                                                       |
 | `severity`         | string  | No       | -       | Filter by severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                                                    |
 | `type`             | string  | No       | -       | Filter by test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                                     |
@@ -1779,8 +1549,7 @@ Perfect for finding specific test cases for execution, review, or management.
 | `behavior`         | string  | No       | -       | Filter by test behavior type. Options: 'positive', 'negative', 'destructive'.                                                                  |
 | `automationStatus` | string  | No       | -       | Filter by automation status. Options: 'automated', 'manual', 'not_automated'.                                                                   |
 | `tags`             | string  | No       | -       | Filter by tags (comma-separated list). Example: 'smoke,regression' or 'critical'.                                                              |
-| `isFlaky`          | boolean | No       | -       | Filter test cases marked as flaky. Set to true to show only flaky tests, false for non-flaky.                                                  |
-| `limit`            | number  | No       | 50      | Maximum number of results to return (max: 1000).                                                                                              |
+| `limit`            | number  | No       | 10      | Maximum number of results to return (default: 10, max: 1000).                                                                                  |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
@@ -1882,11 +1651,16 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 
 ### Response Format
 
-The tool returns a JSON response with an array of manual test cases, each containing:
+The tool returns a JSON response with:
+
+- `data`: Array of manual test cases
+- `count`: Number of test cases returned
+
+Each test case contains:
 
 - Test case ID (internal `_id` and human-readable `caseId`)
 - Title and description
-- Status (actual, draft, deprecated)
+- Status (active, draft, deprecated)
 - Priority, severity, and type
 - Suite information
 - Steps array with actions and expected results
@@ -1899,7 +1673,9 @@ The tool returns a JSON response with an array of manual test cases, each contai
 
 ```json
 {
-  "testCases": [
+  "success": true,
+  "message": "Manual test cases retrieved successfully",
+  "data": [
     {
       "_id": "test_case_6901b2abc6b187e63f536a6b",
       "caseId": "TC-123",
@@ -1935,8 +1711,7 @@ The tool returns a JSON response with an array of manual test cases, each contai
       "updatedAt": "2024-01-20T14:45:00Z"
     }
   ],
-  "total": 1,
-  "limit": 50
+  "count": 1
 }
 ```
 
@@ -1978,7 +1753,7 @@ Error: Failed to list manual test cases: [error message]
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-cases`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-cases`
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2159,7 +1934,7 @@ Error: Failed to get manual test case details: 404 Not Found
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-cases/{caseId}`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-cases/:caseId`
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2179,11 +1954,12 @@ Error: Failed to get manual test case details: 404 Not Found
 
 This tool allows you to create new manual test cases in your TestDino project. You can specify:
 
-- **Basic Information**: Title, description, suite
-- **Test Steps**: Array of steps with actions, expected results, and optional test data
-- **Preconditions**: Prerequisites required before test execution
-- **Postconditions**: Expected state after test execution
-- **Metadata**: Priority, severity, type, layer, behavior
+- **Basic Information**: Title, description, suite name
+- **Test Steps**: Classic format (action, expectedResult, data, subSteps with images) or Gherkin format (event, stepDescription)
+- **Preconditions/Postconditions**: Prerequisites and expected state after execution
+- **Metadata**: Status, priority, severity, type, layer, behavior, automationStatus, tags, automation
+- **Attachments**: Local file paths or URLs (up to 10MB each)
+- **Custom Fields**: Key-value pairs for project-specific metadata
 
 Use this to document new test scenarios, features, or requirements as they are developed.
 
@@ -2193,26 +1969,31 @@ Use this to document new test scenarios, features, or requirements as they are d
 | ---------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `projectId`      | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                  |
 | `title`          | string | Yes      | Test case title (Required). A clear, descriptive title for the test case.                                                |
-| `suiteId`        | string | Yes      | Test suite ID (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite IDs. |
+| `suiteName`      | string | Yes      | Test suite name (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite names. |
 | `description`    | string | No       | Detailed description of what this test case validates.                                                                   |
 | `preconditions`  | string | No       | Prerequisites or setup required before executing this test case.                                                         |
 | `postconditions` | string | No       | Expected state or cleanup actions after executing this test case.                                                        |
-| `steps`          | array  | No       | Array of test steps. Each step should have action, expectedResult, and optional data fields.                             |
-| `priority`       | string | No       | Test case priority level. Options: 'critical', 'high', 'medium', 'low'.                                                  |
+| `testStepsDeclarationType` | string | No       | 'Classic' or 'Gherkin'. Default: Classic.                                                       |
+| `steps`          | array  | No       | Array of test steps. Classic: action, expectedResult, data, subSteps (max 5, each with optional images max 2). Gherkin: event, stepDescription. |
+| `status`         | string | No       | Test case status. Options: 'Active', 'Draft', 'Deprecated'.                                                              |
+| `priority`       | string | No       | Test case priority level. Options: 'high', 'medium', 'low', 'Not set'.                                                      |
 | `severity`       | string | No       | Test case severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                              |
 | `type`           | string | No       | Test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                          |
 | `layer`          | string | No       | Test layer. Options: 'e2e', 'api', 'unit'.                                                                               |
-| `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive'.                                                      |
+| `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive', 'Not set'.                                            |
+| `automationStatus` | string | No       | Options: 'Manual', 'Automated', 'To be automated'.                                                                       |
+| `tags`           | string | No       | Comma-separated tags.                                                                                                     |
+| `automation`     | array  | No       | Options: 'To be Automated', 'Is flaky', 'Muted'.                                                                          |
+| `attachments`    | array  | No       | Array of local file paths or URLs (up to 10MB each).                                                                      |
+| `customFields`   | object | No       | Custom fields as key-value pairs.                                                                                         |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
 ### Test Steps Structure
 
-Each step in the `steps` array should have:
+**Classic format** (default): Each step has `action`, `expectedResult`, optional `data`, and optional `subSteps` (max 5 per step, each with optional `images` max 2).
 
-- `action` (required): The action to perform in this step
-- `expectedResult` (required): The expected outcome of this action
-- `data` (optional): Optional test data for this step
+**Gherkin format**: Set `testStepsDeclarationType` to 'Gherkin'. Each step has `event` (Given/When/Then/And/But) and `stepDescription`.
 
 ### Configuration
 
@@ -2241,7 +2022,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   "arguments": {
     "projectId": "proj_690ded10f1fb81a3ca1bbc50",
     "title": "Verify user can login with valid credentials",
-    "suiteId": "suite_123"
+    "suiteName": "Authentication Tests"
   }
 }
 ```
@@ -2254,7 +2035,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   "arguments": {
     "projectId": "proj_690ded10f1fb81a3ca1bbc50",
     "title": "Verify user can login with valid credentials",
-    "suiteId": "suite_123",
+    "suiteName": "Authentication Tests",
     "description": "Test that users can successfully login with valid email and password",
     "preconditions": "User account exists with valid credentials",
     "steps": [
@@ -2292,7 +2073,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   "arguments": {
     "projectId": "proj_690ded10f1fb81a3ca1bbc50",
     "title": "Verify login fails with invalid password",
-    "suiteId": "suite_123",
+    "suiteName": "Authentication Tests",
     "description": "Test that login fails when incorrect password is provided",
     "preconditions": "User account exists",
     "postconditions": "User remains on login page with error message",
@@ -2388,13 +2169,13 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 Error: projectId is required
 Error: title is required
-Error: suiteId is required
+Error: suiteName is required
 ```
 
-**Invalid Suite ID:**
+**Invalid Suite Name:**
 
 ```
-Error: Failed to create manual test case: Suite not found
+Error: Failed to create manual test case: Test suite "SuiteName" not found
 ```
 
 ### Prerequisites
@@ -2402,12 +2183,12 @@ Error: Failed to create manual test case: Suite not found
 1. **TestDino Account**: Valid account with API access
 2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
 3. **Project ID**: Valid TestDino project identifier
-4. **Suite ID**: Valid test suite identifier (use `list_manual_test_suites` to find suite IDs)
+4. **Suite Name**: Valid test suite name (use `list_manual_test_suites` to find suite names)
 5. **Internet Connectivity**: Required to access TestDino API
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-cases`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-cases`
 - **Method**: POST
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2430,7 +2211,7 @@ This tool allows you to update existing manual test cases. You can modify:
 - **Basic Information**: Title, description
 - **Test Steps**: Add, modify, or remove steps
 - **Preconditions/Postconditions**: Update prerequisites or expected outcomes
-- **Status**: Change status (actual, draft, deprecated)
+- **Status**: Change status (Active, Draft, Deprecated)
 - **Metadata**: Update priority, severity, type, layer, behavior
 
 Use this to keep test cases up-to-date as requirements change or to fix errors in existing test cases.
@@ -2441,7 +2222,7 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 | ----------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                |
 | `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                      |
-| `updates`   | object | Yes      | Object containing the fields to update. Can include: title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, etc. |
+| `updates`   | object | Yes      | Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, testStepsDeclarationType, attachments, customFields, etc. |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
@@ -2449,17 +2230,23 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 
 The `updates` object can contain any of the following fields:
 
-- `title` (string): Updated test case title
+- `name` (string): Updated test case title (maps to title)
 - `description` (string): Updated description
 - `preconditions` (string): Updated preconditions
 - `postconditions` (string): Updated postconditions
-- `steps` (array): Updated test steps array (each step has action, expectedResult, optional data)
-- `status` (string): Updated status. Options: 'actual', 'draft', 'deprecated'
+- `testStepsDeclarationType` (string): 'Classic' or 'Gherkin'. When switching, provide steps in the new format.
+- `steps` (array): Updated test steps array (Classic: action, expectedResult, data, subSteps with images; Gherkin: event, stepDescription)
+- `status` (string): Updated status. Options: 'Active', 'Draft', 'Deprecated'
 - `priority` (string): Updated priority. Options: 'critical', 'high', 'medium', 'low'
 - `severity` (string): Updated severity. Options: 'critical', 'major', 'minor', 'trivial'
 - `type` (string): Updated type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'
 - `layer` (string): Updated layer. Options: 'e2e', 'api', 'unit'
 - `behavior` (string): Updated behavior. Options: 'positive', 'negative', 'destructive'
+- `automationStatus` (string): Updated automation status
+- `tags` (string): Updated tags (comma-separated)
+- `automation` (array): Updated automation checklist ('To be Automated', 'Is flaky', 'Muted')
+- `attachments` (object): `{ add: string[], remove: string[] }` — add local paths/URLs or remove by attachment ID/URL
+- `customFields` (object): Updated custom fields as key-value pairs
 
 ### Configuration
 
@@ -2642,7 +2429,7 @@ Error: Failed to update manual test case: 404 Not Found
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-cases/{caseId}`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-cases/:caseId`
 - **Method**: PATCH
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2799,7 +2586,7 @@ Error: Failed to list manual test suites: [error message]
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-suites`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-suites`
 - **Method**: GET
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2971,7 +2758,7 @@ Error: Failed to create manual test suite: Parent suite not found
 
 ### Technical Details
 
-- **API Endpoint**: `/api/test-suites`
+- **API Endpoint**: `/api/mcp/manual-tests/:projectId/test-suites`
 - **Method**: POST
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable (Personal Access Token)
 - **Response Format**: JSON
@@ -2996,6 +2783,9 @@ When adding new tools to the MCP server:
 ---
 
 ## Version History
+
+- **v1.0.6**:
+  - Documentation updates: Corrected `create_manual_test_case` to use `suiteName` (not `suiteId`), fixed API endpoints for manual test tools, removed deprecated `upload_latest_local_test_runs` documentation, updated response formats and parameter tables.
 
 - **v1.0.3**:
   - **Removed**: `upload_latest_local_test_runs` tool

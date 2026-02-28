@@ -232,7 +232,7 @@ User: "Check my TestDino connection"
 **Key Parameters**:
 - `projectId` (required)
 - `suiteId`: Filter by test suite
-- `status`: 'actual', 'draft', 'deprecated'
+- `status`: 'active', 'draft', 'deprecated'
 - `priority`: 'critical', 'high', 'medium', 'low'
 - `severity`: 'critical', 'major', 'minor', 'trivial'
 - `type`: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'
@@ -260,9 +260,9 @@ User: "Check my TestDino connection"
 **Key Parameters**:
 - `projectId` (required)
 - `title` (required)
-- `suiteId` (required)
-- `steps`: Array of {action, expectedResult, data}
-- `priority`, `severity`, `type`, etc.
+- `suiteName` (required) — Use suite name. Use `list_manual_test_suites` to find suite names.
+- `steps`: Array of {action, expectedResult, data} for Classic, or {event, stepDescription} for Gherkin
+- `priority`, `severity`, `type`, `layer`, `behavior`, `attachments`, `customFields`, etc.
 
 #### `update_manual_test_case`
 **Purpose**: Update existing manual test cases
@@ -344,9 +344,9 @@ User: "Check my TestDino connection"
 
 ### Pattern 6: Creating Manual Test Cases
 ```
-1. Call list_manual_test_suites(projectId) to find suite IDs
+1. Call list_manual_test_suites(projectId) to find suite names
 2. If suite doesn't exist, call create_manual_test_suite(projectId, name)
-3. Call create_manual_test_case(projectId, title, suiteId, steps, ...)
+3. Call create_manual_test_case(projectId, title, suiteName, steps, ...)
 ```
 
 ---
@@ -365,7 +365,7 @@ User: "Check my TestDino connection"
 | `debug_testcase` | `projectId`, `testcase_name` |
 | `list_manual_test_cases` | `projectId` |
 | `get_manual_test_case` | `projectId`, `caseId` |
-| `create_manual_test_case` | `projectId`, `title`, `suiteId` |
+| `create_manual_test_case` | `projectId`, `title`, `suiteName` |
 | `update_manual_test_case` | `projectId`, `caseId`, `updates` |
 | `list_manual_test_suites` | `projectId` |
 | `create_manual_test_suite` | `projectId`, `name` |
@@ -459,9 +459,9 @@ User asks about manual test cases
 │  └─ get_manual_test_case(projectId, caseId)
 │
 ├─ Need to create?
-│  └─ Need suite ID?
+│  └─ Need suite name?
 │     ├─ Yes → list_manual_test_suites(projectId) first
-│     └─ No → create_manual_test_case(projectId, title, suiteId, ...)
+│     └─ No → create_manual_test_case(projectId, title, suiteName, ...)
 │
 └─ Need to update?
    └─ update_manual_test_case(projectId, caseId, updates)
@@ -631,7 +631,7 @@ try {
 | "Why is test X failing?" | `debug_testcase` | `projectId`, `testcase_name` |
 | "Details of test case X" | `get_testcase_details` | `projectId`, `testcase_id` or `testcase_name`+`testrun_id` |
 | "List manual test cases" | `list_manual_test_cases` | `projectId`, filters |
-| "Create test case" | `create_manual_test_case` | `projectId`, `title`, `suiteId`, `steps` |
+| "Create test case" | `create_manual_test_case` | `projectId`, `title`, `suiteName`, `steps` |
 
 ### Parameter Quick Reference
 
