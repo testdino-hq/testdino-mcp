@@ -7,10 +7,23 @@ import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 import { processAttachments, FileData } from "../../lib/file-utils.js";
 
+interface SubStepImage {
+  url: string;
+  fileName: string;
+}
+
+interface SubStep {
+  action: string;
+  expectedResult: string;
+  data?: string;
+  images?: SubStepImage[];
+}
+
 interface ClassicTestStep {
   action: string;
   expectedResult: string;
   data?: string;
+  subSteps?: SubStep[];
 }
 
 interface GherkinTestStep {
@@ -75,8 +88,33 @@ interface CreateManualTestCaseBody {
   automationStatus?: string;
   tags?: string;
   automation?: string[];
-  attachments?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
+  attachments?: (FileData | string)[];
   customFields?: Record<string, string>;
+}
+
+/**
+ * Validate classic steps for sub-step and image constraints
+ */
+function validateClassicSteps(steps: TestStep[]): void {
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i] as ClassicTestStep;
+    if (!step.subSteps) continue;
+
+    if (step.subSteps.length > 5) {
+      throw new Error(
+        `Step ${i + 1} has ${step.subSteps.length} sub-steps, but maximum 5 sub-steps are allowed per step.`
+      );
+    }
+
+    for (let j = 0; j < step.subSteps.length; j++) {
+      const subStep = step.subSteps[j];
+      if (subStep.images && subStep.images.length > 2) {
+        throw new Error(
+          `Step ${i + 1}, sub-step ${j + 1} has ${subStep.images.length} images, but maximum 2 images are allowed per sub-step.`
+        );
+      }
+    }
+  }
 }
 
 export const createManualTestCaseTool = {
@@ -127,7 +165,7 @@ export const createManualTestCaseTool = {
       steps: {
         type: "array",
         description:
-          "Array of test steps. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription.",
+          "Array of test steps. For Classic format: action, expectedResult, optional data, and optional subSteps (max 5 per step, each with optional images max 2). For Gherkin format: event and stepDescription.",
         items: {
           type: "object",
           oneOf: [
@@ -144,6 +182,50 @@ export const createManualTestCaseTool = {
                 data: {
                   type: "string",
                   description: "Optional test data for this step (Classic format).",
+                },
+                subSteps: {
+                  type: "array",
+                  description:
+                    "Optional array of sub-steps for this step (Classic format only). Maximum 5 sub-steps per step. Each sub-step can have up to 2 images.",
+                  maxItems: 5,
+                  items: {
+                    type: "object",
+                    properties: {
+                      action: {
+                        type: "string",
+                        description: "The action to perform in this sub-step.",
+                      },
+                      expectedResult: {
+                        type: "string",
+                        description: "The expected outcome of this sub-step action.",
+                      },
+                      data: {
+                        type: "string",
+                        description: "Optional test data for this sub-step.",
+                      },
+                      images: {
+                        type: "array",
+                        description:
+                          "Optional array of images for this sub-step. Maximum 2 images per sub-step. Each image requires a url and fileName.",
+                        maxItems: 2,
+                        items: {
+                          type: "object",
+                          properties: {
+                            url: {
+                              type: "string",
+                              description: "The URL of the image.",
+                            },
+                            fileName: {
+                              type: "string",
+                              description: "The file name of the image.",
+                            },
+                          },
+                          required: ["url", "fileName"],
+                        },
+                      },
+                    },
+                    required: ["action", "expectedResult"],
+                  },
                 },
               },
               required: ["action", "expectedResult"],
@@ -290,6 +372,8 @@ export async function handleCreateManualTestCase(
       body.postconditions = String(args.postconditions);
     }
     if (args?.steps) {
+      // Validate sub-step and image constraints before sending
+      validateClassicSteps(args.steps);
       body.steps = args.steps;
     }
     if (args?.priority) {
