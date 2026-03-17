@@ -14,7 +14,7 @@ import path from "node:path";
 import { z } from "zod";
 
 // Import existing tool handlers
-import { getApiUrl, getApiKey } from "./src/lib/env.js";
+import { getApiUrl, getApiKey } from "./frontend/lib/env.js";
 import {
   handleHealth,
   handleListTestRuns,
@@ -28,7 +28,7 @@ import {
   handleUpdateManualTestCase,
   handleListManualTestSuites,
   handleCreateManualTestSuite,
-} from "./src/tools/index.js";
+} from "./frontend/tools/index.js";
 
 // The existing handlers return { content: [{ type: string, text: string }] }
 // but McpServer expects { type: "text" } literal. This helper casts the result.

@@ -81,28 +81,30 @@ export function TestCaseDetail({ data, navigate }: TestCaseDetailProps) {
       {steps.length > 0 && (
         <div className="section">
           <div className="section-title">Steps</div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Action</th>
-                <th>Expected</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {steps.map((step: any, i: number) => (
-                <tr key={i}>
-                  <td style={{ color: "var(--muted-foreground)", width: 36 }}>{i + 1}</td>
-                  <td>{step.action || step.title || step.description}</td>
-                  <td style={{ color: "var(--muted-foreground)" }}>{step.expectedResult || step.expected || "—"}</td>
-                  <td>
-                    {step.status && <span className={`badge badge-${step.status}`}>{step.status}</span>}
-                  </td>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>#</th>
+                  <th>Action</th>
+                  <th>Expected</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {steps.map((step: any, i: number) => (
+                  <tr key={i}>
+                    <td style={{ color: "var(--muted-foreground)" }}>{i + 1}</td>
+                    <td className="wrap-cell">{step.action || step.title || step.description}</td>
+                    <td className="wrap-cell" style={{ color: "var(--muted-foreground)" }}>{step.expectedResult || step.expected || "—"}</td>
+                    <td>
+                      {step.status && <span className={`badge badge-${step.status}`}>{step.status}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

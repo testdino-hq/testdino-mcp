@@ -14,8 +14,9 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true
   },
-  "include": ["src/tools/**/*", "src/lib/**/*", "server.ts"],
-  "exclude": ["node_modules", "dist", "src/ui"]
+  "include": ["frontend/tools/**/*", "frontend/lib/**/*", "server.ts"],
+  "exclude": ["node_modules", "dist", "frontend/ui"]
 }

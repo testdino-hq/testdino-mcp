@@ -49,13 +49,13 @@ export function ProjectPicker({ data, navigate, callTool }: ProjectPickerProps) 
         <div className="page-heading-desc">Choose a project to view its test results and analytics.</div>
       </div>
 
-      <div className="filters-bar" style={{ marginBottom: 20 }}>
+      <div className="filters-bar" style={{ marginBottom: 16 }}>
         <input
           type="text"
           placeholder="Search organizations or projects..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 260 }}
+          style={{ flex: 1, minWidth: 0, width: "100%" }}
           autoFocus
         />
       </div>
@@ -83,22 +83,22 @@ export function ProjectPicker({ data, navigate, callTool }: ProjectPickerProps) 
                     <div className="project-card-icon">
                       <FolderIcon />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div className="project-card-info">
                       <div className="project-card-name">{project.projectName}</div>
-                      <div className="mono-tag" style={{ marginTop: 3 }}>
+                      <div className="mono-tag" style={{ marginTop: 2 }}>
                         {project.projectId}
                       </div>
-                    </div>
-                    <div className="project-card-meta">
-                      {project.modules.testRuns && (
-                        <span className="badge badge-running">Test Runs</span>
-                      )}
-                      {project.modules.manualTestCases && (
-                        <span className="badge badge-passed">Manual Tests</span>
-                      )}
-                      <span className={`badge badge-${project.permissions.role === "owner" ? "actual" : "draft"}`}>
-                        {project.permissions.role}
-                      </span>
+                      <div className="project-card-meta">
+                        {project.modules.testRuns && (
+                          <span className="badge badge-running">Test Runs</span>
+                        )}
+                        {project.modules.manualTestCases && (
+                          <span className="badge badge-passed">Manual Tests</span>
+                        )}
+                        <span className={`badge badge-${project.permissions.role === "owner" ? "actual" : "draft"}`}>
+                          {project.permissions.role}
+                        </span>
+                      </div>
                     </div>
                     <div className="project-card-arrow">
                       {isLoading ? <div className="spinner" /> : <ChevronIcon />}
