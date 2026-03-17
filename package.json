@@ -19,7 +19,9 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "npm run build:ui && npm run build:server",
     "start": "node dist/server.js",
+    "start:http": "node dist/server-http.js",
     "dev": "tsx server.ts",
+    "dev:http": "tsx server-http.ts",
     "prepublishOnly": "npm run build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
@@ -43,6 +45,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@types/express": "^5.0.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.0",
     "@types/react": "^19.2.14",
