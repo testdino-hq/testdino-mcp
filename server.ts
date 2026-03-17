@@ -14,6 +14,7 @@ import path from "node:path";
 import { z } from "zod";
 
 // Import existing tool handlers
+import { getApiUrl, getApiKey } from "./src/lib/env.js";
 import {
   handleHealth,
   handleListTestRuns,
@@ -38,11 +39,39 @@ function asToolResult(result: { content: { type: string; text: string }[] }): Ca
 // Parse handler result text and extract array data.
 // The API may return a raw array, or an object like { testRuns: [...], pagination: {...} }.
 // This helper finds the first array value in the response.
+async function fetchOrgsAndProjects(): Promise<unknown[]> {
+  const token = getApiKey();
+  if (!token) throw new Error("Missing TESTDINO_PAT");
+  const res = await fetch(`${getApiUrl()}/api/mcp/hello`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json() as any;
+  const data = json.data || json;
+  return (data.access as unknown[]) || [];
+}
+
+function flattenRun(run: any): any {
+  return {
+    ...run,
+    passed: run?.testStats?.passed,
+    failed: run?.testStats?.failed,
+    skipped: run?.testStats?.skipped,
+    flaky: run?.testStats?.flaky,
+    total: run?.testStats?.total,
+  };
+}
+
 function extractArray(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object") {
     for (const value of Object.values(data as Record<string, unknown>)) {
       if (Array.isArray(value)) return value;
+      // one level deeper (e.g. { success, data: { testRuns: [...] } })
+      if (value && typeof value === "object") {
+        for (const inner of Object.values(value as Record<string, unknown>)) {
+          if (Array.isArray(inner)) return inner;
+        }
+      }
     }
   }
   return [];
@@ -71,7 +100,8 @@ const server = new McpServer({
 const resourceUri = "ui://testdino/app.html";
 
 // ════════════════════════════════════════════════════════════
-// Existing tools (registered normally — backward compatible)
+// Existing tools — unchanged behaviour, structuredContent added
+// so show_testdino panel (if already open) reflects results
 // ════════════════════════════════════════════════════════════
 
 server.tool(
@@ -95,7 +125,13 @@ server.tool(
     page: z.number().optional().describe("Page number"),
     get_all: z.boolean().optional().describe("Get all results"),
   },
-  async (args) => asToolResult(await handleListTestRuns(args)),
+  async (args) => {
+    const result = await handleListTestRuns(args);
+    try {
+      const testruns = extractArray(parseHandlerResult(result)).map(flattenRun);
+      return { content: (result as any).content, structuredContent: { view: "dashboard", projectId: args.projectId, testruns, filters: { branch: args.by_branch, timeInterval: args.by_time_interval } } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -106,7 +142,25 @@ server.tool(
     testrun_id: z.string().optional().describe("Test run ID (single or comma-separated, max 20)"),
     counter: z.number().optional().describe("Test run counter number"),
   },
-  async (args) => asToolResult(await handleGetRunDetails(args)),
+  async (args) => {
+    const result = await handleGetRunDetails(args);
+    try {
+      const raw = parseHandlerResult(result) as any;
+      const testRun = raw?.data?.testRun || raw;
+      const testSuites = raw?.data?.testSuites || [];
+      const flatRun = {
+        ...testRun,
+        passed: testRun?.testStats?.passed, failed: testRun?.testStats?.failed,
+        skipped: testRun?.testStats?.skipped, flaky: testRun?.testStats?.flaky,
+        total: testRun?.testStats?.total,
+        branch: testRun?.metadata?.git?.branch,
+        commit: testRun?.metadata?.git?.commit?.hash,
+        author: testRun?.metadata?.git?.commit?.author,
+        suites: testSuites,
+      };
+      return { content: (result as any).content, structuredContent: { view: "run-detail", projectId: args.projectId, runDetails: flatRun } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -135,7 +189,13 @@ server.tool(
     page: z.number().optional().describe("Page number"),
     get_all: z.boolean().optional().describe("Get all results"),
   },
-  async (args) => asToolResult(await handleListTestCases(args as any)),
+  async (args) => {
+    const result = await handleListTestCases(args as any);
+    try {
+      const testcases = extractArray(parseHandlerResult(result as any));
+      return { content: (result as any).content, structuredContent: { view: "testcases", projectId: args.projectId, testcases } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -148,7 +208,14 @@ server.tool(
     testrun_id: z.string().optional().describe("Test run ID"),
     counter: z.number().optional().describe("Test run counter"),
   },
-  async (args) => asToolResult(await handleGetTestCaseDetails(args)),
+  async (args) => {
+    const result = await handleGetTestCaseDetails(args);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const tc = raw?.data?.testCase || raw?.data || raw;
+      return { content: (result as any).content, structuredContent: { view: "testcase-detail", projectId: args.projectId, testcase: tc } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -158,7 +225,18 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     testcase_name: z.string().describe("Test case name"),
   },
-  async (args) => asToolResult(await handleDebugTestCase(args)),
+  async (args) => {
+    const result = await handleDebugTestCase(args);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const debugData = {
+        history: raw?.data?.historical_data || [],
+        debugging_prompt: raw?.Prompt || "",
+        ...(raw?.data?.test_metadata || {}),
+      };
+      return { content: (result as any).content, structuredContent: { view: "failures", projectId: args.projectId, debugData, testcaseName: args.testcase_name } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -179,7 +257,13 @@ server.tool(
     isFlaky: z.boolean().optional().describe("Filter flaky tests"),
     limit: z.number().optional().describe("Results limit"),
   },
-  async (args) => asToolResult(await handleListManualTestCases(args as any)),
+  async (args) => {
+    const result = await handleListManualTestCases(args as any);
+    try {
+      const manualCases = extractArray(parseHandlerResult(result as any));
+      return { content: (result as any).content, structuredContent: { view: "manual-cases", projectId: args.projectId, manualCases } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -189,7 +273,14 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     caseId: z.string().describe("Test case ID"),
   },
-  async (args) => asToolResult(await handleGetManualTestCase(args)),
+  async (args) => {
+    const result = await handleGetManualTestCase(args);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const tc = raw?.data?.testCase || raw?.data || raw;
+      return { content: (result as any).content, structuredContent: { view: "manual-case-detail", projectId: args.projectId, testcase: tc } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -202,23 +293,21 @@ server.tool(
     description: z.string().optional().describe("Description"),
     preconditions: z.string().optional().describe("Preconditions"),
     postconditions: z.string().optional().describe("Postconditions"),
-    steps: z
-      .array(
-        z.object({
-          action: z.string(),
-          expectedResult: z.string(),
-          data: z.string().optional(),
-        }),
-      )
-      .optional()
-      .describe("Test steps"),
+    steps: z.array(z.object({ action: z.string(), expectedResult: z.string(), data: z.string().optional() })).optional().describe("Test steps"),
     priority: z.string().optional().describe("Priority"),
     severity: z.string().optional().describe("Severity"),
     type: z.string().optional().describe("Type"),
     layer: z.string().optional().describe("Layer"),
     behavior: z.string().optional().describe("Behavior"),
   },
-  async (args) => asToolResult(await handleCreateManualTestCase(args as any)),
+  async (args) => {
+    const result = await handleCreateManualTestCase(args as any);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const created = raw?.data || raw;
+      return { content: (result as any).content, structuredContent: { view: "action-result", action: "created", item: "manual test case", label: args.title, data: created, projectId: args.projectId } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -227,25 +316,28 @@ server.tool(
   {
     projectId: z.string().describe("Project ID"),
     caseId: z.string().describe("Test case ID"),
-    updates: z
-      .object({
-        title: z.string().optional(),
-        description: z.string().optional(),
-        preconditions: z.string().optional(),
-        postconditions: z.string().optional(),
-        steps: z
-          .array(z.object({ action: z.string(), expectedResult: z.string(), data: z.string().optional() }))
-          .optional(),
-        status: z.string().optional(),
-        priority: z.string().optional(),
-        severity: z.string().optional(),
-        type: z.string().optional(),
-        layer: z.string().optional(),
-        behavior: z.string().optional(),
-      })
-      .describe("Fields to update"),
+    updates: z.object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      preconditions: z.string().optional(),
+      postconditions: z.string().optional(),
+      steps: z.array(z.object({ action: z.string(), expectedResult: z.string(), data: z.string().optional() })).optional(),
+      status: z.string().optional(),
+      priority: z.string().optional(),
+      severity: z.string().optional(),
+      type: z.string().optional(),
+      layer: z.string().optional(),
+      behavior: z.string().optional(),
+    }).describe("Fields to update"),
   },
-  async (args) => asToolResult(await handleUpdateManualTestCase(args as any)),
+  async (args) => {
+    const result = await handleUpdateManualTestCase(args as any);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const updated = raw?.data || raw;
+      return { content: (result as any).content, structuredContent: { view: "action-result", action: "updated", item: "manual test case", label: args.caseId, data: updated, projectId: args.projectId } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -255,7 +347,13 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     parentSuiteId: z.string().optional().describe("Parent suite ID"),
   },
-  async (args) => asToolResult(await handleListManualTestSuites(args)),
+  async (args) => {
+    const result = await handleListManualTestSuites(args);
+    try {
+      const suites = extractArray(parseHandlerResult(result as any));
+      return { content: (result as any).content, structuredContent: { view: "manual-suites", projectId: args.projectId, suites } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 server.tool(
@@ -266,266 +364,142 @@ server.tool(
     name: z.string().describe("Suite name"),
     parentSuiteId: z.string().optional().describe("Parent suite ID for nesting"),
   },
-  async (args) => asToolResult(await handleCreateManualTestSuite(args)),
+  async (args) => {
+    const result = await handleCreateManualTestSuite(args);
+    try {
+      const raw = parseHandlerResult(result as any) as any;
+      const created = raw?.data || raw;
+      return { content: (result as any).content, structuredContent: { view: "action-result", action: "created", item: "test suite", label: args.name, data: created, projectId: args.projectId } } as CallToolResult;
+    } catch { return asToolResult(result as any); }
+  },
 );
 
 // ════════════════════════════════════════════════════════════
-// UI-Enabled Tools (MCP App)
+// UI Tool — single entry point + internal action routing
 // ════════════════════════════════════════════════════════════
 
 registerAppTool(
   server,
-  "show_test_dashboard",
+  "show_testdino",
   {
-    title: "Test Run Dashboard",
+    title: "TestDino",
     description:
-      "Shows an interactive dashboard of test runs for a project. Displays pass/fail stats, trends, and lets users drill into individual runs.",
+      "Opens the TestDino interactive dashboard. Browse test runs, drill into run details, view test cases, analyze failures, and explore manual test cases — all from one place. Omit projectId to show an org/project picker first.",
     inputSchema: {
-      projectId: z.string().describe("Project ID"),
+      // ── Visible to the model ──────────────────────────────
+      projectId: z.string().optional().describe("Project ID — omit to show org/project picker"),
       by_branch: z.string().optional().describe("Filter by branch"),
       by_time_interval: z.string().optional().describe("Time range: 1d, 3d, weekly, monthly"),
-    },
-    _meta: { ui: { resourceUri } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleListTestRuns(args));
-      const testruns = extractArray(data);
-      return {
-        content: [{ type: "text", text: `Showing ${testruns.length} test runs for project ${args.projectId}` }],
-        structuredContent: {
-          view: "dashboard",
-          projectId: args.projectId,
-          testruns,
-          filters: { branch: args.by_branch, timeInterval: args.by_time_interval },
-        },
-      };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return {
-        content: [{ type: "text", text: error }],
-        structuredContent: { view: "dashboard", projectId: args.projectId, testruns: [], error },
-      };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "show_test_run",
-  {
-    title: "Test Run Details",
-    description: "Shows a detailed interactive view of a specific test run with statistics, suites, and test cases.",
-    inputSchema: {
-      projectId: z.string().describe("Project ID"),
-      testrun_id: z.string().optional().describe("Test run ID"),
-      counter: z.number().optional().describe("Test run counter number"),
-    },
-    _meta: { ui: { resourceUri } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleGetRunDetails(args));
-      return {
-        content: [{ type: "text", text: `Test run details for ${args.testrun_id || args.counter}` }],
-        structuredContent: { view: "run-detail", projectId: args.projectId, runDetails: data, runId: args.testrun_id },
-      };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return {
-        content: [{ type: "text", text: error }],
-        structuredContent: { view: "run-detail", projectId: args.projectId, runDetails: null, error },
-      };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "show_test_failures",
-  {
-    title: "Failure Analysis",
-    description:
-      "Shows interactive failure analysis with error patterns, history, and AI debugging suggestions for a test case.",
-    inputSchema: {
-      projectId: z.string().describe("Project ID"),
-      testcase_name: z.string().describe("Test case name to analyze"),
-    },
-    _meta: { ui: { resourceUri } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleDebugTestCase(args));
-      return {
-        content: [{ type: "text", text: `Failure analysis for: ${args.testcase_name}` }],
-        structuredContent: { view: "failures", projectId: args.projectId, debugData: data, testcaseName: args.testcase_name },
-      };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return {
-        content: [{ type: "text", text: error }],
-        structuredContent: { view: "failures", projectId: args.projectId, debugData: null, testcaseName: args.testcase_name, error },
-      };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "show_test_cases",
-  {
-    title: "Test Cases View",
-    description: "Shows an interactive list of test cases for a test run with status, duration, and debug actions.",
-    inputSchema: {
-      projectId: z.string().describe("Project ID"),
-      by_testrun_id: z.string().optional().describe("Test run ID"),
-      counter: z.number().optional().describe("Test run counter"),
-      by_status: z.string().optional().describe("Filter: passed, failed, skipped, flaky"),
-    },
-    _meta: { ui: { resourceUri } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleListTestCases(args as any));
-      return {
-        content: [{ type: "text", text: `Test cases for project ${args.projectId}` }],
-        structuredContent: { view: "testcases", projectId: args.projectId, testcases: extractArray(data) },
-      };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return {
-        content: [{ type: "text", text: error }],
-        structuredContent: { view: "testcases", projectId: args.projectId, testcases: [], error },
-      };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "show_manual_test_cases",
-  {
-    title: "Manual Test Cases",
-    description: "Shows an interactive list of manual test cases with priority, status, and type information.",
-    inputSchema: {
-      projectId: z.string().describe("Project ID"),
-      search: z.string().optional().describe("Search query"),
-      status: z.string().optional().describe("Status: actual, draft, deprecated"),
-      priority: z.string().optional().describe("Priority: critical, high, medium, low"),
-    },
-    _meta: { ui: { resourceUri } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleListManualTestCases(args as any));
-      return {
-        content: [{ type: "text", text: `Manual test cases for project ${args.projectId}` }],
-        structuredContent: { view: "manual-cases", projectId: args.projectId, manualCases: extractArray(data) },
-      };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return {
-        content: [{ type: "text", text: error }],
-        structuredContent: { view: "manual-cases", projectId: args.projectId, manualCases: [], error },
-      };
-    }
-  },
-);
-
-// ════════════════════════════════════════════════════════════
-// App-Only Tools (called by the UI, not visible to the model)
-// ════════════════════════════════════════════════════════════
-
-registerAppTool(
-  server,
-  "ui_fetch_testruns",
-  {
-    description: "Fetches test run data for the UI",
-    inputSchema: {
-      projectId: z.string(),
-      by_branch: z.string().optional(),
-      by_time_interval: z.string().optional(),
-      limit: z.number().optional(),
-      page: z.number().optional(),
-    },
-    _meta: { ui: { resourceUri, visibility: ["app"] } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleListTestRuns(args));
-      return { content: [{ type: "text", text: "OK" }], structuredContent: { testruns: extractArray(data) } };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return { content: [{ type: "text", text: error }], structuredContent: { testruns: [], error } };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "ui_fetch_run_details",
-  {
-    description: "Fetches test run details for the UI",
-    inputSchema: {
-      projectId: z.string(),
+      // ── Internal UI routing (React app only) ─────────────
+      _action: z.enum([
+        "fetch_testruns",
+        "fetch_run_details",
+        "fetch_testcases",
+        "fetch_debug",
+        "fetch_manual_testcases",
+      ]).optional(),
       testrun_id: z.string().optional(),
       counter: z.number().optional(),
-    },
-    _meta: { ui: { resourceUri, visibility: ["app"] } },
-  },
-  async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleGetRunDetails(args));
-      return { content: [{ type: "text", text: "OK" }], structuredContent: { runDetails: data } };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return { content: [{ type: "text", text: error }], structuredContent: { runDetails: null, error } };
-    }
-  },
-);
-
-registerAppTool(
-  server,
-  "ui_fetch_testcases",
-  {
-    description: "Fetches test cases for the UI",
-    inputSchema: {
-      projectId: z.string(),
-      by_testrun_id: z.string().optional(),
-      counter: z.number().optional(),
       by_status: z.string().optional(),
+      testcase_name: z.string().optional(),
+      search: z.string().optional(),
+      status: z.string().optional(),
+      priority: z.string().optional(),
+      suiteId: z.string().optional(),
     },
-    _meta: { ui: { resourceUri, visibility: ["app"] } },
+    _meta: { ui: { resourceUri } },
   },
   async (args): Promise<CallToolResult> => {
-    try {
-      const data = parseHandlerResult(await handleListTestCases(args as any));
-      return { content: [{ type: "text", text: "OK" }], structuredContent: { testcases: extractArray(data) } };
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      return { content: [{ type: "text", text: error }], structuredContent: { testcases: [], error } };
-    }
-  },
-);
+    const pid = args.projectId;
 
-registerAppTool(
-  server,
-  "ui_fetch_debug",
-  {
-    description: "Fetches debug data for the UI",
-    inputSchema: {
-      projectId: z.string(),
-      testcase_name: z.string(),
-    },
-    _meta: { ui: { resourceUri, visibility: ["app"] } },
-  },
-  async (args): Promise<CallToolResult> => {
+    // ── Internal data-fetch actions (React UI only) ────────
+    // These return data WITHOUT a view field so ontoolresult
+    // does not reset the current view.
+    if (args._action && pid) {
+      try {
+        switch (args._action) {
+          case "fetch_testruns": {
+            const data = parseHandlerResult(await handleListTestRuns({
+              projectId: pid, by_branch: args.by_branch, by_time_interval: args.by_time_interval,
+            }));
+            const testruns = extractArray(data).map(flattenRun);
+            return { content: [{ type: "text", text: JSON.stringify({ testruns }, null, 2) }], structuredContent: { testruns } } as CallToolResult;
+          }
+          case "fetch_run_details": {
+            const raw = parseHandlerResult(await handleGetRunDetails({ projectId: pid, testrun_id: args.testrun_id, counter: args.counter })) as any;
+            const testRun = raw?.data?.testRun || raw;
+            const testSuites = raw?.data?.testSuites || [];
+            const flatRun = {
+              ...testRun,
+              passed: testRun?.testStats?.passed, failed: testRun?.testStats?.failed,
+              skipped: testRun?.testStats?.skipped, flaky: testRun?.testStats?.flaky,
+              total: testRun?.testStats?.total,
+              branch: testRun?.metadata?.git?.branch,
+              commit: testRun?.metadata?.git?.commit?.hash,
+              author: testRun?.metadata?.git?.commit?.author,
+              suites: testSuites,
+            };
+            return { content: [{ type: "text", text: JSON.stringify({ runDetails: flatRun }, null, 2) }], structuredContent: { runDetails: flatRun } } as CallToolResult;
+          }
+          case "fetch_testcases": {
+            const data = parseHandlerResult(await handleListTestCases({
+              projectId: pid, by_testrun_id: args.testrun_id, counter: args.counter, by_status: args.by_status,
+            } as any));
+            const testcases = extractArray(data);
+            return { content: [{ type: "text", text: JSON.stringify({ testcases }, null, 2) }], structuredContent: { testcases } } as CallToolResult;
+          }
+          case "fetch_debug": {
+            const raw = parseHandlerResult(await handleDebugTestCase({ projectId: pid, testcase_name: args.testcase_name! })) as any;
+            const debugData = {
+              history: raw?.data?.historical_data || [],
+              debugging_prompt: raw?.Prompt || "",
+              ...(raw?.data?.test_metadata || {}),
+            };
+            return { content: [{ type: "text", text: JSON.stringify({ debugData }, null, 2) }], structuredContent: { debugData } } as CallToolResult;
+          }
+          case "fetch_manual_testcases": {
+            const data = parseHandlerResult(await handleListManualTestCases({
+              projectId: pid, search: args.search, status: args.status, priority: args.priority, suiteId: args.suiteId,
+            } as any));
+            const manualCases = extractArray(data);
+            return { content: [{ type: "text", text: JSON.stringify({ manualCases }, null, 2) }], structuredContent: { manualCases } } as CallToolResult;
+          }
+        }
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        return { content: [{ type: "text", text: error }], structuredContent: { error } } as CallToolResult;
+      }
+    }
+
+    // ── No projectId → org/project picker ─────────────────
+    if (!pid) {
+      try {
+        const orgs = await fetchOrgsAndProjects();
+        const payload = { view: "project-picker", orgs };
+        return {
+          content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+          structuredContent: payload,
+        } as CallToolResult;
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        const payload = { view: "project-picker", orgs: [], error };
+        return { content: [{ type: "text", text: error }], structuredContent: payload } as CallToolResult;
+      }
+    }
+
+    // ── With projectId → dashboard ─────────────────────────
     try {
-      const data = parseHandlerResult(await handleDebugTestCase(args));
-      return { content: [{ type: "text", text: "OK" }], structuredContent: { debugData: data } };
+      const data = parseHandlerResult(await handleListTestRuns({ projectId: pid, by_branch: args.by_branch, by_time_interval: args.by_time_interval }));
+      const testruns = extractArray(data).map(flattenRun);
+      const payload = { view: "dashboard", projectId: pid, testruns, filters: { branch: args.by_branch, timeInterval: args.by_time_interval } };
+      return {
+        content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+        structuredContent: payload,
+      } as CallToolResult;
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
-      return { content: [{ type: "text", text: error }], structuredContent: { debugData: null, error } };
+      const payload = { view: "dashboard", projectId: pid, testruns: [], error };
+      return { content: [{ type: "text", text: error }], structuredContent: payload } as CallToolResult;
     }
   },
 );
