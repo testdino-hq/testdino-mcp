@@ -2,10 +2,9 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "moduleResolution": "bundler",
     "outDir": "./dist",
-    // "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -15,7 +14,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "jsx": "react-jsx"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
