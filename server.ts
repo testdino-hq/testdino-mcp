@@ -92,12 +92,14 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "dist")
   : import.meta.dirname;
 
+const resourceUri = "ui://testdino/app.html";
+
+export function createServer(): McpServer {
+
 const server = new McpServer({
   name: "@testdino/mcp",
   version: "2.0.0",
 });
-
-const resourceUri = "ui://testdino/app.html";
 
 // ════════════════════════════════════════════════════════════
 // Existing tools — unchanged behaviour, structuredContent added
@@ -125,13 +127,7 @@ server.tool(
     page: z.number().optional().describe("Page number"),
     get_all: z.boolean().optional().describe("Get all results"),
   },
-  async (args) => {
-    const result = await handleListTestRuns(args);
-    try {
-      const testruns = extractArray(parseHandlerResult(result)).map(flattenRun);
-      return { content: (result as any).content, structuredContent: { view: "dashboard", projectId: args.projectId, testruns, filters: { branch: args.by_branch, timeInterval: args.by_time_interval } } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleListTestRuns(args)),
 );
 
 server.tool(
@@ -142,25 +138,7 @@ server.tool(
     testrun_id: z.string().optional().describe("Test run ID (single or comma-separated, max 20)"),
     counter: z.number().optional().describe("Test run counter number"),
   },
-  async (args) => {
-    const result = await handleGetRunDetails(args);
-    try {
-      const raw = parseHandlerResult(result) as any;
-      const testRun = raw?.data?.testRun || raw;
-      const testSuites = raw?.data?.testSuites || [];
-      const flatRun = {
-        ...testRun,
-        passed: testRun?.testStats?.passed, failed: testRun?.testStats?.failed,
-        skipped: testRun?.testStats?.skipped, flaky: testRun?.testStats?.flaky,
-        total: testRun?.testStats?.total,
-        branch: testRun?.metadata?.git?.branch,
-        commit: testRun?.metadata?.git?.commit?.hash,
-        author: testRun?.metadata?.git?.commit?.author,
-        suites: testSuites,
-      };
-      return { content: (result as any).content, structuredContent: { view: "run-detail", projectId: args.projectId, runDetails: flatRun } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleGetRunDetails(args)),
 );
 
 server.tool(
@@ -189,13 +167,7 @@ server.tool(
     page: z.number().optional().describe("Page number"),
     get_all: z.boolean().optional().describe("Get all results"),
   },
-  async (args) => {
-    const result = await handleListTestCases(args as any);
-    try {
-      const testcases = extractArray(parseHandlerResult(result as any));
-      return { content: (result as any).content, structuredContent: { view: "testcases", projectId: args.projectId, testcases } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleListTestCases(args as any)),
 );
 
 server.tool(
@@ -208,14 +180,7 @@ server.tool(
     testrun_id: z.string().optional().describe("Test run ID"),
     counter: z.number().optional().describe("Test run counter"),
   },
-  async (args) => {
-    const result = await handleGetTestCaseDetails(args);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const tc = raw?.data?.testCase || raw?.data || raw;
-      return { content: (result as any).content, structuredContent: { view: "testcase-detail", projectId: args.projectId, testcase: tc } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleGetTestCaseDetails(args)),
 );
 
 server.tool(
@@ -225,18 +190,7 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     testcase_name: z.string().describe("Test case name"),
   },
-  async (args) => {
-    const result = await handleDebugTestCase(args);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const debugData = {
-        history: raw?.data?.historical_data || [],
-        debugging_prompt: raw?.Prompt || "",
-        ...(raw?.data?.test_metadata || {}),
-      };
-      return { content: (result as any).content, structuredContent: { view: "failures", projectId: args.projectId, debugData, testcaseName: args.testcase_name } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleDebugTestCase(args)),
 );
 
 server.tool(
@@ -257,13 +211,7 @@ server.tool(
     isFlaky: z.boolean().optional().describe("Filter flaky tests"),
     limit: z.number().optional().describe("Results limit"),
   },
-  async (args) => {
-    const result = await handleListManualTestCases(args as any);
-    try {
-      const manualCases = extractArray(parseHandlerResult(result as any));
-      return { content: (result as any).content, structuredContent: { view: "manual-cases", projectId: args.projectId, manualCases } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleListManualTestCases(args as any)),
 );
 
 server.tool(
@@ -273,14 +221,7 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     caseId: z.string().describe("Test case ID"),
   },
-  async (args) => {
-    const result = await handleGetManualTestCase(args);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const tc = raw?.data?.testCase || raw?.data || raw;
-      return { content: (result as any).content, structuredContent: { view: "manual-case-detail", projectId: args.projectId, testcase: tc } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleGetManualTestCase(args)),
 );
 
 server.tool(
@@ -300,14 +241,7 @@ server.tool(
     layer: z.string().optional().describe("Layer"),
     behavior: z.string().optional().describe("Behavior"),
   },
-  async (args) => {
-    const result = await handleCreateManualTestCase(args as any);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const created = raw?.data || raw;
-      return { content: (result as any).content, structuredContent: { view: "action-result", action: "created", item: "manual test case", label: args.title, data: created, projectId: args.projectId } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleCreateManualTestCase(args as any)),
 );
 
 server.tool(
@@ -330,14 +264,7 @@ server.tool(
       behavior: z.string().optional(),
     }).describe("Fields to update"),
   },
-  async (args) => {
-    const result = await handleUpdateManualTestCase(args as any);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const updated = raw?.data || raw;
-      return { content: (result as any).content, structuredContent: { view: "action-result", action: "updated", item: "manual test case", label: args.caseId, data: updated, projectId: args.projectId } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleUpdateManualTestCase(args as any)),
 );
 
 server.tool(
@@ -347,13 +274,7 @@ server.tool(
     projectId: z.string().describe("Project ID"),
     parentSuiteId: z.string().optional().describe("Parent suite ID"),
   },
-  async (args) => {
-    const result = await handleListManualTestSuites(args);
-    try {
-      const suites = extractArray(parseHandlerResult(result as any));
-      return { content: (result as any).content, structuredContent: { view: "manual-suites", projectId: args.projectId, suites } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleListManualTestSuites(args)),
 );
 
 server.tool(
@@ -364,14 +285,7 @@ server.tool(
     name: z.string().describe("Suite name"),
     parentSuiteId: z.string().optional().describe("Parent suite ID for nesting"),
   },
-  async (args) => {
-    const result = await handleCreateManualTestSuite(args);
-    try {
-      const raw = parseHandlerResult(result as any) as any;
-      const created = raw?.data || raw;
-      return { content: (result as any).content, structuredContent: { view: "action-result", action: "created", item: "test suite", label: args.name, data: created, projectId: args.projectId } } as CallToolResult;
-    } catch { return asToolResult(result as any); }
-  },
+  async (args) => asToolResult(await handleCreateManualTestSuite(args)),
 );
 
 // ════════════════════════════════════════════════════════════
@@ -510,7 +424,7 @@ registerAppTool(
 
 registerAppResource(
   server,
-  resourceUri,
+  "TestDino Dashboard",
   resourceUri,
   { mimeType: RESOURCE_MIME_TYPE },
   async () => {
@@ -521,7 +435,7 @@ registerAppResource(
           uri: resourceUri,
           mimeType: RESOURCE_MIME_TYPE,
           text: html,
-          _meta: {
+          metadata: {
             ui: {
               csp: {
                 connectDomains: ["https://api.testdino.com", "http://localhost:3001"],
@@ -554,10 +468,14 @@ server.resource("testdino-docs", "testdino://docs/skill.md", async () => {
   };
 });
 
+return server;
+
+} // end createServer
+
 // ════════════════════════════════════════════════════════════
-// Start server
+// Start server (stdio) — default when run directly
 // ════════════════════════════════════════════════════════════
 
 const transport = new StdioServerTransport();
-await server.connect(transport);
+await createServer().connect(transport);
 console.error("TestDino MCP App server running on stdio");

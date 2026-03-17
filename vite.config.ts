@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react(), viteSingleFile()],
   build: {
     outDir: "dist",
+    emptyOutDir: false,
     rollupOptions: {
       input: "mcp-app.html",
     },
