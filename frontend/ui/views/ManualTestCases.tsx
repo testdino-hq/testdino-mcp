@@ -29,42 +29,44 @@ export function ManualTestCases({ data, navigate }: ManualTestCasesProps) {
         <div className="empty-state">No manual test cases found.</div>
       ) : (
         <>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Automation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageCases.map((tc: any, i: number) => (
-                <tr key={tc._id || tc.id || i}>
-                  <td style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 12 }}>
-                    {tc.caseId || tc.humanId || `TC-${page * PAGE_SIZE + i + 1}`}
-                  </td>
-                  <td>{tc.title || tc.name}</td>
-                  <td>
-                    {tc.priority && (
-                      <span className={`badge badge-${tc.priority}`}>{tc.priority}</span>
-                    )}
-                  </td>
-                  <td>
-                    {tc.status && (
-                      <span className={`badge badge-${tc.status === "actual" ? "passed" : tc.status === "deprecated" ? "failed" : "skipped"}`}>
-                        {tc.status}
-                      </span>
-                    )}
-                  </td>
-                  <td>{tc.type || "—"}</td>
-                  <td>{tc.automationStatus || "—"}</td>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Automation</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageCases.map((tc: any, i: number) => (
+                  <tr key={tc._id || tc.id || i}>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.6875rem" }}>
+                      {tc.caseId || tc.humanId || `TC-${page * PAGE_SIZE + i + 1}`}
+                    </td>
+                    <td className="wrap-cell">{tc.title || tc.name}</td>
+                    <td>
+                      {tc.priority && (
+                        <span className={`badge badge-${tc.priority}`}>{tc.priority}</span>
+                      )}
+                    </td>
+                    <td>
+                      {tc.status && (
+                        <span className={`badge badge-${tc.status === "actual" ? "passed" : tc.status === "deprecated" ? "failed" : "skipped"}`}>
+                          {tc.status}
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ color: "var(--muted-foreground)" }}>{tc.type || "—"}</td>
+                    <td style={{ color: "var(--muted-foreground)" }}>{tc.automationStatus || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <Pagination page={page} total={manualCases.length} onChange={setPage} />
         </>
       )}

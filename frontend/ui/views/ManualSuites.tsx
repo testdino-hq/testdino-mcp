@@ -41,49 +41,51 @@ export function ManualSuites({ data, navigate, callTool }: ManualSuitesProps) {
         <div className="empty-state">No test suites found.</div>
       ) : (
         <>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Suite Name</th>
-                <th>ID</th>
-                <th>Children</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageSuites.map((suite: any, i: number) => (
-                <tr key={suite._id || suite.id || i}>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <SuiteIcon />
-                      <span style={{ fontWeight: 500 }}>
-                        {suite.name || suite.title || `Suite ${page * PAGE_SIZE + i + 1}`}
-                      </span>
-                    </div>
-                    {suite.description && (
-                      <div style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 2 }}>
-                        {suite.description}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    <span className="mono-tag">{suite._id || suite.id || "—"}</span>
-                  </td>
-                  <td style={{ color: "var(--muted-foreground)" }}>
-                    {suite.childCount ?? suite.children?.length ?? suite.casesCount ?? "—"}
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => handleDrillDown(suite._id || suite.id)}
-                    >
-                      View Cases
-                    </button>
-                  </td>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Suite Name</th>
+                  <th>ID</th>
+                  <th>Children</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageSuites.map((suite: any, i: number) => (
+                  <tr key={suite._id || suite.id || i}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <SuiteIcon />
+                        <span style={{ fontWeight: 500 }}>
+                          {suite.name || suite.title || `Suite ${page * PAGE_SIZE + i + 1}`}
+                        </span>
+                      </div>
+                      {suite.description && (
+                        <div style={{ fontSize: "0.6875rem", color: "var(--muted-foreground)", marginTop: 2 }}>
+                          {suite.description}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className="mono-tag">{suite._id || suite.id || "—"}</span>
+                    </td>
+                    <td style={{ color: "var(--muted-foreground)" }}>
+                      {suite.childCount ?? suite.children?.length ?? suite.casesCount ?? "—"}
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => handleDrillDown(suite._id || suite.id)}
+                      >
+                        View Cases
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <Pagination page={page} total={suites.length} onChange={setPage} />
         </>
       )}

@@ -63,38 +63,23 @@ export function RunDetail({ data, navigate, callTool }: RunDetailProps) {
       {/* Stats */}
       <div className="stats-bar">
         <div className="stat-card passed">
-          <div className="stat-card-header">
-            <div className="stat-label">Passed</div>
-            <div className="stat-card-icon"><CheckIcon /></div>
-          </div>
+          <div className="stat-label">Passed</div>
           <div className="stat-value">{run?.passed ?? run?.testStats?.passed ?? "—"}</div>
         </div>
         <div className="stat-card failed">
-          <div className="stat-card-header">
-            <div className="stat-label">Failed</div>
-            <div className="stat-card-icon"><XIcon /></div>
-          </div>
+          <div className="stat-label">Failed</div>
           <div className="stat-value">{run?.failed ?? run?.testStats?.failed ?? "—"}</div>
         </div>
         <div className="stat-card skipped">
-          <div className="stat-card-header">
-            <div className="stat-label">Skipped</div>
-            <div className="stat-card-icon"><SkipIcon /></div>
-          </div>
+          <div className="stat-label">Skipped</div>
           <div className="stat-value">{run?.skipped ?? run?.testStats?.skipped ?? "—"}</div>
         </div>
         <div className="stat-card flaky">
-          <div className="stat-card-header">
-            <div className="stat-label">Flaky</div>
-            <div className="stat-card-icon"><ZapIcon /></div>
-          </div>
+          <div className="stat-label">Flaky</div>
           <div className="stat-value">{run?.flaky ?? run?.testStats?.flaky ?? "—"}</div>
         </div>
         <div className="stat-card total">
-          <div className="stat-card-header">
-            <div className="stat-label">Total</div>
-            <div className="stat-card-icon"><ListIcon /></div>
-          </div>
+          <div className="stat-label">Total</div>
           <div className="stat-value">{run?.total ?? run?.testStats?.total ?? "—"}</div>
         </div>
       </div>
@@ -113,7 +98,7 @@ export function RunDetail({ data, navigate, callTool }: RunDetailProps) {
       <div className="section">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div className="section-title" style={{ marginBottom: 0 }}>Test Cases</div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <select
               className="filters-bar-select"
               value={statusFilter}
@@ -125,9 +110,6 @@ export function RunDetail({ data, navigate, callTool }: RunDetailProps) {
               <option value="skipped">Skipped</option>
               <option value="flaky">Flaky</option>
             </select>
-            <button className="btn btn-sm" onClick={() => loadCases(statusFilter)} disabled={loadingCases}>
-              {loadingCases ? "Loading..." : "Refresh"}
-            </button>
           </div>
         </div>
 
@@ -144,37 +126,39 @@ export function RunDetail({ data, navigate, callTool }: RunDetailProps) {
 
         {!loadingCases && testcases && testcases.length > 0 && (
           <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Test Case</th>
-                  <th>Status</th>
-                  <th>Duration</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageCases.map((tc: any, i: number) => (
-                  <tr key={tc._id || tc.id || i}>
-                    <td>{tc.title || tc.name || tc.testcaseName || `Test ${casesPage * PAGE_SIZE + i + 1}`}</td>
-                    <td>
-                      <span className={`badge badge-${tc.status}`}>{tc.status}</span>
-                    </td>
-                    <td style={{ color: "var(--muted-foreground)" }}>{formatDuration(tc.duration)}</td>
-                    <td>
-                      {(tc.status === "failed" || tc.status === "flaky") && (
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => handleDebugCase(tc.title || tc.name || tc.testcaseName)}
-                        >
-                          Debug
-                        </button>
-                      )}
-                    </td>
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pageCases.map((tc: any, i: number) => (
+                    <tr key={tc._id || tc.id || i}>
+                      <td className="wrap-cell">{tc.title || tc.name || tc.testcaseName || `Test ${casesPage * PAGE_SIZE + i + 1}`}</td>
+                      <td>
+                        <span className={`badge badge-${tc.status}`}>{tc.status}</span>
+                      </td>
+                      <td style={{ color: "var(--muted-foreground)" }}>{formatDuration(tc.duration)}</td>
+                      <td>
+                        {(tc.status === "failed" || tc.status === "flaky") && (
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleDebugCase(tc.title || tc.name || tc.testcaseName)}
+                          >
+                            Debug
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <Pagination page={casesPage} total={testcases.length} onChange={setCasesPage} />
           </>
         )}

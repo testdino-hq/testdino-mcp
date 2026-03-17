@@ -190,7 +190,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
   }
 
   const activeSection: "testruns" | "manual" = viewData.view === "manual-cases" ? "manual" : "testruns";
-  const commonProps = { navigate, callTool, hostContext };
+  const commonProps = { app, navigate, callTool, hostContext };
 
   return (
     <div
@@ -211,7 +211,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
         </svg>
         <h1>TestDino</h1>
         {projectId && <span className="project-tag">{projectId}</span>}
-        <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+        <div className="header-actions">
           {history.length > 0 && (
             <button className="btn btn-sm" onClick={goBack}>
               ← Back

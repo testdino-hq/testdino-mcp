@@ -36,36 +36,38 @@ export function TestCases({ data, navigate, callTool }: TestCasesProps) {
         <div className="empty-state">No test cases found.</div>
       ) : (
         <>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Test Case</th>
-                <th>Status</th>
-                <th>Spec File</th>
-                <th>Duration</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageCases.map((tc: any, i: number) => (
-                <tr key={tc._id || tc.id || i}>
-                  <td>{tc.title || tc.name || tc.testcaseName}</td>
-                  <td>
-                    <span className={`badge badge-${tc.status}`}>{tc.status}</span>
-                  </td>
-                  <td style={{ fontSize: 12, color: "#64748b" }}>{tc.specFile || tc.spec_file || "—"}</td>
-                  <td>{tc.duration ? `${Math.round(tc.duration / 1000)}s` : "—"}</td>
-                  <td>
-                    {(tc.status === "failed" || tc.status === "flaky") && (
-                      <button className="btn btn-sm" onClick={() => handleDebug(tc.title || tc.name || tc.testcaseName)}>
-                        Debug
-                      </button>
-                    )}
-                  </td>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Test Case</th>
+                  <th>Status</th>
+                  <th>Spec File</th>
+                  <th>Duration</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageCases.map((tc: any, i: number) => (
+                  <tr key={tc._id || tc.id || i}>
+                    <td className="wrap-cell">{tc.title || tc.name || tc.testcaseName}</td>
+                    <td>
+                      <span className={`badge badge-${tc.status}`}>{tc.status}</span>
+                    </td>
+                    <td style={{ color: "var(--muted-foreground)" }}>{tc.specFile || tc.spec_file || "—"}</td>
+                    <td style={{ color: "var(--muted-foreground)" }}>{tc.duration ? `${Math.round(tc.duration / 1000)}s` : "—"}</td>
+                    <td>
+                      {(tc.status === "failed" || tc.status === "flaky") && (
+                        <button className="btn btn-sm" onClick={() => handleDebug(tc.title || tc.name || tc.testcaseName)}>
+                          Debug
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <Pagination page={page} total={testcases.length} onChange={setPage} />
         </>
       )}

@@ -62,28 +62,30 @@ export function ManualCaseDetail({ data, navigate }: ManualCaseDetailProps) {
       {steps.length > 0 && (
         <div className="section">
           <div className="section-title">Test Steps</div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th style={{ width: 36 }}>#</th>
-                <th>Action</th>
-                <th>Expected Result</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {steps.map((step: any, i: number) => (
-                <tr key={i}>
-                  <td style={{ color: "var(--muted-foreground)" }}>{i + 1}</td>
-                  <td>{step.action}</td>
-                  <td style={{ color: "var(--muted-foreground)" }}>{step.expectedResult || "—"}</td>
-                  <td style={{ color: "var(--muted-foreground)", fontSize: 12, fontFamily: "monospace" }}>
-                    {step.data || "—"}
-                  </td>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>#</th>
+                  <th>Action</th>
+                  <th>Expected Result</th>
+                  <th>Data</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {steps.map((step: any, i: number) => (
+                  <tr key={i}>
+                    <td style={{ color: "var(--muted-foreground)" }}>{i + 1}</td>
+                    <td className="wrap-cell">{step.action}</td>
+                    <td className="wrap-cell" style={{ color: "var(--muted-foreground)" }}>{step.expectedResult || "—"}</td>
+                    <td style={{ color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "0.6875rem" }}>
+                      {step.data || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
