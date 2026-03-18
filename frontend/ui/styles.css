@@ -112,6 +112,10 @@
               border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
+html, body {
+  position: relative;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.8125rem;
@@ -296,7 +300,7 @@ body {
 
 .data-table thead th {
   text-align: left;
-  padding: 8px 10px;
+  padding: 8px 14px;
   font-weight: 600;
   color: var(--muted-foreground);
   border-bottom: 1px solid var(--border);
@@ -324,7 +328,7 @@ body {
 }
 
 .data-table tbody td {
-  padding: 8px 10px;
+  padding: 8px 14px;
   vertical-align: middle;
   color: var(--foreground);
   white-space: nowrap;
@@ -596,17 +600,17 @@ select {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 2px 14px;
+  padding: 4px 16px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
 }
 
 .detail-row {
   display: flex;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 16px;
+  padding: 15px 15px;
   border-bottom: 1px solid var(--border);
-  align-items: flex-start;
+  align-items: center;
 }
 
 .detail-row:last-child {
@@ -614,21 +618,20 @@ select {
 }
 
 .detail-label {
-  font-weight: 500;
-  min-width: 80px;
-  max-width: 80px;
+  font-weight: 600;
+  min-width: 90px;
+  max-width: 90px;
   color: var(--muted-foreground);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
   flex-shrink: 0;
-  padding-top: 1px;
 }
 
 .detail-value {
   flex: 1;
   word-break: break-word;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--foreground);
   min-width: 0;
 }
@@ -1336,4 +1339,484 @@ select {
     padding: 2px 5px;
     font-size: 0.5625rem;
   }
+}
+
+/* ─────────────────────────────────────────────────────────
+   CLAY-STYLE SPLIT PANEL LAYOUT
+───────────────────────────────────────────────────────── */
+.split-panel {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--card);
+  margin-bottom: 8px;
+}
+
+.item-list {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.split-panel.has-detail .item-list {
+  flex: 0 0 44%;
+  border-right: 1px solid var(--border);
+  max-width: 44%;
+}
+
+/* ─────────────────────────────────────────────────────────
+   ITEM CARD — Clay-style contact row
+───────────────────────────────────────────────────────── */
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.item-card:last-child {
+  border-bottom: none;
+}
+
+.item-card:hover {
+  background: var(--muted);
+}
+
+.item-card.selected {
+  background: var(--accent);
+}
+
+/* Avatar circle — matches Clay's colored person circles */
+.item-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: white;
+}
+
+.item-avatar.avatar-passed     { background: var(--passed);      color: white; }
+.item-avatar.avatar-failed     { background: var(--failed);      color: white; }
+.item-avatar.avatar-flaky      { background: var(--flaky);       color: white; }
+.item-avatar.avatar-skipped    { background: var(--skipped);     color: white; }
+.item-avatar.avatar-running    { background: var(--running);     color: white; }
+.item-avatar.avatar-interrupted{ background: var(--interrupted); color: white; }
+.item-avatar.avatar-total      { background: var(--muted-foreground); color: white; }
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-primary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.split-panel.has-detail .item-title {
+  max-width: 100px;
+}
+
+.item-secondary {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6875rem;
+  color: hsl(220, 70%, 52%); /* Clay's blue link style */
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.split-panel.has-detail .item-secondary {
+  max-width: 110px;
+}
+
+.item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* "View Info" button — Clay-style outlined pill */
+.item-action-btn {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.1s, border-color 0.1s;
+  box-shadow: var(--shadow-sm);
+}
+
+.item-action-btn:hover {
+  background: var(--muted);
+  border-color: var(--muted-foreground);
+}
+
+/* ─────────────────────────────────────────────────────────
+   DETAIL PANEL — right side slide-in
+───────────────────────────────────────────────────────── */
+.split-panel .detail-panel {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--card);
+  padding: 0;
+}
+
+.detail-content {
+  padding: 14px 16px;
+}
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  min-height: 120px;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-section-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 10px 0 6px;
+}
+
+.detail-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.detail-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.detail-meta-item svg {
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.detail-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.75rem;
+}
+
+.detail-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.passed-dot  { background: var(--passed); }
+.failed-dot  { background: var(--failed); }
+.flaky-dot   { background: var(--flaky); }
+.skipped-dot { background: var(--skipped); }
+
+.detail-stat-label {
+  flex: 1;
+  color: var(--muted-foreground);
+}
+
+.detail-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.passed-text  { color: var(--passed); }
+.failed-text  { color: var(--failed); }
+.flaky-text   { color: var(--flaky); }
+
+/* Suites list in detail */
+.detail-suites {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-suite-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  padding: 3px 0;
+}
+
+.detail-suite-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.detail-suite-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--muted-foreground);
+}
+
+.badge-passed-dot  { background: var(--passed); }
+.badge-failed-dot  { background: var(--failed); }
+.badge-flaky-dot   { background: var(--flaky); }
+.badge-skipped-dot { background: var(--skipped); }
+
+.detail-suite-more {
+  font-size: 0.6rem;
+  color: var(--muted-foreground);
+  padding: 2px 0;
+}
+
+.detail-error-box {
+  background: var(--failed-bg);
+  border: 1px solid var(--failed-border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 0.6875rem;
+  color: var(--failed);
+  font-family: "SF Mono", "Geist Mono", Monaco, monospace;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* ─────────────────────────────────────────────────────────
+   ACTION BAR — Clay-style bottom pill buttons
+───────────────────────────────────────────────────────── */
+.action-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 2px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  white-space: nowrap;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--muted);
+  border-color: var(--muted-foreground);
+}
+
+.action-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.action-btn-plus {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+/* Loading text */
+.loading-text {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* ─────────────────────────────────────────────────────────
+   FULLSCREEN OVERLAY
+───────────────────────────────────────────────────────── */
+.fullscreen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--background);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.fullscreen-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.btn-open:hover {
+  opacity: 0.85;
+}
+
+.btn-close-fs {
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CLAY-STYLE LOGO LOADING SCREEN
+───────────────────────────────────────────────────────── */
+.logo-loading-screen {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+}
+
+.logo-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-loading-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-loading-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.logo-loading-image {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-loading-bar {
+  width: 120px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.logo-loading-bar-fill {
+  height: 100%;
+  width: 40%;
+  background: var(--foreground);
+  border-radius: 100px;
+  animation: loading-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes loading-slide {
+  0%   { transform: translateX(-100%); width: 40%; }
+  50%  { width: 60%; }
+  100% { transform: translateX(350%); width: 40%; }
 }
