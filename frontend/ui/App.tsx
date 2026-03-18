@@ -1,7 +1,9 @@
+/// <reference path="./assets/images.d.ts" />
 import type { App, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { useCallback, useEffect, useRef, useState } from "react";
+import logoUrl from "./assets/logo.png";
 import { Dashboard } from "./views/Dashboard";
 import { RunDetail } from "./views/RunDetail";
 import { FailureAnalysis } from "./views/FailureAnalysis";
@@ -83,14 +85,7 @@ export function TestDinoApp() {
   }
 
   if (!app) {
-    return (
-      <div className="app-container">
-        <div className="loading">
-          <div className="spinner" />
-          Connecting to host...
-        </div>
-      </div>
-    );
+    return <LogoLoadingScreen />;
   }
 
   return (
@@ -116,6 +111,18 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
   const [navLoading, setNavLoading] = useState<"testruns" | "manual" | null>(null);
   const [history, setHistory] = useState<ViewData[]>([]);
   const isInternalNavRef = useRef(false);
+
+  const isFullscreen = hostContext?.displayMode === "fullscreen";
+
+  const toggleFullscreen = useCallback(async () => {
+    const currentMode = hostContext?.displayMode ?? "inline";
+    const nextMode = currentMode === "fullscreen" ? "inline" : "fullscreen";
+    try {
+      await app.requestDisplayMode({ mode: nextMode });
+    } catch {
+      // host doesn't support display mode changes
+    }
+  }, [app, hostContext?.displayMode]);
 
   useEffect(() => {
     if (!isInternalNavRef.current) {
@@ -178,30 +185,40 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
     [projectId, callTool, navigate],
   );
 
+  // Auto-recover: if the initial show_testdino result was lost (race condition
+  // where the host fires ontoolresult before React has mounted), re-call the
+  // tool ourselves to bootstrap the UI.
+  useEffect(() => {
+    if (viewData) return;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await app.callServerTool({ name: "show_testdino", arguments: {} });
+        const sc = result.structuredContent as ViewData | undefined;
+        if (sc?.view) {
+          setViewData(sc);
+          return;
+        }
+        const textBlock = (result.content as any[])?.find((c: any) => c.type === "text");
+        if (textBlock?.text) {
+          try {
+            const parsed = JSON.parse(textBlock.text) as ViewData;
+            if (parsed?.view) setViewData(parsed);
+          } catch { /* not JSON */ }
+        }
+      } catch { /* ignore */ }
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [app, viewData]);
+
   if (!viewData) {
-    return (
-      <div className="app-container">
-        <div className="loading">
-          <div className="spinner" />
-          Waiting for data...
-        </div>
-      </div>
-    );
+    return <LogoLoadingScreen />;
   }
 
   const activeSection: "testruns" | "manual" = viewData.view === "manual-cases" ? "manual" : "testruns";
   const commonProps = { app, navigate, callTool, hostContext };
 
-  return (
-    <div
-      className="app-container"
-      style={{
-        paddingTop:    hostContext?.safeAreaInsets?.top,
-        paddingRight:  hostContext?.safeAreaInsets?.right,
-        paddingBottom: hostContext?.safeAreaInsets?.bottom,
-        paddingLeft:   hostContext?.safeAreaInsets?.left,
-      }}
-    >
+  const innerContent = (
+    <>
       {/* Header */}
       <div className="app-header">
         <svg className="logo" viewBox="0 0 34 31" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -220,6 +237,14 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
           {cachedOrgs.length > 0 && viewData.view !== "project-picker" && (
             <button className="btn btn-sm" onClick={() => navigate("project-picker", { orgs: cachedOrgs })}>
               Change Project
+            </button>
+          )}
+          {!isFullscreen && (
+            <button className="btn btn-open" onClick={toggleFullscreen}>
+              Open
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 9L9 1M9 1H4M9 1V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           )}
         </div>
@@ -261,6 +286,36 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
       {viewData.view === "manual-case-detail" && <ManualCaseDetail data={viewData} {...commonProps} />}
       {viewData.view === "manual-suites" && <ManualSuites data={viewData} {...commonProps} />}
       {viewData.view === "action-result" && <ActionResult data={viewData} {...commonProps} />}
+    </>
+  );
+
+  return (
+    <div
+      className="app-container"
+      style={{
+        paddingTop:    hostContext?.safeAreaInsets?.top,
+        paddingRight:  hostContext?.safeAreaInsets?.right,
+        paddingBottom: hostContext?.safeAreaInsets?.bottom,
+        paddingLeft:   hostContext?.safeAreaInsets?.left,
+      }}
+    >
+      {innerContent}
+    </div>
+  );
+}
+
+/* ── Clay-style logo loading screen ─────────────────────── */
+function LogoLoadingScreen() {
+  return (
+    <div className="logo-loading-screen">
+      <div className="logo-loading-inner">
+        <div className="logo-loading-wordmark">
+          <img src={logoUrl} alt="TestDino" className="logo-loading-image" />
+        </div>
+        <div className="logo-loading-bar">
+          <div className="logo-loading-bar-fill" />
+        </div>
+      </div>
     </div>
   );
 }

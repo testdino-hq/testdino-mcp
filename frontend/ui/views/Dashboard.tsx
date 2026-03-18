@@ -15,7 +15,7 @@ export function Dashboard({ data, navigate, callTool }: DashboardProps) {
 
   const [branch, setBranch] = useState(filters.branch || "");
   const [timeInterval, setTimeInterval] = useState(filters.timeInterval || "");
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [runs, setRuns] = useState(testruns);
   const [page, setPage] = useState(0);
   const initialMount = useRef(true);
@@ -196,59 +196,11 @@ function BranchIcon() {
   );
 }
 
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
 function ClockIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3"/>
       <path d="M8 5v3.5l2.5 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
-function SkipIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M3.5 4.5l5 3.5-5 3.5V4.5zM10 4.5v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function ZapIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M9.5 2L3 9h5l-1.5 5L14 7H9L9.5 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function TrendIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M2 11l4-4 3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
 }
