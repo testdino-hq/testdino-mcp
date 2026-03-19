@@ -110,6 +110,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
   const [cachedOrgs, setCachedOrgs] = useState<unknown[]>([]);
   const [navLoading, setNavLoading] = useState<"testruns" | "manual" | null>(null);
   const [history, setHistory] = useState<ViewData[]>([]);
+  const [isWebClient, setIsWebClient] = useState(false);
   const isInternalNavRef = useRef(false);
 
   const isFullscreen = hostContext?.displayMode === "fullscreen";
@@ -133,6 +134,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
     if (viewData?.view === "project-picker" && Array.isArray(viewData.orgs)) {
       setCachedOrgs(viewData.orgs as unknown[]);
     }
+    if (viewData?.isWebClient === true) setIsWebClient(true);
   }, [viewData]);
 
   const navigate = useCallback(
@@ -239,7 +241,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
               Change Project
             </button>
           )}
-          {!isFullscreen && (
+          {isWebClient && !isFullscreen && (
             <button className="btn btn-open" onClick={toggleFullscreen}>
               Open
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -291,7 +293,7 @@ function AppContent({ app, viewData, setViewData, hostContext }: AppContentProps
 
   return (
     <div
-      className="app-container"
+      className={`app-container${isFullscreen ? " is-fullscreen" : ""}`}
       style={{
         paddingTop:    hostContext?.safeAreaInsets?.top,
         paddingRight:  hostContext?.safeAreaInsets?.right,

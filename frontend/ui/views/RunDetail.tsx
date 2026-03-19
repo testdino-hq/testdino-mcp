@@ -85,7 +85,7 @@ export function RunDetail({ data, navigate, callTool }: RunDetailProps) {
       </div>
 
       {/* Details panel */}
-      <div className="detail-panel" style={{ marginBottom: 20,display: "flex", gap: 24, flexWrap: "wrap",justifyContent: "space-between", alignItems: "center" }}>
+      <div className="detail-panel" style={{ marginBottom: 20 }}>
         <DetailRow label="  Status"   value={run?.status} badge />
         <DetailRow label="Branch"   value={run?.branch   || run?.metadata?.git?.branch} />
         <DetailRow label="Commit"   value={run?.commit   || run?.metadata?.git?.commit?.hash} />

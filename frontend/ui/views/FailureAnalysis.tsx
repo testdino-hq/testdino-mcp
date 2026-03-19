@@ -16,23 +16,111 @@ export function FailureAnalysis({ app, data, navigate }: FailureAnalysisProps) {
   const [activeTab, setActiveTab] = useState<"summary" | "history" | "errors">("summary");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [collapsedErrors, setCollapsedErrors] = useState<Set<number>>(new Set());
 
-  const history        = debugData?.history         || debugData?.testRuns        || [];
+  const history         = debugData?.history         || debugData?.testRuns        || [];
   const errorCategories = debugData?.errorCategories || debugData?.error_categories || [];
-  const commonErrors   = debugData?.commonErrors    || debugData?.common_errors    || [];
-  const debugPrompt    = debugData?.debugging_prompt || debugData?.debuggingPrompt || "";
 
   const failureCount = history.filter((h: any) => h.status === "failed").length;
   const totalCount   = history.length;
   const failureRate  = totalCount > 0 ? Math.round((failureCount / totalCount) * 100) : 0;
 
+  // Extract the primary error message — first line only to avoid appended browser logs.
+  function getErrorMsg(h: any): string {
+    let msg = "";
+    if (h.error?.message) msg = h.error.message;
+    else if (typeof h.error === "string" && h.error) msg = h.error;
+    else if (h.errorMessage) msg = h.errorMessage;
+    else if (Array.isArray(h.allErrors) && h.allErrors.length > 0) {
+      const first = h.allErrors[0];
+      msg = first?.message || (typeof first === "string" ? first : "") || "";
+    } else if (Array.isArray(h.attempts) && h.attempts.length > 0) {
+      const a = h.attempts[h.attempts.length - 1];
+      msg = a?.error?.message || (typeof a?.error === "string" ? a.error : "") || "";
+    }
+    return msg.split("\n")[0].trim();
+  }
+  function getStack(h: any): string {
+    if (h.error?.stack) return h.error.stack;
+    if (h.stackTrace) return h.stackTrace;
+    if (h.stack) return h.stack;
+    if (Array.isArray(h.allErrors) && h.allErrors[0]?.stack) return h.allErrors[0].stack;
+    return "";
+  }
+  function cleanStack(raw: string): string {
+    if (!raw) return "";
+    const lines = raw.split("\n").filter(line => {
+      const t = line.trim();
+      return t !== "" &&
+        t !== "Browser logs:" &&
+        t !== "Call log:" &&
+        !t.startsWith("<launching>") &&
+        !t.startsWith("<launched>") &&
+        !t.startsWith("[pid=") &&
+        !t.startsWith("--") &&
+        !/^-\s+\[pid=/.test(t) &&
+        !/^-\s+</.test(t);
+    });
+    const result = lines.join("\n").trim();
+    return result.length > 1500 ? result.slice(0, 1500) + "\n...(truncated)" : result;
+  }
+
+  // Derive error patterns from history — one pattern per unique error message.
+  const commonErrors = (() => {
+    const errorMap = new Map<string, { message: string; stack: string; count: number; category: string }>();
+    for (const h of history) {
+      if (h.status !== "failed" && h.status !== "flaky") continue;
+      const msg = getErrorMsg(h);
+      if (!msg) continue;
+      const key = msg.slice(0, 120);
+      const existing = errorMap.get(key);
+      if (existing) existing.count++;
+      else errorMap.set(key, { message: msg, stack: cleanStack(getStack(h)), count: 1, category: h.errorCategory || h.category || "—" });
+    }
+    return Array.from(errorMap.values()).sort((a, b) => b.count - a.count);
+  })();
+
+  // Build a contextual prompt using correct field paths from the API.
+  const contextualPrompt = (() => {
+    const lastFailure = [...history].reverse().find((h: any) => h.status === "failed" || h.status === "flaky");
+    if (!lastFailure) return "";
+    const error  = getErrorMsg(lastFailure);
+    const stack  = cleanStack(getStack(lastFailure));
+    const file   = lastFailure.testSuite?.filePath || lastFailure.testSuite?.fileName || "";
+    const branch = lastFailure.testRun?.branch || lastFailure.branch || "";
+    const env    = lastFailure.testRun?.environment || lastFailure.environment || "";
+    const author = lastFailure.testRun?.author || "";
+    const commit = lastFailure.testRun?.commit || "";
+    const failureRate = totalCount > 0 ? Math.round((history.filter((h: any) => h.status === "failed" || h.status === "flaky").length / totalCount) * 100) : 0;
+
+    const lines: string[] = [];
+    lines.push(`I have a failing automated test that needs to be fixed.`, ``);
+    lines.push(`Test case: "${testcaseName}"`);
+    if (file)   lines.push(`Test file: ${file}`);
+    if (branch) lines.push(`Branch: ${branch}`);
+    if (env)    lines.push(`Environment: ${env}`);
+    if (author) lines.push(`Author: ${author}`);
+    if (commit) lines.push(`Commit: ${commit}`);
+    lines.push(`Failure rate: ${failureRate}% (${history.filter((h: any) => h.status === "failed" || h.status === "flaky").length} of ${totalCount} runs)`);
+    if (error) {
+      lines.push(``, `Error:`, error);
+    }
+    if (stack && stack !== error) {
+      lines.push(``, `Stack trace:`, stack);
+    }
+    lines.push(``);
+    lines.push(`1) What is the root cause of this specific failure?`);
+    lines.push(`2) What is the fix?`);
+    return lines.join("\n");
+  })();
+
   const handleSendToChat = useCallback(async () => {
-    if (!debugPrompt || sending) return;
+    if (!contextualPrompt || sending) return;
     setSending(true);
     try {
       await app.sendMessage({
         role: "user",
-        content: [{ type: "text", text: debugPrompt }],
+        content: [{ type: "text", text: contextualPrompt }],
       });
       setSent(true);
     } catch (e) {
@@ -40,7 +128,7 @@ export function FailureAnalysis({ app, data, navigate }: FailureAnalysisProps) {
     } finally {
       setSending(false);
     }
-  }, [app, debugPrompt, sending]);
+  }, [app, contextualPrompt, sending]);
 
   return (
     <div className="view-fade-in">
@@ -108,7 +196,7 @@ export function FailureAnalysis({ app, data, navigate }: FailureAnalysisProps) {
             </div>
           )}
 
-          {debugPrompt && (
+          {contextualPrompt && (
             <div className="section">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <h3 className="section-title" style={{ marginBottom: 0 }}>AI Debugging Suggestion</h3>
@@ -135,7 +223,7 @@ export function FailureAnalysis({ app, data, navigate }: FailureAnalysisProps) {
                   )}
                 </button>
               </div>
-              <FormattedPrompt text={debugPrompt} />
+              <FormattedPrompt text={contextualPrompt} />
             </div>
           )}
         </div>
@@ -146,21 +234,32 @@ export function FailureAnalysis({ app, data, navigate }: FailureAnalysisProps) {
           {commonErrors.length === 0 ? (
             <div className="empty-state">No error patterns found.</div>
           ) : (
-            commonErrors.map((err: any, i: number) => (
-              <div key={i} className="section">
-                <div className="detail-panel">
-                  <DetailRow label="Error"       value={err.message || err.error || err.errorMessage} />
-                  <DetailRow label="Occurrences" value={String(err.count || err.occurrences || "")} />
-                  <DetailRow label="Category"    value={err.category} />
-                  {(err.stackTrace || err.stack) && (
-                    <div style={{ marginTop: 8, padding: "0 0 8px" }}>
-                      <div className="detail-label" style={{ marginBottom: 6 }}>Stack Trace</div>
-                      <div className="code-block">{err.stackTrace || err.stack}</div>
+            commonErrors.map((err: any, i: number) => {
+              const isOpen = !collapsedErrors.has(i);
+              const toggle = () => setCollapsedErrors(prev => {
+                const next = new Set(prev);
+                next.has(i) ? next.delete(i) : next.add(i);
+                return next;
+              });
+              return (
+                <div key={i} className="error-accordion">
+                  <div className="error-accordion-header" onClick={toggle}>
+                    <span className="error-accordion-chevron">{isOpen ? "∧" : "∨"}</span>
+                    <span className="error-accordion-title">Error Details</span>
+                  </div>
+                  {isOpen && (
+                    <div className="error-accordion-body">
+                      {err.message && (
+                        <div className="error-accordion-message">{err.message}</div>
+                      )}
+                      {err.stack && err.stack.trim() !== err.message?.trim() && (
+                        <div className="error-accordion-stack">{err.stack}</div>
+                      )}
                     </div>
                   )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -257,34 +356,6 @@ function FormattedPrompt({ text }: { text: string }) {
 }
 
 /* ── Icons ─────────────────────────────────────────────── */
-function TrendDownIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M2 5l4 4 3-3 5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-function ListIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
-}
-function XIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  );
-}
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
 function SendIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
@@ -297,17 +368,6 @@ function SendCheckIcon() {
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
       <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-  );
-}
-
-/* ── Sub-components ─────────────────────────────────────── */
-function DetailRow({ label, value }: { label: string; value?: string }) {
-  if (!value) return null;
-  return (
-    <div className="detail-row">
-      <div className="detail-label">{label}</div>
-      <div className="detail-value">{value}</div>
-    </div>
   );
 }
 

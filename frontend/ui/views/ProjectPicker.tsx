@@ -60,56 +60,58 @@ export function ProjectPicker({ data, navigate, callTool }: ProjectPickerProps) 
         />
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="empty-state">
-          {search ? `No projects match "${search}".` : "No projects found."}
-        </div>
-      ) : (
-        filtered.map((org) => (
-          <div key={org.organizationId} className="section">
-            <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <OrgIcon />
-              {org.organizationName}
-            </div>
-            <div style={{ display: "grid", gap: 8 }}>
-              {org.projects.map((project) => {
-                const isLoading = loadingId === project.projectId;
-                return (
-                  <div
-                    key={project.projectId}
-                    className={`project-card${isLoading ? " loading" : ""}`}
-                    onClick={() => !loadingId && handleSelectProject(project.projectId)}
-                  >
-                    <div className="project-card-icon">
-                      <FolderIcon />
-                    </div>
-                    <div className="project-card-info">
-                      <div className="project-card-name">{project.projectName}</div>
-                      <div className="mono-tag" style={{ marginTop: 2 }}>
-                        {project.projectId}
-                      </div>
-                      <div className="project-card-meta">
-                        {project.modules.testRuns && (
-                          <span className="badge badge-running">Test Runs</span>
-                        )}
-                        {project.modules.manualTestCases && (
-                          <span className="badge badge-passed">Manual Tests</span>
-                        )}
-                        <span className={`badge badge-${project.permissions.role === "owner" ? "actual" : "draft"}`}>
-                          {project.permissions.role}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="project-card-arrow">
-                      {isLoading ? <div className="spinner" /> : <ChevronIcon />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      <div className="picker-scroll">
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            {search ? `No projects match "${search}".` : "No projects found."}
           </div>
-        ))
-      )}
+        ) : (
+          filtered.map((org) => (
+            <div key={org.organizationId} className="section">
+              <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <OrgIcon />
+                {org.organizationName}
+              </div>
+              <div style={{ display: "grid", gap: 8 }}>
+                {org.projects.map((project) => {
+                  const isLoading = loadingId === project.projectId;
+                  return (
+                    <div
+                      key={project.projectId}
+                      className={`project-card${isLoading ? " loading" : ""}`}
+                      onClick={() => !loadingId && handleSelectProject(project.projectId)}
+                    >
+                      <div className="project-card-icon">
+                        <FolderIcon />
+                      </div>
+                      <div className="project-card-info">
+                        <div className="project-card-name">{project.projectName}</div>
+                        <div className="mono-tag" style={{ marginTop: 2 }}>
+                          {project.projectId}
+                        </div>
+                        <div className="project-card-meta">
+                          {project.modules.testRuns && (
+                            <span className="badge badge-running">Test Runs</span>
+                          )}
+                          {project.modules.manualTestCases && (
+                            <span className="badge badge-passed">Manual Tests</span>
+                          )}
+                          <span className={`badge badge-${project.permissions.role === "owner" ? "actual" : "draft"}`}>
+                            {project.permissions.role}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="project-card-arrow">
+                        {isLoading ? <div className="spinner" /> : <ChevronIcon />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

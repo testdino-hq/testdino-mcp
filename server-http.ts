@@ -4,13 +4,22 @@ import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./server.js";
 
+process.env.TESTDINO_IS_HTTP = "1";
+
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
 app.post("/mcp", async (req, res) => {
-  const server = createServer();
+  const authHeader = req.headers.authorization;
+  const tokenFromHeader = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : undefined;
+  const tokenFromQuery = typeof req.query.token === "string" ? req.query.token : undefined;
+  const token = tokenFromHeader ?? tokenFromQuery ?? process.env.TESTDINO_PAT;
+
+  const server = createServer(token);
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });

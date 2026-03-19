@@ -655,6 +655,77 @@ select {
   line-height: 1.6;
 }
 
+/* ─────────────────────────────────────────────────────────
+   ERROR ACCORDION
+───────────────────────────────────────────────────────── */
+.error-accordion {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.error-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.error-accordion-header:hover {
+  background: var(--accent);
+}
+
+.error-accordion-chevron {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.error-accordion-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.error-accordion-body {
+  padding: 14px 16px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.error-accordion-message {
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.error-accordion-stack {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-left: 3px solid #93c5fd;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--foreground);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow-y: auto;
+  line-height: 1.65;
+}
+
 .dark .code-block {
   background: var(--accent);
 }
@@ -1737,21 +1808,22 @@ select {
 .btn-open {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 20px;
   background: #2563eb;
   color: #fff;
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  letter-spacing: -0.01em;
+  transition: background 0.15s;
 }
 
 .btn-open:hover {
-  opacity: 0.85;
+  background: #1d4ed8;
 }
 
 .btn-close-fs {
@@ -1819,4 +1891,14 @@ select {
   0%   { transform: translateX(-100%); width: 40%; }
   50%  { width: 60%; }
   100% { transform: translateX(350%); width: 40%; }
+}
+
+.picker-scroll {
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 2px;
+}
+
+.is-fullscreen .picker-scroll {
+  max-height: none;
 }
