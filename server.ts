@@ -11,10 +11,11 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import fs from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "url";
 import { z } from "zod";
 
 // Import existing tool handlers
-import { getApiUrl, getApiKey } from "./frontend/lib/env.js";
+import { getApiUrl, getApiKey, setRequestToken } from "./frontend/lib/env.js";
 import {
   handleHealth,
   handleListTestRuns,
@@ -94,7 +95,8 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
 
 const resourceUri = "ui://testdino/app.html";
 
-export function createServer(): McpServer {
+export function createServer(requestToken?: string): McpServer {
+setRequestToken(requestToken);
 
 const server = new McpServer({
   name: "@testdino/mcp",
@@ -364,10 +366,11 @@ registerAppTool(
           }
           case "fetch_debug": {
             const raw = parseHandlerResult(await handleDebugTestCase({ projectId: pid, testcase_name: args.testcase_name! })) as any;
+            // API returns flat: { Prompt, test_metadata, historical_data } — NOT nested under data
             const debugData = {
-              history: raw?.data?.historical_data || [],
-              debugging_prompt: raw?.Prompt || "",
-              ...(raw?.data?.test_metadata || {}),
+              history: raw?.historical_data || raw?.data?.historical_data || [],
+              debugging_prompt: raw?.Prompt || raw?.data?.debugging_prompt || "",
+              ...(raw?.test_metadata || raw?.data?.test_metadata || {}),
             };
             return { content: [{ type: "text", text: JSON.stringify({ debugData }, null, 2) }], structuredContent: { debugData } } as CallToolResult;
           }
@@ -389,14 +392,16 @@ registerAppTool(
     if (!pid) {
       try {
         const orgs = await fetchOrgsAndProjects();
-        const payload = { view: "project-picker", orgs };
+        const isWebClient = !!process.env.TESTDINO_IS_HTTP;
+        const payload = { view: "project-picker", orgs, isWebClient };
         return {
           content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
           structuredContent: payload,
         } as CallToolResult;
       } catch (e) {
         const error = e instanceof Error ? e.message : String(e);
-        const payload = { view: "project-picker", orgs: [], error };
+        const isWebClient = !!process.env.TESTDINO_IS_HTTP;
+        const payload = { view: "project-picker", orgs: [], error, isWebClient };
         return { content: [{ type: "text", text: error }], structuredContent: payload } as CallToolResult;
       }
     }
@@ -405,7 +410,8 @@ registerAppTool(
     try {
       const data = parseHandlerResult(await handleListTestRuns({ projectId: pid, by_branch: args.by_branch, by_time_interval: args.by_time_interval }));
       const testruns = extractArray(data).map(flattenRun);
-      const payload = { view: "dashboard", projectId: pid, testruns, filters: { branch: args.by_branch, timeInterval: args.by_time_interval } };
+      const isWebClient = !!process.env.TESTDINO_IS_HTTP;
+      const payload = { view: "dashboard", projectId: pid, testruns, filters: { branch: args.by_branch, timeInterval: args.by_time_interval }, isWebClient };
       return {
         content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
         structuredContent: payload,
@@ -473,9 +479,11 @@ return server;
 } // end createServer
 
 // ════════════════════════════════════════════════════════════
-// Start server (stdio) — default when run directly
+// Start server (stdio) — only when run directly, not imported
 // ════════════════════════════════════════════════════════════
 
-const transport = new StdioServerTransport();
-await createServer().connect(transport);
-console.error("TestDino MCP App server running on stdio");
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+  const transport = new StdioServerTransport();
+  await createServer().connect(transport);
+  console.error("TestDino MCP App server running on stdio");
+}
