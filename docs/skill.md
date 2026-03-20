@@ -561,6 +561,10 @@ When presenting results, include context:
 // Include time range when showing filtered results
 ```
 
+### 8. View Screenshot and Image Artifacts
+
+Test case responses may include screenshot and image URLs in the `screenshots`, `artifacts`, or attachment `path` fields (with image content types like `image/png`). When these image URLs are present, you should **fetch and visually inspect them** — they capture the application state at the time of test failure and provide critical visual context for accurate diagnosis and root cause analysis. Do not skip images when debugging failures; the visual state often reveals issues that error messages and stack traces alone cannot.
+
 ---
 
 ## Error Handling
@@ -667,6 +671,7 @@ try {
 5. **Leverage cross-run filtering** in `list_testcase` to avoid multiple calls
 6. **Use `debug_testcase`** for AI-assisted failure analysis
 7. **Provide context** in responses (test run info, time ranges, etc.)
+8. **View screenshot images** when present in test case artifacts — visual context is critical for diagnosing failures
 
 ### Tool Selection Flow
 
