@@ -17,6 +17,6 @@
     "types": ["node"],
     "composite": true
   },
-  "include": ["frontend/tools/**/*", "frontend/lib/**/*", "server.ts", "server-http.ts"],
+  "include": ["frontend/tools/**/*", "frontend/lib/**/*", "frontend/auth/**/*", "server.ts", "server-http.ts"],
   "exclude": ["node_modules", "dist", "frontend/ui"]
 }
