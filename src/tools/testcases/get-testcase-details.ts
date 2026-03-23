@@ -111,14 +111,20 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
       },
     });
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(response, null, 2),
-        },
-      ],
-    };
+    const responseText = JSON.stringify(response, null, 2);
+    const content: Array<{ type: string; text: string }> = [
+      { type: "text", text: responseText },
+    ];
+
+    // If response contains screenshot/image attachments, instruct the agent to view them
+    if (responseText.includes('"contentType": "image/') || responseText.includes('"screenshots"')) {
+      content.push({
+        type: "text",
+        text: "This test case has screenshot images attached. You should fetch and view the screenshot URLs above (in the 'screenshots' or attachment 'path' fields) to visually inspect the application state at the time of failure — this is critical for accurate diagnosis.",
+      });
+    }
+
+    return { content };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to retrieve test case details: ${errorMessage}`);

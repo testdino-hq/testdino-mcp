@@ -67,15 +67,21 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
       },
     });
 
-    // Return the API response as-is (includes historical data and debugging_prompt)
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(response, null, 2),
-        },
-      ],
-    };
+    // Return the API response (includes historical data and debugging_prompt)
+    const responseText = JSON.stringify(response, null, 2);
+    const content: Array<{ type: string; text: string }> = [
+      { type: "text", text: responseText },
+    ];
+
+    // If response contains screenshot/image attachments, instruct the agent to view them
+    if (responseText.includes('"contentType": "image/') || responseText.includes('"name": "screenshot"')) {
+      content.push({
+        type: "text",
+        text: "Screenshot images are available in the historical test data above. You should fetch and view the screenshot URLs in the attempts' attachments to visually inspect the application state at the time of each failure — this is critical for accurate root cause analysis.",
+      });
+    }
+
+    return { content };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to debug test case: ${errorMessage}`);
