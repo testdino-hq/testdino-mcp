@@ -1,5 +1,5 @@
 export function getApiUrl(): string {
-  return "http://localhost:3001";
+  return "https://api.testdino.com";
 }
 
 export function getApiKey(args?: unknown): string | undefined {
