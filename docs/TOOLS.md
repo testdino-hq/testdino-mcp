@@ -2784,7 +2784,7 @@ When adding new tools to the MCP server:
 
 ## Version History
 
-- **v1.0.6**:
+- **v1.0.7**:
   - Documentation updates: Corrected `create_manual_test_case` to use `suiteName` (not `suiteId`), fixed API endpoints for manual test tools, removed deprecated `upload_latest_local_test_runs` documentation, updated response formats and parameter tables.
 
 - **v1.0.3**:

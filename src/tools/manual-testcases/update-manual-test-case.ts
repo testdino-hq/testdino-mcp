@@ -401,11 +401,7 @@ export async function handleUpdateManualTestCase(
       );
     }
 
-    const body = {
-      projectId: String(args.projectId),
-      caseId: String(args.caseId),
-      ...processedUpdates,
-    };
+    const body = { ...processedUpdates };
 
     const updateManualTestCaseUrl = endpoints.updateManualTestCase(
       String(args.projectId),

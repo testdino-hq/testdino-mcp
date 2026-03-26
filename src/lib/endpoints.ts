@@ -45,7 +45,6 @@ export const endpoints = {
     by_author?: string;
     by_commit?: string;
     by_environment?: string;
-    by_pr?: string;
     limit?: number;
     page?: number;
     get_all?: string | boolean;
@@ -141,10 +140,29 @@ export const endpoints = {
    */
   getTestCaseDetails: (params?: {
     projectId?: string;
-    testcaseid?: string; // Test case ID (can be used alone)
-    by_title?: string; // Test case name (must be combined with by_testrun_id or counter)
-    by_testrun_id?: string; // Test run ID (required when using by_title)
-    counter?: string | number; // Test run counter (required when using by_title if by_testrun_id not provided)
+    testcaseid?: string;
+    by_title?: string;
+    by_fulltitle?: string;
+    by_testrun_id?: string;
+    by_testrun_ids?: string;
+    by_testsuite_id?: string;
+    counter?: string | number;
+    by_status?: string;
+    by_error_message?: string;
+    by_code_snippet?: string;
+    include_history?: boolean | string;
+    history_limit?: number;
+    include_artifacts?: boolean | string;
+    include_screenshots?: boolean | string;
+    include_traces?: boolean | string;
+    include_videos?: boolean | string;
+    include_attachments?: boolean | string;
+    steps_filter?: "failed_only";
+    limit?: number;
+    page?: number;
+    sort_by?: string;
+    sort_order?: string;
+    get_all?: boolean | string;
   }): string => {
     const baseUrl = getBaseUrl();
     const projectId = params?.projectId || "";
