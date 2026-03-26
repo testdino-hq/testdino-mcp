@@ -1,695 +1,628 @@
-# TestDino MCP Tools - AI Agent Skills Guide
+# TestDino MCP — AI Agent Skills Guide
 
-This guide helps AI agents understand and efficiently use the TestDino MCP tools. It provides patterns, best practices, and decision-making guidance for tool selection and usage.
+> **How to use this guide**: Read this document before making any TestDino tool calls. It tells you which tool to pick, what parameters are required vs. optional, and how to chain tools together for common tasks.
+
+---
 
 ## Table of Contents
 
-1. [Understanding MCP Tools](#understanding-mcp-tools)
-2. [Tool Categories](#tool-categories)
-3. [Common Patterns & Workflows](#common-patterns--workflows)
-4. [Parameter Requirements](#parameter-requirements)
-5. [Decision Trees](#decision-trees)
-6. [Best Practices](#best-practices)
-7. [Error Handling](#error-handling)
-8. [Tool Reference Quick Guide](#tool-reference-quick-guide)
+1. [Core Concepts](#core-concepts)
+2. [Tool Reference](#tool-reference)
+   - [health](#health)
+   - [list_testruns](#list_testruns)
+   - [get_run_details](#get_run_details)
+   - [list_testcase](#list_testcase)
+   - [get_testcase_details](#get_testcase_details)
+   - [debug_testcase](#debug_testcase)
+   - [list_manual_test_cases](#list_manual_test_cases)
+   - [get_manual_test_case](#get_manual_test_case)
+   - [create_manual_test_case](#create_manual_test_case)
+   - [update_manual_test_case](#update_manual_test_case)
+   - [list_manual_test_suites](#list_manual_test_suites)
+   - [create_manual_test_suite](#create_manual_test_suite)
+3. [Workflows & Patterns](#workflows--patterns)
+4. [Decision Trees](#decision-trees)
+5. [Parameter Quick Reference](#parameter-quick-reference)
+6. [Error Handling](#error-handling)
 
 ---
 
-## Understanding MCP Tools
+## Core Concepts
 
-### What are MCP Tools?
+### Authentication
+- All tools read `TESTDINO_PAT` automatically from the environment — you never pass it as a parameter.
+- If this variable is missing, all tools throw `"Missing TESTDINO_PAT environment variable"`. Tell the user to add it to their `mcp.json` env section.
 
-MCP (Model Context Protocol) tools are functions that AI agents can call to interact with external systems. In this case, they connect to the TestDino to:
+### projectId
+- **Required for every tool except `health`.**
+- Call `health()` first in any session to get the project IDs and pick the right one.
+- Projects are nested under organizations in the health response.
 
-- Retrieve test execution data
-- Analyze test results
-- Manage test cases
-- Debug test failures
+### Identifiers
+- **testrun_id**: A string MongoDB-style ID (e.g. `"test_run_6901b2abc6b187e63f536a6b"`)
+- **counter**: A sequential integer (e.g. `43`) — human-readable alias for a test run
+- **testcase_id**: A string ID for a specific test case execution
+- **caseId**: A string ID or human-readable ID (e.g. `"TC-123"`) for a manual test case
 
-### How Tools Work
-
-1. **Tool Definition**: Each tool has a name, description, and input schema
-2. **Tool Execution**: AI agents call tools with parameters
-3. **Response Handling**: Tools return structured data that agents can process
-4. **Error Handling**: Tools throw errors that agents must handle gracefully
-
-### Key Concepts
-
-- **projectId**: Required for most tools. Get it from the `health` tool first
-- **PAT**: Automatically read from `TESTDINO_PAT` environment variable (configured in mcp.json)
-- **Filtering**: Many tools support powerful filtering to narrow results
-- **Pagination**: Use `page`, `limit`, or `get_all` for large result sets
+### Pagination defaults
+- Most list tools default to `limit=20` or `limit=50`. Use `get_all=true` sparingly — only when you genuinely need every record.
+- Prefer filters over fetching everything.
 
 ---
 
-## Tool Categories
-
-### 1. Connection & Setup Tools
-
-#### `health`
-**Purpose**: Verify connection and get project information
-
-**When to Use**:
-- First tool to call when user asks about TestDino
-- Need to get project IDs and organization information
-- Troubleshooting connection issues
-- Validating PAT configuration
-
-**Returns**:
-- Account information
-- Available organizations and projects
-- Project IDs (needed for other tools)
-- Access permissions
-
-**Example Flow**:
-```
-User: "Check my TestDino connection"
-→ Call health()
-→ Extract projectId from response
-→ Use projectId in subsequent tool calls
-```
+## Tool Reference
 
 ---
 
-### 2. Test Run Management Tools
+### `health`
 
-#### `list_testruns`
-**Purpose**: Browse and filter test runs
+**Purpose**: Verify PAT, check connection, and retrieve project/organization info.
 
-**When to Use**:
-- User asks about test runs (e.g., "show me recent test runs")
-- Need to find test runs by branch, time, author, commit, or environment
-- Need to get test run IDs for detailed analysis
-- Analyzing test execution trends
+**Required parameters**: None
 
-**Key Parameters**:
-- `projectId` (required)
-- `by_branch`: Filter by git branch
-- `by_time_interval`: '1d', '3d', 'weekly', 'monthly', or date range
-- `by_author`: Filter by commit author
-- `by_commit`: Filter by commit hash
-- `by_environment`: Filter by environment
-- `limit`, `page`, `get_all`: Pagination controls
+**When to call**:
+- At the start of every session before using any other tool.
+- When the user asks "what projects do I have?" or "check my connection."
+- When you don't yet have a `projectId`.
 
-**Returns**:
-- Array of test runs with:
-  - Test run IDs and counters
-  - Statistics (passed, failed, skipped, flaky)
-  - Metadata (branch, author, commit, environment)
-  - Duration and timestamps
+**Response includes**:
+- Account and email info
+- List of organizations → each with a list of projects and their `projectId` values
+- Access permissions per project
 
-#### `get_run_details`
-**Purpose**: Get comprehensive details about a specific test run
-
-**When to Use**:
-- User asks for details about a specific test run
-- Need complete test statistics and error breakdown
-- Analyzing all tests in a run
-- Need test suite and test case details
-
-**Key Parameters**:
-- `projectId` (required)
-- `testrun_id` OR `counter` (at least one required)
-
-**Returns**:
-- Complete test run summary
-- Test statistics by status
-- Error categories breakdown
-- All test suites and test cases
-- Rerun attempt metadata
-
-**Workflow Pattern**:
+**Pattern**:
 ```
-1. Use list_testruns() to find test run IDs
-2. Use get_run_details() for specific run analysis
+Call health()
+→ Extract org name and project name the user is asking about
+→ Store projectId for all subsequent calls in this session
 ```
 
 ---
 
-### 3. Test Case Analysis Tools
+### `list_testruns`
 
-#### `list_testcase`
-**Purpose**: List test cases with comprehensive filtering
+**Purpose**: Browse test runs with flexible filters.
 
-**When to Use**:
-- User asks about specific test cases (e.g., "show me failed tests")
-- Need to filter by status, browser, error category, runtime, etc.
-- Finding test cases across multiple test runs
-- Analyzing test cases by branch, environment, commit, or author
+**Required parameters**: `projectId`
 
-**Key Parameters**:
-- `projectId` (required)
-- **Test Run Identification** (choose one approach):
-  - `by_testrun_id` OR `counter`: Direct test run identification
-  - `by_branch`, `by_commit`, `by_author`, `by_environment`, `by_time_interval`: Filter test runs first, then return test cases
-- **Test Case Filters**:
-  - `by_status`: 'passed', 'failed', 'skipped', 'flaky'
-  - `by_spec_file_name`: Filter by spec file
-  - `by_error_category`: 'timeout_issues', 'element_not_found', etc.
-  - `by_browser_name`: 'chromium', 'firefox', 'webkit'
-  - `by_tag`: Filter by test tags
-  - `by_total_runtime`: '<60', '>100' (seconds)
-  - `by_artifacts`: true/false (has screenshots/videos)
-  - `by_error_message`: Partial match on error message
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `by_branch` | string | Filter by git branch name |
+| `by_time_interval` | string | `'1d'`, `'3d'`, `'weekly'`, `'monthly'`, or `'YYYY-MM-DD,YYYY-MM-DD'` |
+| `by_author` | string | Filter by commit author |
+| `by_commit` | string | Filter by commit hash |
+| `by_environment` | string | Filter by CI/deployment environment |
+| `limit` | number | Results per page (default: 20) |
+| `page` | number | Page number (default: 1) |
+| `get_all` | boolean | Return all results — use sparingly |
 
-**Important**: You can identify test runs in two ways:
-1. **Direct**: Use `by_testrun_id` or `counter` to specify exact test runs
-2. **Indirect**: Use `by_branch`, `by_commit`, etc. to filter test runs first, then get test cases from those runs
+**Response includes**: test run IDs, counters, passed/failed/skipped/flaky counts, branch, author, commit, environment, duration, timestamps.
 
-**Returns**:
-- Array of test cases with:
-  - Test case IDs and names
-  - Status and duration
-  - Browser and environment
-  - Error information (if failed)
-  - Associated test run information
+**Good uses**:
+- Find test runs to get IDs for follow-up calls
+- Summarize test execution trends over time
+- Identify which commits introduced failures
 
-#### `get_testcase_details`
-**Purpose**: Get detailed information about a specific test case
+---
 
-**When to Use**:
-- User asks for details about a specific test case
-- Need error messages, stack traces, execution steps
-- Debugging a specific test failure
-- Need console logs or artifact information
+### `get_run_details`
 
-**Key Parameters**:
-- `projectId` (required)
-- **Test Case Identification** (choose one):
-  - `testcase_id`: Use if you know the exact test case ID
-  - `testcase_name` + (`testrun_id` OR `counter`): Use test name with test run context
+**Purpose**: Get the full breakdown of a single test run (or batch of up to 20).
 
-**Returns**:
-- Complete test case details
-- Error messages and stack traces
-- Execution steps
-- Console logs
-- Artifact availability (screenshots, videos, traces)
-- Retry attempt information
+**Required parameters**: `projectId` + (`testrun_id` OR `counter`)
 
-#### `debug_testcase`
-**Purpose**: AI-assisted debugging with historical failure pattern analysis
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `testrun_id` | string | Single ID, or comma-separated IDs (max 20): `'id1,id2,id3'` |
+| `counter` | number | Test run counter number |
 
-**When to Use**:
-- User asks "why is test X failing?" or "debug test X"
-- Need to understand failure patterns across multiple executions
-- Analyzing flaky test behavior
-- Root cause analysis with historical context
+**Response includes**: full summary, test statistics by status, error category breakdown, test suites, and all test cases in the run.
 
-**Key Parameters**:
-- `projectId` (required)
-- `testcase_name` (required): Test case name/title
-
-**Returns**:
-- Historical execution data
-- Failure patterns and error categories
-- Common error messages and locations
-- Browser-specific issues
-- Debugging prompt (pre-formatted for AI analysis)
-- Timeline of failures
-
-**Workflow Pattern**:
+**Workflow**:
 ```
-1. User: "Why is 'Verify user login' failing?"
-2. Call debug_testcase(projectId, "Verify user login")
-3. Analyze returned patterns and debugging_prompt
-4. Optionally read test code if available
-5. Provide root cause analysis and fix suggestions
+list_testruns() → get run IDs → get_run_details() for the specific run
 ```
 
 ---
 
-### 4. Manual Test Case Management Tools
+### `list_testcase`
 
-#### `list_manual_test_cases`
-**Purpose**: Search and list manual test cases
+**Purpose**: List and filter test cases across one or many test runs.
 
-**When to Use**:
-- User asks about manual test cases
-- Need to find test cases by various criteria
-- Reviewing test case inventory
+**Required parameters**: `projectId` + at least one test run identifier or test run filter.
 
-**Key Parameters**:
-- `projectId` (required)
-- `suiteId`: Filter by test suite
-- `status`: 'active', 'draft', 'deprecated'
-- `priority`: 'critical', 'high', 'medium', 'low'
-- `severity`: 'critical', 'major', 'minor', 'trivial'
-- `type`: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'
-- `tags`: Comma-separated tags
-- `search`: Search in title, description, or caseId
+**Test run identification** (use one approach):
+| Approach | Parameters |
+|----------|-----------|
+| Direct run lookup | `by_testrun_id` (single ID or comma-separated, max 20) OR `counter` |
+| Indirect (tool resolves runs) | `by_branch`, `by_commit`, `by_author`, `by_environment`, `by_time_interval` |
 
-#### `get_manual_test_case`
-**Purpose**: Get detailed manual test case information
+**Test case filters** (combine freely):
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `by_status` | string | `'passed'`, `'failed'`, `'skipped'`, `'flaky'` |
+| `by_spec_file_name` | string | Filter by spec file name |
+| `by_error_category` | string | `'timeout_issues'`, `'element_not_found'`, `'assertion_failures'`, `'network_issues'` |
+| `by_browser_name` | string | `'chromium'`, `'firefox'`, `'webkit'` |
+| `by_tag` | string | Filter by test tag |
+| `by_total_runtime` | string | e.g. `'<60'`, `'>100'` (seconds) |
+| `by_artifacts` | boolean | Has screenshots/videos |
+| `by_error_message` | string | Partial match on error message text |
+| `by_attempt_number` | number | Filter by retry attempt number |
+| `by_pages` | number | List by page number (no testrun_id/counter needed) |
+| `limit` | number | Results per page |
+| `page` | number | Page number |
+| `get_all` | boolean | All results |
 
-**When to Use**:
-- User asks for details about a specific manual test case
-- Need test steps, preconditions, metadata
-
-**Key Parameters**:
-- `projectId` (required)
-- `caseId` (required): Test case ID
-
-#### `create_manual_test_case`
-**Purpose**: Create new manual test cases
-
-**When to Use**:
-- User wants to create a new test case
-- Documenting new test scenarios
-
-**Key Parameters**:
-- `projectId` (required)
-- `title` (required)
-- `suiteName` (required) — Use suite name. Use `list_manual_test_suites` to find suite names.
-- `steps`: Array of {action, expectedResult, data} for Classic, or {event, stepDescription} for Gherkin
-- `priority`, `severity`, `type`, `layer`, `behavior`, `attachments`, `customFields`, etc.
-
-#### `update_manual_test_case`
-**Purpose**: Update existing manual test cases
-
-**When to Use**:
-- User wants to modify a test case
-- Updating test steps or metadata
-
-**Key Parameters**:
-- `projectId` (required)
-- `caseId` (required)
-- `updates`: Object with fields to update
-
-#### `list_manual_test_suites`
-**Purpose**: List test suite hierarchy
-
-**When to Use**:
-- Need to find suite IDs for test case creation
-- Understanding test organization structure
-
-**Key Parameters**:
-- `projectId` (required)
-- `parentSuiteId`: Optional, to get children of a specific suite
-
-#### `create_manual_test_suite`
-**Purpose**: Create new test suite folders
-
-**When to Use**:
-- User wants to organize test cases in a new suite
-- Creating test suite structure
-
-**Key Parameters**:
-- `projectId` (required)
-- `name` (required)
-- `parentSuiteId`: Optional, for nested suites
+**Key insight**: When you use `by_branch`, `by_commit`, etc., the tool internally finds matching test runs first and then returns their test cases. You don't need to call `list_testruns` first.
 
 ---
 
-## Common Patterns & Workflows
+### `get_testcase_details`
 
-### Pattern 1: Initial Setup
-```
-1. Call health() to verify connection
-2. Extract projectId from response
-3. Store projectId for subsequent calls
-```
+**Purpose**: Get full details of a specific test case — errors, stack traces, steps, console logs, and artifacts.
 
-### Pattern 2: Finding Failed Tests
-```
-1. Call list_testruns(projectId, by_branch="main", limit=10)
-2. Get test run IDs from results
-3. Call list_testcase(projectId, by_testrun_id=runId, by_status="failed")
-4. For each failed test, call get_testcase_details() if user wants details
-```
+**Required parameters**: `projectId` + at least one search parameter from the list below.
 
-### Pattern 3: Debugging a Test
-```
-1. User: "Why is test X failing?"
-2. Call debug_testcase(projectId, "test X")
-3. Analyze returned patterns
-4. Optionally call get_testcase_details() for specific execution details
-5. Provide analysis and suggestions
-```
+**Search parameters** (provide at least one):
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `testcase_id` | string | Exact test case ID — most precise, no other context needed |
+| `testcase_name` | string | Partial, case-insensitive title match. Combine with `testrun_id` or `counter` to scope to a specific run |
+| `testcase_fulltitle` | string | Full path including suite, e.g. `'auth.spec.js > Login > Verify user can logout'` |
+| `by_error_message` | string | Search across all test cases whose error message matches |
+| `by_code_snippet` | string | Search across error code snippets |
+| `by_status` | string | `'passed'`, `'failed'`, `'skipped'`, `'flaky'` |
 
-### Pattern 4: Time-Based Analysis
-```
-1. User: "Show me test runs from last week"
-2. Call list_testruns(projectId, by_time_interval="weekly")
-3. Analyze results and present summary
-```
+**Scoping parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `testrun_id` | string | Scope to a single test run |
+| `testrun_ids` | string | Scope to multiple runs (comma-separated, max 20) |
+| `testsuite_id` | string | Scope to a test suite |
+| `counter` | number | Alternative to `testrun_id` |
 
-### Pattern 5: Cross-Run Analysis
-```
-1. User: "Find all failed tests on main branch"
-2. Call list_testcase(projectId, by_branch="main", by_status="failed")
-   (No need to call list_testruns first - tool handles it internally)
-3. Present results grouped by test run or test case
-```
+**Artifact parameters** (default `false`):
+| Parameter | Description |
+|-----------|-------------|
+| `include_artifacts` | All artifacts (shortcut for all below) |
+| `include_screenshots` | Screenshot URLs per attempt |
+| `include_traces` | Playwright trace links per attempt |
+| `include_videos` | Video recording URLs per attempt |
+| `include_attachments` | Attachment metadata per attempt |
 
-### Pattern 6: Creating Manual Test Cases
+**History and filtering**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `include_history` | boolean | Include previous executions of the same test (default: `false`) |
+| `history_limit` | number | How many history entries (default: 10) |
+| `steps_filter` | string | `'failed_only'` — strips passing setup/hook steps, returns only erroring steps |
+
+**Pagination and sorting**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Max results (default: 1 for ID lookup, 50 for search, max: 1000) |
+| `page` | number | Page number (default: 1) |
+| `sort_by` | string | `'startTime'` or `'duration'` |
+| `sort_order` | string | `'asc'` or `'desc'` |
+| `get_all` | boolean | Return all matching up to 1000 |
+
+**Critical rules**:
+- `testcase_name` alone without a run context returns ALL executions of that test across runs. Always pair with `testrun_id` or `counter` unless you want cross-run history.
+- Use `steps_filter='failed_only'` when debugging to cut noise — only failed steps are returned.
+- Use `include_history=true` + `history_limit` to track a test's pass/fail pattern over time.
+
+---
+
+### `debug_testcase`
+
+**Purpose**: AI-assisted root cause analysis using historical failure data.
+
+**Required parameters**: `projectId`, `testcase_name`
+
+**What it returns**:
+- Historical execution data across many test runs
+- Failure patterns (error types, frequency, browsers affected)
+- Common error messages and code locations
+- A `debugging_prompt` string — **pre-formatted analysis instructions specifically designed for the AI to use as context when diagnosing the issue**
+
+**How to use the response**:
+1. Read the `debugging_prompt` field — treat it as domain-specific instructions for your analysis.
+2. Examine the historical failure data to identify patterns.
+3. Look for: consistent error messages, browser-specific failures, time-of-day patterns, correlations with specific branches or commits.
+4. Optionally follow up with `get_testcase_details()` (with `include_screenshots=true` or `include_traces=true`) for a specific failing execution.
+
+**When to call**:
+- User says "why is test X failing?" / "debug test X" / "is test X flaky?"
+- You need to understand if a failure is consistent or intermittent.
+- You need historical context before diving into a specific execution.
+
+**Pattern**:
 ```
-1. Call list_manual_test_suites(projectId) to find suite names
-2. If suite doesn't exist, call create_manual_test_suite(projectId, name)
-3. Call create_manual_test_case(projectId, title, suiteName, steps, ...)
+debug_testcase(projectId, "Verify user login")
+→ Read debugging_prompt from response
+→ Analyze historical data using the debugging_prompt as context
+→ Identify pattern: always fails? flaky? browser-specific? recent regression?
+→ Optionally: get_testcase_details(projectId, testcase_name, testrun_id=latestFailingRun, steps_filter='failed_only')
+→ Provide root cause analysis and fix suggestions
 ```
 
 ---
 
-## Parameter Requirements
+### `list_manual_test_cases`
 
-### Required Parameters Summary
+**Purpose**: Search and browse manual test cases.
 
-| Tool | Required Parameters |
-|------|-------------------|
-| `health` | None |
-| `list_testruns` | `projectId` |
-| `get_run_details` | `projectId` + (`testrun_id` OR `counter`) |
-| `list_testcase` | `projectId` + (test run identifier OR test run filter) |
-| `get_testcase_details` | `projectId` + (`testcase_id` OR (`testcase_name` + (`testrun_id` OR `counter`))) |
-| `debug_testcase` | `projectId`, `testcase_name` |
-| `list_manual_test_cases` | `projectId` |
-| `get_manual_test_case` | `projectId`, `caseId` |
-| `create_manual_test_case` | `projectId`, `title`, `suiteName` |
-| `update_manual_test_case` | `projectId`, `caseId`, `updates` |
-| `list_manual_test_suites` | `projectId` |
-| `create_manual_test_suite` | `projectId`, `name` |
+**Required parameters**: `projectId`
 
-### Getting projectId
-
-**Always start with `health()` tool** to get project IDs:
-```javascript
-// Call health() first
-const healthResult = await health();
-// Extract projectId from the response
-// Response format includes organizations and projects with IDs
-```
-
-### Common Parameter Patterns
-
-**Time Intervals**:
-- `'1d'`: Last day
-- `'3d'`: Last 3 days
-- `'weekly'`: Last 7 days
-- `'monthly'`: Last 30 days
-- `'2024-01-01,2024-01-31'`: Custom date range
-
-**Status Values**:
-- `'passed'`, `'failed'`, `'skipped'`, `'flaky'`
-
-**Error Categories**:
-- `'timeout_issues'`, `'element_not_found'`, `'assertion_failures'`, `'network_issues'`
-
-**Browsers**:
-- `'chromium'`, `'firefox'`, `'webkit'`
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `suiteId` | string | Filter by test suite ID |
+| `search` | string | Search in title, description, or caseId |
+| `status` | string | `'active'`, `'draft'`, `'deprecated'` |
+| `priority` | string | `'critical'`, `'high'`, `'medium'`, `'low'` |
+| `severity` | string | `'critical'`, `'major'`, `'minor'`, `'trivial'` |
+| `type` | string | `'functional'`, `'smoke'`, `'regression'`, `'security'`, `'performance'`, `'e2e'` |
+| `layer` | string | `'e2e'`, `'api'`, `'unit'` |
+| `behavior` | string | `'positive'`, `'negative'`, `'destructive'` |
+| `automationStatus` | string | `'Manual'`, `'Automated'`, `'To be automated'` |
+| `tags` | string | Comma-separated tag filter |
+| `time` | string | Time interval filter |
+| `limit` | number | Results per page |
 
 ---
 
-## Decision Trees
+### `get_manual_test_case`
 
-### When User Asks About Test Runs
+**Purpose**: Get full details of a single manual test case including steps, preconditions, and metadata.
 
-```
-User asks about test runs
-│
-├─ Need project info?
-│  └─ Call health() first
-│
-├─ Need specific test run details?
-│  └─ Do you have testrun_id or counter?
-│     ├─ Yes → get_run_details(projectId, testrun_id/counter)
-│     └─ No → list_testruns() first to find IDs
-│
-└─ Need to filter test runs?
-   └─ list_testruns(projectId, filters...)
-```
+**Required parameters**: `projectId`, `caseId`
 
-### When User Asks About Test Cases
-
-```
-User asks about test cases
-│
-├─ Need specific test case details?
-│  └─ Do you have testcase_id?
-│     ├─ Yes → get_testcase_details(projectId, testcase_id)
-│     └─ No → Do you have testcase_name + testrun_id/counter?
-│        ├─ Yes → get_testcase_details(projectId, testcase_name, testrun_id/counter)
-│        └─ No → list_testcase() first to find IDs
-│
-├─ Need to debug a test case?
-│  └─ Do you have testcase_name?
-│     ├─ Yes → debug_testcase(projectId, testcase_name)
-│     └─ No → Ask user for test case name
-│
-└─ Need to filter test cases?
-   └─ list_testcase(projectId, filters...)
-      │
-      ├─ Filter by test run?
-      │  └─ Use by_testrun_id or counter
-      │
-      └─ Filter by branch/environment/commit?
-         └─ Use by_branch, by_environment, by_commit, etc.
-            (Tool will find matching test runs first)
-```
-
-### When User Asks About Manual Test Cases
-
-```
-User asks about manual test cases
-│
-├─ Need to list/search?
-│  └─ list_manual_test_cases(projectId, filters...)
-│
-├─ Need details?
-│  └─ get_manual_test_case(projectId, caseId)
-│
-├─ Need to create?
-│  └─ Need suite name?
-│     ├─ Yes → list_manual_test_suites(projectId) first
-│     └─ No → create_manual_test_case(projectId, title, suiteName, ...)
-│
-└─ Need to update?
-   └─ update_manual_test_case(projectId, caseId, updates)
-```
+- `caseId` can be the internal `_id` or a human-readable ID like `'TC-123'`.
 
 ---
 
-## Best Practices
+### `create_manual_test_case`
 
-### 1. Always Start with Health Check
+**Purpose**: Create a new manual test case.
 
-When user first mentions TestDino or you need project information:
-```javascript
-// First call
-const healthResult = await health();
-// Extract projectId and store it
-```
+**Required parameters**: `projectId`, `title`, `suiteName`
 
-### 2. Use Appropriate Filters
+> **Always call `list_manual_test_suites()` first** to find the exact suite name. The `suiteName` must match exactly.
 
-Don't fetch all data when you can filter:
-```javascript
-// ❌ Bad: Fetch all test runs
-list_testruns(projectId, get_all=true)
+**Key optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `description` | string | What this test validates |
+| `status` | string | `'Active'` (default), `'Draft'`, `'Deprecated'` |
+| `testStepsDeclarationType` | string | `'Classic'` (default) or `'Gherkin'` |
+| `preconditions` | string | Setup requirements before executing |
+| `postconditions` | string | Cleanup or expected state after execution |
+| `steps` | array | Test steps (see formats below) |
+| `priority` | string | `'high'`, `'medium'`, `'low'`, `'Not set'` |
+| `severity` | string | `'Blocker'`, `'critical'`, `'major'`, `'Normal'`, `'minor'`, `'trivial'`, `'Not set'` |
+| `type` | string | `'functional'`, `'smoke'`, `'regression'`, `'security'`, `'performance'`, `'e2e'`, `'Integration'`, `'API'`, `'Unit'`, `'Accessability'`, `'Compatibility'`, `'Acceptance'`, `'Exploratory'`, `'Usability'`, `'Other'` |
+| `layer` | string | `'e2e'`, `'api'`, `'unit'`, `'not set'` |
+| `behavior` | string | `'positive'`, `'negative'`, `'destructive'`, `'Not set'` |
+| `automationStatus` | string | `'Manual'`, `'Automated'`, `'To be automated'` |
+| `tags` | string | Comma-separated tags |
+| `automation` | array | `['To be Automated', 'Is flaky', 'Muted']` |
+| `attachments` | array | Array of URLs or local file paths (max 10MB each) |
+| `customFields` | object | Key-value pairs — only if custom fields are configured in project settings |
 
-// ✅ Good: Filter by what user asked
-list_testruns(projectId, by_branch="main", by_time_interval="weekly", limit=20)
-```
-
-### 3. Combine Tools for Complete Analysis
-
-For comprehensive analysis, combine multiple tools:
-```javascript
-// 1. Find test runs
-const runs = await list_testruns(projectId, by_branch="main");
-
-// 2. Get details for specific run
-const details = await get_run_details(projectId, testrun_id=runs[0]._id);
-
-// 3. Get failed test cases
-const failed = await list_testcase(projectId, by_testrun_id=runs[0]._id, by_status="failed");
-
-// 4. Debug specific test
-const debug = await debug_testcase(projectId, "Verify user login");
-```
-
-### 4. Handle Missing Parameters Gracefully
-
-If user doesn't provide required parameters:
-```javascript
-// Check if projectId is available
-if (!projectId) {
-  // Call health() to get it
-  const healthResult = await health();
-  projectId = extractProjectId(healthResult);
-}
-
-// If testrun_id missing but user mentioned branch
-if (!testrun_id && userMentionedBranch) {
-  // Use list_testruns with branch filter
-  const runs = await list_testruns(projectId, by_branch=branch);
-  // Then use first run or ask user which one
+**Classic step format**:
+```json
+{
+  "action": "Click the login button",
+  "expectedResult": "User is redirected to dashboard",
+  "data": "Username: testuser@example.com",
+  "subSteps": [
+    {
+      "action": "Enter email",
+      "expectedResult": "Email field is populated",
+      "data": "testuser@example.com",
+      "images": [
+        { "url": "https://example.com/screenshot.png", "fileName": "screenshot.png" }
+      ]
+    }
+  ]
 }
 ```
+- Max 5 sub-steps per step
+- Max 2 images per sub-step
 
-### 5. Use Pagination Wisely
-
-For large result sets:
-```javascript
-// Start with limited results
-const firstPage = await list_testruns(projectId, limit=20);
-
-// If user needs more, fetch additional pages
-if (needMore) {
-  const secondPage = await list_testruns(projectId, limit=20, page=2);
+**Gherkin step format**:
+```json
+{
+  "event": "Given",
+  "stepDescription": "the user is on the login page"
 }
 ```
-
-### 6. Leverage Cross-Run Filtering
-
-Use `list_testcase` with test run filters to avoid multiple calls:
-```javascript
-// ❌ Less efficient: Find runs first, then test cases
-const runs = await list_testruns(projectId, by_branch="main");
-const cases = await list_testcase(projectId, by_testrun_id=runs[0]._id, by_status="failed");
-
-// ✅ More efficient: Let tool handle it
-const cases = await list_testcase(projectId, by_branch="main", by_status="failed");
-```
-
-### 7. Provide Context in Responses
-
-When presenting results, include context:
-```javascript
-// Include test run information when showing test cases
-// Include error categories when showing failed tests
-// Include time range when showing filtered results
-```
+- `event` must be one of: `"Given"`, `"When"`, `"And"`, `"Then"`, `"But"`
 
 ---
 
-## Error Handling
+### `update_manual_test_case`
 
-### Common Errors
+**Purpose**: Modify fields of an existing manual test case. Send only the fields you want to change.
 
-1. **Missing PAT**
-   ```
-   Error: Missing TESTDINO_PAT environment variable
-   ```
-   **Solution**: Inform user to configure PAT in mcp.json
+**Required parameters**: `projectId`, `caseId`, `updates` (object)
 
-2. **Missing projectId**
-   ```
-   Error: projectId is required
-   ```
-   **Solution**: Call `health()` first to get project IDs
+**`updates` object fields** (all optional — only include what you're changing):
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Updated title |
+| `description` | string | Updated description |
+| `status` | string | `'Active'`, `'Draft'`, `'Deprecated'` |
+| `testStepsDeclarationType` | string | `'Classic'` or `'Gherkin'` |
+| `preconditions` | string | Updated preconditions |
+| `postconditions` | string | Updated postconditions |
+| `steps` | array | Full replacement of test steps |
+| `priority` | string | Same options as create |
+| `severity` | string | Same options as create |
+| `type` | string | Same options as create |
+| `layer` | string | Same options as create |
+| `behavior` | string | Same options as create |
+| `automationStatus` | string | Same options as create |
+| `tags` | string | Comma-separated tags |
+| `automation` | array | Automation checklist |
+| `attachments` | object | `{ "add": ["url-or-path"], "remove": ["attachment-id-or-url"] }` |
+| `customFields` | object | Updated custom fields |
 
-3. **Missing Required Parameters**
-   ```
-   Error: At least one of the following must be provided: ...
-   ```
-   **Solution**: Check tool documentation for required parameters
-
-4. **Test Run Not Found**
-   ```
-   Error: 404 Not Found
-   ```
-   **Solution**: Verify test run ID exists, use `list_testruns()` to find valid IDs
-
-5. **No Results Found**
-   ```
-   Response: { count: 0, testRuns: [] }
-   ```
-   **Solution**: Adjust filters or inform user no results match criteria
-
-### Error Handling Pattern
-
-```javascript
-try {
-  const result = await toolCall(params);
-  // Process result
-} catch (error) {
-  if (error.message.includes("TESTDINO_PAT")) {
-    // Guide user to configure PAT
-  } else if (error.message.includes("projectId")) {
-    // Call health() to get projectId
-  } else if (error.message.includes("404")) {
-    // Resource not found, suggest using list tools
-  } else {
-    // Generic error handling
+**Important**: `attachments` uses a nested `add`/`remove` structure — you can add and remove in the same call:
+```json
+{
+  "attachments": {
+    "add": ["https://example.com/new-screenshot.png"],
+    "remove": ["old-attachment-id"]
   }
 }
 ```
 
 ---
 
-## Tool Reference Quick Guide
+### `list_manual_test_suites`
 
-### Quick Lookup Table
+**Purpose**: Get the test suite hierarchy (folders/groups for organizing manual test cases).
 
-| User Intent | Tool to Use | Key Parameters |
-|------------|-------------|----------------|
-| "Check connection" | `health` | None |
-| "Show test runs" | `list_testruns` | `projectId`, filters |
-| "Details of test run X" | `get_run_details` | `projectId`, `testrun_id`/`counter` |
-| "Show failed tests" | `list_testcase` | `projectId`, `by_status="failed"` |
-| "Why is test X failing?" | `debug_testcase` | `projectId`, `testcase_name` |
-| "Details of test case X" | `get_testcase_details` | `projectId`, `testcase_id` or `testcase_name`+`testrun_id` |
-| "List manual test cases" | `list_manual_test_cases` | `projectId`, filters |
-| "Create test case" | `create_manual_test_case` | `projectId`, `title`, `suiteName`, `steps` |
+**Required parameters**: `projectId`
 
-### Parameter Quick Reference
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `parentSuiteId` | string | List only children of a specific suite |
 
-**Time Filters**:
-- `by_time_interval`: '1d', '3d', 'weekly', 'monthly', 'YYYY-MM-DD,YYYY-MM-DD'
+**Returns**: Array of suites with `id`, `name`, `parentSuiteId`, and child count.
 
-**Status Filters**:
-- `by_status`: 'passed', 'failed', 'skipped', 'flaky'
-
-**Test Run Identification**:
-- `testrun_id`: String ID
-- `counter`: Number (sequential)
-
-**Test Case Identification**:
-- `testcase_id`: String ID
-- `testcase_name` + `testrun_id`/`counter`: Name with context
-
-**Pagination**:
-- `limit`: Number (default varies by tool)
-- `page`: Number (default: 1)
-- `get_all`: Boolean (default: false)
+**When to call**: Before `create_manual_test_case` to get the exact `suiteName` to use.
 
 ---
 
-## Summary
+### `create_manual_test_suite`
 
-### Key Takeaways
+**Purpose**: Create a new test suite (folder) for organizing test cases.
 
-1. **Always start with `health()`** to get project IDs and verify connection
-2. **Use filters** to narrow results instead of fetching everything
-3. **Combine tools** for comprehensive analysis
-4. **Handle errors gracefully** and guide users to solutions
-5. **Leverage cross-run filtering** in `list_testcase` to avoid multiple calls
-6. **Use `debug_testcase`** for AI-assisted failure analysis
-7. **Provide context** in responses (test run info, time ranges, etc.)
+**Required parameters**: `projectId`, `name`
 
-### Tool Selection Flow
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `parentSuiteId` | string | ID of parent suite for nesting |
 
+---
+
+## Workflows & Patterns
+
+### Session Startup
 ```
-Need project info? → health()
-Need test runs? → list_testruns()
-Need test run details? → get_run_details()
-Need test cases? → list_testcase()
-Need test case details? → get_testcase_details()
-Need to debug? → debug_testcase()
-Need manual test cases? → list_manual_test_cases() / get_manual_test_case()
-Need to create/update? → create_manual_test_case() / update_manual_test_case()
+1. health()                          → get projectId
+2. Store projectId for the session
+3. Proceed with the user's request
 ```
 
+### Find and Analyze Failed Tests
+```
+1. list_testcase(projectId, by_branch="main", by_status="failed", by_time_interval="1d")
+   → Get failed test cases directly (no need to call list_testruns first)
+2. For each failing test of interest:
+   get_testcase_details(projectId, testcase_id=<id>, steps_filter="failed_only")
+   → See the exact failing step and error
+```
+
+### Debug a Specific Test
+```
+1. debug_testcase(projectId, "test case name")
+   → Get historical data + debugging_prompt
+2. Read the debugging_prompt — use it as analysis context
+3. Identify pattern from history (flaky? consistent? regression?)
+4. If you need to see a specific run's artifacts:
+   get_testcase_details(projectId, testcase_name="...", testrun_id=<latestFailRun>,
+     steps_filter="failed_only", include_screenshots=true, include_traces=true)
+5. Provide root cause analysis and suggested fix
+```
+
+### Investigate a Recent Regression
+```
+1. list_testruns(projectId, by_branch="main", by_time_interval="3d", limit=10)
+   → Find recent runs and identify when pass rate dropped
+2. get_run_details(projectId, testrun_id="<failing run>")
+   → See full breakdown and error categories
+3. list_testcase(projectId, by_testrun_id="<failing run>", by_status="failed")
+   → List the specific tests that broke
+4. debug_testcase(projectId, "<test name>") for key failing tests
+   → Confirm this is a new regression, not pre-existing flakiness
+```
+
+### Track a Flaky Test Over Time
+```
+1. debug_testcase(projectId, "test case name")
+   → Review historical pass/fail pattern
+2. get_testcase_details(projectId, testcase_name="...", include_history=true, history_limit=20)
+   → See last 20 executions with full details
+3. Look for: intermittent failure pattern, specific browsers, time-based correlation
+```
+
+### Create a Manual Test Case
+```
+1. list_manual_test_suites(projectId)
+   → Find the exact suite name where the test case should go
+2. (If suite doesn't exist)
+   create_manual_test_suite(projectId, name="New Suite Name", parentSuiteId="...")
+3. create_manual_test_case(projectId, title="...", suiteName="Exact Suite Name",
+     steps=[...], priority="high", type="functional")
+```
+
+### Update Test Case Steps
+```
+1. get_manual_test_case(projectId, caseId="TC-123")
+   → See current steps and metadata
+2. update_manual_test_case(projectId, caseId="TC-123", updates={
+     steps: [...new steps...],
+     status: "Active"
+   })
+```
+
+### Cross-Run Failure Analysis
+```
+list_testcase(projectId,
+  by_testrun_id="run1,run2,run3",   ← up to 20 comma-separated IDs
+  by_status="failed",
+  by_browser_name="webkit"
+)
+→ Find tests failing specifically in webkit across multiple runs
+```
+
 ---
 
-## Additional Resources
+## Decision Trees
 
-- **Full Documentation**: See `docs/TOOLS.md` for detailed tool documentation
-- **Installation Guide**: See `docs/INSTALLATION.md` for setup instructions
-- **Documentation**: https://docs.testdino.com
+### "Show me recent test runs"
+```
+list_testruns(projectId, by_time_interval="weekly", limit=20)
+```
+
+### "Why is [test name] failing?"
+```
+debug_testcase(projectId, "[test name]")
+→ Read debugging_prompt, analyze patterns
+→ If more detail needed:
+   get_testcase_details(projectId, testcase_name="[test name]",
+     testrun_id="<latest fail>", steps_filter="failed_only")
+```
+
+### "Show me all failed tests on main branch today"
+```
+list_testcase(projectId, by_branch="main", by_status="failed", by_time_interval="1d")
+```
+
+### "Get details about test run #47"
+```
+get_run_details(projectId, counter=47)
+```
+
+### "Find tests failing with timeout errors"
+```
+list_testcase(projectId, by_error_category="timeout_issues", by_status="failed", by_time_interval="weekly")
+```
+
+### "Get details of test case [name] from run #47"
+```
+get_testcase_details(projectId, testcase_name="[name]", counter=47, steps_filter="failed_only")
+```
+
+### "Search for tests with 'element not found' in error message"
+```
+get_testcase_details(projectId, by_error_message="element not found", by_status="failed")
+```
+
+### "Create a test case for the login feature"
+```
+1. list_manual_test_suites(projectId)                     → find suite name
+2. create_manual_test_case(projectId, title="...",
+     suiteName="<exact suite name>", steps=[...])
+```
+
+### "Update TC-123 to add a step"
+```
+1. get_manual_test_case(projectId, caseId="TC-123")       → get current steps
+2. update_manual_test_case(projectId, caseId="TC-123",
+     updates={ steps: [...existing + new step...] })
+```
 
 ---
 
-*This guide is designed to help AI agents efficiently use TestDino MCP tools. For user-facing documentation, refer to the main README.md and docs/TOOLS.md files.*
+## Parameter Quick Reference
 
+### Time Interval Values
+- `'1d'` — last 1 day
+- `'3d'` — last 3 days
+- `'weekly'` — last 7 days
+- `'monthly'` — last 30 days
+- `'2024-01-01,2024-01-31'` — custom date range (inclusive)
+
+### Status Values
+- Automated test cases: `'passed'`, `'failed'`, `'skipped'`, `'flaky'`
+- Manual test cases: `'active'`, `'draft'`, `'deprecated'`
+
+### Error Categories (for `by_error_category`)
+- `'timeout_issues'`
+- `'element_not_found'`
+- `'assertion_failures'`
+- `'network_issues'`
+
+### Browser Names
+- `'chromium'`
+- `'firefox'`
+- `'webkit'`
+
+### Runtime Filter Format
+- `'<60'` — tests that ran in under 60 seconds
+- `'>100'` — tests that ran over 100 seconds
+
+### Required Parameters Summary
+
+| Tool | Required |
+|------|----------|
+| `health` | — |
+| `list_testruns` | `projectId` |
+| `get_run_details` | `projectId` + (`testrun_id` OR `counter`) |
+| `list_testcase` | `projectId` + (run ID or run filter) |
+| `get_testcase_details` | `projectId` + (one of: `testcase_id`, `testcase_name`, `testcase_fulltitle`, `by_error_message`, `by_code_snippet`, `by_status`) |
+| `debug_testcase` | `projectId`, `testcase_name` |
+| `list_manual_test_cases` | `projectId` |
+| `get_manual_test_case` | `projectId`, `caseId` |
+| `create_manual_test_case` | `projectId`, `title`, `suiteName` |
+| `update_manual_test_case` | `projectId`, `caseId`, `updates` (object) |
+| `list_manual_test_suites` | `projectId` |
+| `create_manual_test_suite` | `projectId`, `name` |
+
+---
+
+## Error Handling
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `"Missing TESTDINO_PAT"` | PAT not in environment | Tell user to add `TESTDINO_PAT` to the `env` section of `mcp.json` |
+| `"projectId is required"` | No projectId passed | Call `health()` to get it first |
+| `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details` | Add `testcase_id`, `testcase_name`, or another search param |
+| `"testcase_name is required"` | `debug_testcase` called without name | Ask user for the test case name |
+| `"Step N has X sub-steps, maximum 5 allowed"` | Sub-step limit exceeded | Reduce sub-steps to ≤ 5 per step |
+| `"Sub-step N has X images, maximum 2 allowed"` | Image limit exceeded | Reduce images to ≤ 2 per sub-step |
+| HTTP 404 | Resource not found | Verify IDs exist — use `list_*` tools to find valid IDs |
+| `{ count: 0, ... }` | No results match filters | Broaden filters or inform user nothing matches |
+
+### Common Mistakes to Avoid
+
+1. **Calling any tool before `health()`** — you won't have a `projectId`.
+2. **Using `testcase_name` alone in `get_testcase_details`** without a run context — returns all historical executions, which can be large. Always pair with `testrun_id` or `counter` unless you want cross-run results.
+3. **Using `get_all=true` for large datasets** — prefer filters. Only use `get_all` when the user genuinely needs everything.
+4. **Passing `steps` without specifying `testStepsDeclarationType`** — Classic format is the default. If using Gherkin steps, explicitly set `testStepsDeclarationType: "Gherkin"`.
+5. **Creating test cases without checking suite names** — always call `list_manual_test_suites()` first; `suiteName` must be an exact match.
+6. **Ignoring the `debugging_prompt` in `debug_testcase` response** — this field contains pre-formatted analysis instructions from the API. Always read and apply it when analyzing failures.
+
+---
+
+*For installation setup, see `docs/INSTALLATION.md`. For full API documentation, see `docs/TOOLS.md`.*
