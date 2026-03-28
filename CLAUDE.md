@@ -139,7 +139,7 @@ When bumping version, update all three. Use `/bump-version` command.
 ## Build & Quality Commands
 
 ```bash
-npm run build          # TypeScript compilation (tsc)
+npm run build          # Bundle with tsup (ESM + CJS dual output)
 npm run dev            # Run from source (tsx src/index.ts)
 npm run typecheck      # Type check without emitting (tsc --noEmit)
 npm run lint           # ESLint

@@ -59,6 +59,7 @@ export default tseslint.config(
       "*.tgz",
       "tests/**",
       "vitest.config.ts",
+      "tsup.config.ts",
     ],
   }
 );
