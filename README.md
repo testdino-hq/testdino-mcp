@@ -200,7 +200,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
 - **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 12 available tools with examples, parameters, and use cases
-- **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
+- **[AI Agent Skills Guide](./docs/SKILL.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements
 

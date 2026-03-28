@@ -11,7 +11,7 @@ Severity levels: `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
 | ID      | Severity  | Status | Description                                                                                     |
 | ------- | --------- | ------ | ----------------------------------------------------------------------------------------------- |
 | ISS-001 | CRITICAL  | FOUND  | PAT precedence inverted — env var overrides explicit args.token                                 |
-| ISS-002 | CRITICAL  | FOUND  | readFileSync for skill.md crashes server if file missing                                        |
+| ISS-002 | CRITICAL  | FOUND  | readFileSync for SKILL.md crashes server if file missing                                        |
 | ISS-003 | CRITICAL  | FOUND  | Zero test coverage — entire test suite absent                                                   |
 | ISS-004 | IMPORTANT | FOUND  | Raw API error body leaked into tool output, no size cap                                         |
 | ISS-005 | IMPORTANT | FOUND  | list_testcase: args.projectId accessed without null guard                                       |
@@ -51,11 +51,11 @@ return tokenFromArgs || process.env.TESTDINO_PAT;
 
 ---
 
-## ISS-002: readFileSync Crashes Server If skill.md Missing (CRITICAL)
+## ISS-002: readFileSync Crashes Server If SKILL.md Missing (CRITICAL)
 
 **Status:** FOUND (2026-03-28)
 
-**Symptoms:** MCP server crashes with unhandled exception if `docs/skill.md` is missing (e.g., corrupted install, missing docs directory).
+**Symptoms:** MCP server crashes with unhandled exception if `docs/SKILL.md` is missing (e.g., corrupted install, missing docs directory).
 
 **Root cause:** `src/index.ts:110` — `readFileSync` is not wrapped in try/catch. The synchronous exception propagates uncaught through the MCP SDK and kills the server's stdio transport.
 

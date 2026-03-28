@@ -85,7 +85,7 @@ Every tool file exports exactly two things:
 3. Export from `src/tools/index.ts`
 4. Register in `src/index.ts` (add to tools array + add routing if-block)
 5. Update `docs/TOOLS.md` with full documentation
-6. Update `docs/skill.md` if it affects AI agent workflows
+6. Update `docs/SKILL.md` if it affects AI agent workflows
 7. Run full verify: `npm run typecheck && npm run lint && npm run test`
 
 ---
@@ -235,10 +235,10 @@ Three docs files serve different purposes:
 | File                   | Audience    | Purpose                                            |
 | ---------------------- | ----------- | -------------------------------------------------- |
 | `docs/TOOLS.md`        | Human users | Comprehensive tool reference with examples         |
-| `docs/skill.md`        | AI agents   | Patterns, workflows, decision trees for tool usage |
+| `docs/SKILL.md`        | AI agents   | Patterns, workflows, decision trees for tool usage |
 | `docs/INSTALLATION.md` | Human users | Setup instructions for different AI tools          |
 
-When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/skill.md`.
+When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/SKILL.md`.
 
 ---
 

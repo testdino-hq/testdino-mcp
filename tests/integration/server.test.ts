@@ -85,7 +85,7 @@ function createServer() {
   server.setRequestHandler(ListResourcesRequestSchema, () => ({
     resources: [
       {
-        uri: "testdino://docs/skill.md",
+        uri: "testdino://docs/SKILL.md",
         name: "TestDino MCP Skills Guide",
         description: "AI agent guide for using TestDino MCP tools",
         mimeType: "text/markdown",
@@ -95,8 +95,8 @@ function createServer() {
 
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
-    if (uri === "testdino://docs/skill.md") {
-      const skillPath = join(__dirname, "..", "..", "docs", "skill.md");
+    if (uri === "testdino://docs/SKILL.md") {
+      const skillPath = join(__dirname, "..", "..", "docs", "SKILL.md");
       const content = readFileSync(skillPath, "utf-8");
       return {
         contents: [{ uri, mimeType: "text/markdown", text: content }],
@@ -267,18 +267,18 @@ describe("MCP Server Integration", () => {
   });
 
   describe("resource listing", () => {
-    it("should expose the skill.md resource", async () => {
+    it("should expose the SKILL.md resource", async () => {
       const result = await client.listResources();
       expect(result.resources).toHaveLength(1);
-      expect(result.resources[0].uri).toBe("testdino://docs/skill.md");
+      expect(result.resources[0].uri).toBe("testdino://docs/SKILL.md");
       expect(result.resources[0].mimeType).toBe("text/markdown");
     });
   });
 
   describe("resource reading", () => {
-    it("should return skill.md content", async () => {
+    it("should return SKILL.md content", async () => {
       const result = await client.readResource({
-        uri: "testdino://docs/skill.md",
+        uri: "testdino://docs/SKILL.md",
       });
       expect(result.contents).toHaveLength(1);
       expect(result.contents[0].text).toContain("TestDino");
