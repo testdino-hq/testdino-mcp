@@ -96,7 +96,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish
+      - name: Publish @testdino/mcp
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update deprecated wrapper version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          cd packages/deprecated-wrapper
+          jq --arg v "$TAG_VERSION" '.version = $v | .dependencies["@testdino/mcp"] = ("^" + $v)' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Publish testdino-mcp wrapper
+        run: |
+          cd packages/deprecated-wrapper
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -57,7 +57,7 @@ If `$ARGUMENTS` is "staged" or empty, review all staged/unstaged git changes.
 ### Documentation Sync
 
 - Do `docs/TOOLS.md` entries match the actual tool behavior?
-- Does `docs/skill.md` reflect current tool capabilities?
+- Does `docs/SKILL.md` reflect current tool capabilities?
 - Is the version consistent across all 3 locations?
 
 ## Output

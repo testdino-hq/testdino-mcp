@@ -1,0 +1,25 @@
+{
+  "name": "testdino-mcp",
+  "version": "1.1.0",
+  "description": "DEPRECATED: This package has moved to @testdino/mcp. This is a wrapper that forwards to the new package.",
+  "license": "MIT",
+  "author": "TestDino",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/testdino-hq/testdino-mcp"
+  },
+  "dependencies": {
+    "@testdino/mcp": "^1.1.0"
+  },
+  "bin": {
+    "testdino-mcp": "./node_modules/@testdino/mcp/dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "deprecated"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

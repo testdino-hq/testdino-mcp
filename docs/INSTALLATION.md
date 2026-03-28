@@ -1,4 +1,4 @@
-# Installation Guide for testdino-mcp
+# Installation Guide for @testdino/mcp
 
 This step-by-step guide will help you install and configure the TestDino MCP server. We provide comprehensive setup instructions for **Cursor**.
 
@@ -23,21 +23,21 @@ You don't need to install anything! The MCP server runs automatically via npx wh
 **Option 2: Global Installation**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 - Install once, use in any project
 - Requires Node.js 18+ and npm
-- Use command: `testdino-mcp`
+- Use command: `@testdino/mcp`
 
 **Option 3: Project Installation**
 
 ```bash
-npm install testdino-mcp
+npm install @testdino/mcp
 ```
 
 - Installed in your project's `node_modules`
-- Use command: `npx testdino-mcp`
+- Use command: `npx @testdino/mcp`
 
 ## Cursor Integration
 
@@ -75,7 +75,7 @@ Open or create the `mcp.json` file and add this configuration:
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -92,7 +92,7 @@ Open or create the `mcp.json` file and add this configuration:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -198,8 +198,8 @@ The Personal Access Token (PAT) authenticates your requests to TestDino and prov
 ### "Package not found"
 
 - Make sure you're connected to the internet
-- Verify the package name: `testdino-mcp`
-- Try: `npm view testdino-mcp` to check if it's published
+- Verify the package name: `@testdino/mcp`
+- Try: `npm view @testdino/mcp` to check if it's published
 
 ### "Command not found" (after global install)
 
@@ -265,7 +265,7 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -282,7 +282,7 @@ Open or create the `claude_desktop_config.json` file and add this configuration:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }

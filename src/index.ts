@@ -48,7 +48,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.8",
+      version: "1.1.0",
     },
     {
       capabilities: {
@@ -90,7 +90,7 @@ async function main() {
     return {
       resources: [
         {
-          uri: "testdino://docs/skill.md",
+          uri: "testdino://docs/SKILL.md",
           name: "TestDino MCP Skills Guide",
           description:
             "AI agent guide for using TestDino MCP tools - patterns, workflows, and best practices",
@@ -106,8 +106,8 @@ async function main() {
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
 
-    if (uri === "testdino://docs/skill.md") {
-      const skillPath = join(__dirname, "..", "docs", "skill.md");
+    if (uri === "testdino://docs/SKILL.md") {
+      const skillPath = join(__dirname, "..", "docs", "SKILL.md");
       const content = readFileSync(skillPath, "utf-8");
       return {
         contents: [

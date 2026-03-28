@@ -92,6 +92,8 @@ export async function handleGetRunDetails(args?: GetRunDetailsArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve test run details: ${errorMessage}`);
+    throw new Error(`Failed to retrieve test run details: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

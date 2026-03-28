@@ -107,6 +107,8 @@ export async function handleCreateManualTestSuite(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create manual test suite: ${errorMessage}`);
+    throw new Error(`Failed to create manual test suite: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

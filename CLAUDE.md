@@ -1,6 +1,6 @@
 # CLAUDE.md — TestDino MCP Server
 
-You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `testdino-mcp`. Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
+You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `@testdino/mcp` (previously `testdino-mcp`). Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
 
 Read this file fully before doing anything. Follow it without deviation.
 
@@ -11,7 +11,7 @@ Read this file fully before doing anything. Follow it without deviation.
 - **What**: MCP server (stdio transport, not HTTP)
 - **Language**: TypeScript (strict mode, ES modules)
 - **Runtime**: Node.js >= 20
-- **Published to**: npm (`testdino-mcp`)
+- **Published to**: npm (`@testdino/mcp`)
 - **API**: Talks to `https://api.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
 
@@ -85,7 +85,7 @@ Every tool file exports exactly two things:
 3. Export from `src/tools/index.ts`
 4. Register in `src/index.ts` (add to tools array + add routing if-block)
 5. Update `docs/TOOLS.md` with full documentation
-6. Update `docs/skill.md` if it affects AI agent workflows
+6. Update `docs/SKILL.md` if it affects AI agent workflows
 7. Run full verify: `npm run typecheck && npm run lint && npm run test`
 
 ---
@@ -139,7 +139,7 @@ When bumping version, update all three. Use `/bump-version` command.
 ## Build & Quality Commands
 
 ```bash
-npm run build          # TypeScript compilation (tsc)
+npm run build          # Bundle with tsup (ESM + CJS dual output)
 npm run dev            # Run from source (tsx src/index.ts)
 npm run typecheck      # Type check without emitting (tsc --noEmit)
 npm run lint           # ESLint
@@ -235,10 +235,10 @@ Three docs files serve different purposes:
 | File                   | Audience    | Purpose                                            |
 | ---------------------- | ----------- | -------------------------------------------------- |
 | `docs/TOOLS.md`        | Human users | Comprehensive tool reference with examples         |
-| `docs/skill.md`        | AI agents   | Patterns, workflows, decision trees for tool usage |
+| `docs/SKILL.md`        | AI agents   | Patterns, workflows, decision trees for tool usage |
 | `docs/INSTALLATION.md` | Human users | Setup instructions for different AI tools          |
 
-When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/skill.md`.
+When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/SKILL.md`.
 
 ---
 

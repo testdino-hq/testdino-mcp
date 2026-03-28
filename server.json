@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "io.github.testdino-inc/testdino-mcp",
+  "name": "io.github.testdino-hq/testdino-mcp",
   "description": "A MCP server for TestDino",
   "repository": {
-    "url": "https://github.com/testdino-inc/testdino-mcp",
+    "url": "https://github.com/testdino-hq/testdino-mcp",
     "source": "github"
   },
-  "version": "1.0.8",
+  "version": "1.1.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "testdino-mcp",
-      "version": "1.0.8",
+      "identifier": "@testdino/mcp",
+      "version": "1.1.0",
       "transport": {
         "type": "stdio"
       },

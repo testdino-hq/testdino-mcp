@@ -1,6 +1,6 @@
 ---
 name: update-docs
-description: Update documentation after tool changes — TOOLS.md, skill.md, README, INSTALLATION.md
+description: Update documentation after tool changes — TOOLS.md, SKILL.md, README, INSTALLATION.md
 argument-hint: '[tool-name or "all" to audit all docs]'
 ---
 
@@ -14,7 +14,7 @@ If a specific tool is named:
 
 - Read the tool's source file to understand current behavior
 - Check `docs/TOOLS.md` for the tool's existing documentation
-- Check `docs/skill.md` for any references
+- Check `docs/SKILL.md` for any references
 
 If "all" is specified:
 
@@ -33,7 +33,7 @@ For each tool in scope, verify:
    - Do example requests match the actual schema?
    - Are enum values listed and up to date?
 
-2. **skill.md**
+2. **SKILL.md**
    - Are workflow references to tools still accurate?
    - Do decision trees point to the right tools?
    - Are parameter quick-reference tables current?
@@ -70,4 +70,4 @@ For TOOLS.md, each tool section should include:
 - Match existing documentation style and structure
 - Tool descriptions in docs should be more detailed than the inputSchema description (docs are for humans, schema is for AI agents)
 - If a tool was removed, remove its documentation section entirely — don't leave stubs
-- Keep skill.md focused on AI agent patterns, not human-readable reference
+- Keep SKILL.md focused on AI agent patterns, not human-readable reference

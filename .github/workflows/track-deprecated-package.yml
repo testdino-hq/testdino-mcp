@@ -1,0 +1,104 @@
+name: Track deprecated package usage
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 9:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  issues: write
+
+jobs:
+  check-downloads:
+    name: Check testdino-mcp downloads
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch download stats
+        id: stats
+        run: |
+          OLD_PKG=$(curl -s "https://api.npmjs.org/downloads/point/last-week/testdino-mcp")
+          NEW_PKG=$(curl -s "https://api.npmjs.org/downloads/point/last-week/@testdino/mcp")
+
+          OLD_DOWNLOADS=$(echo "$OLD_PKG" | jq -r '.downloads // 0')
+          NEW_DOWNLOADS=$(echo "$NEW_PKG" | jq -r '.downloads // 0')
+
+          echo "old_downloads=$OLD_DOWNLOADS" >> "$GITHUB_OUTPUT"
+          echo "new_downloads=$NEW_DOWNLOADS" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+          if [ "$OLD_DOWNLOADS" -eq 0 ]; then
+            echo "is_zero=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_zero=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const oldDownloads = ${{ steps.stats.outputs.old_downloads }};
+            const newDownloads = ${{ steps.stats.outputs.new_downloads }};
+            const date = '${{ steps.stats.outputs.date }}';
+            const isZero = ${{ steps.stats.outputs.is_zero }};
+
+            // Find or create the tracking issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'deprecated-package-tracking',
+              state: 'open',
+            });
+
+            let issueNumber;
+            if (issues.data.length === 0) {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Track: testdino-mcp deprecated package downloads',
+                labels: ['deprecated-package-tracking'],
+                body: [
+                  '## Deprecated Package Download Tracker',
+                  '',
+                  'Tracking weekly downloads of `testdino-mcp` (deprecated) vs `@testdino/mcp` (current).',
+                  'This issue is updated automatically every Monday.',
+                  '',
+                  'Once `testdino-mcp` hits **0 downloads for 4 consecutive weeks**, it is safe to unpublish.',
+                  '',
+                  '| Date | testdino-mcp | @testdino/mcp |',
+                  '|------|-------------|---------------|',
+                ].join('\n'),
+              });
+              issueNumber = created.data.number;
+            } else {
+              issueNumber = issues.data[0].number;
+            }
+
+            // Add weekly report as comment
+            let body = `### Weekly Download Report — ${date}\n\n`;
+            body += `| Package | Downloads (last 7 days) |\n`;
+            body += `|---------|------------------------|\n`;
+            body += `| \`testdino-mcp\` (deprecated) | **${oldDownloads}** |\n`;
+            body += `| \`@testdino/mcp\` (current) | **${newDownloads}** |\n`;
+
+            if (isZero) {
+              body += `\n🎉 **testdino-mcp reached 0 downloads!** Consider unpublishing if this persists for 4 weeks.`;
+            } else if (oldDownloads < 10) {
+              body += `\n⚠️ testdino-mcp is nearly at zero. Migration almost complete.`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body,
+            });
+
+            // Close the issue if zero for reporting
+            if (isZero) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['ready-to-unpublish'],
+              });
+            }

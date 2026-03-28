@@ -27,7 +27,7 @@ List every file that needs to be created or modified:
 3. `src/tools/index.ts` — barrel export
 4. `src/index.ts` — tool registration + routing
 5. `docs/TOOLS.md` — tool documentation
-6. `docs/skill.md` — if it affects AI agent workflows
+6. `docs/SKILL.md` — if it affects AI agent workflows
 
 **Get user approval before writing code.**
 
@@ -124,7 +124,7 @@ Add test file at `tests/tools/<category>/<tool-name>.test.ts` covering:
 ## Phase 4 — Document
 
 1. Add full documentation to `docs/TOOLS.md` following existing format
-2. Update `docs/skill.md` if the tool creates a new workflow or decision path
+2. Update `docs/SKILL.md` if the tool creates a new workflow or decision path
 3. Update the tool count in `README.md` if applicable
 
 ## Phase 5 — Final Verify

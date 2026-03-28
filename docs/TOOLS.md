@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This comprehensive guide covers all available tools in the `testdino-mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
+This comprehensive guide covers all available tools in the `@testdino/mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
 
 > **Platform Support**: This documentation and examples are currently optimized for **Cursor**. Support for **Claude Desktop** and **VS Code** is planned for future releases. The tools work with any MCP-compatible client, but setup instructions focus on Cursor.
 
@@ -66,7 +66,7 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -75,7 +75,7 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 }
 ```
 
-**Note:** For global installation, use `"command": "testdino-mcp"` instead of npx. See [INSTALLATION.md](./INSTALLATION.md) for details.
+**Note:** For global installation, use `"command": "@testdino/mcp"` instead of npx. See [INSTALLATION.md](./INSTALLATION.md) for details.
 
 ### Example Usage
 
@@ -150,7 +150,7 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 **PAT Validation Error:**
 
 ```
-Hello, testdino-mcp! 👋
+Hello, @testdino/mcp! 👋
 
 This is your MCP server responding.
 
@@ -211,7 +211,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -504,7 +504,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -811,7 +811,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -971,7 +971,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -1321,7 +1321,7 @@ Before using this tool, you must configure your TestDino PAT in `.cursor/mcp.jso
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -1566,7 +1566,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -1803,7 +1803,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -2008,7 +2008,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -2261,7 +2261,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -2478,7 +2478,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -2638,7 +2638,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }

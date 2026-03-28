@@ -102,7 +102,10 @@ export function processAttachments(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to read file "${attachment}": ${errorMessage}`);
+        throw new Error(
+          `Failed to read file "${attachment}": ${errorMessage}`,
+          { cause: error }
+        );
       }
     }
     // Return URLs as-is (strings)

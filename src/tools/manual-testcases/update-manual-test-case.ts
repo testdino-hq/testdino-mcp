@@ -359,6 +359,8 @@ export async function handleUpdateManualTestCase(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update manual test case: ${errorMessage}`);
+    throw new Error(`Failed to update manual test case: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

@@ -61,21 +61,21 @@ The server provides 12 powerful tools:
 **Option 2: Global Installation**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 - Install once, use in any project
 - Requires Node.js 18+ and npm
-- Use command: `testdino-mcp`
+- Use command: `@testdino/mcp`
 
 **Option 3: Project Installation**
 
 ```bash
-npm install testdino-mcp
+npm install @testdino/mcp
 ```
 
 - Installed in your project's `node_modules`
-- Use command: `npx testdino-mcp`
+- Use command: `npx @testdino/mcp`
 
 ## Integration
 
@@ -102,7 +102,7 @@ npm install testdino-mcp
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -124,7 +124,7 @@ npm install testdino-mcp
 **If you prefer to install globally instead of using npx or project installation:**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 Then use this configuration:
@@ -133,7 +133,7 @@ Then use this configuration:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -200,7 +200,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
 - **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 12 available tools with examples, parameters, and use cases
-- **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
+- **[AI Agent Skills Guide](./docs/SKILL.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements
 
