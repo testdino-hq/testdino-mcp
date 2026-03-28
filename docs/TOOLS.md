@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This comprehensive guide covers all available tools in the `testdino-mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
+This comprehensive guide covers all available tools in the `@testdino/mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
 
 > **Platform Support**: This documentation and examples are currently optimized for **Cursor**. Support for **Claude Desktop** and **VS Code** is planned for future releases. The tools work with any MCP-compatible client, but setup instructions focus on Cursor.
 
@@ -66,7 +66,7 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }

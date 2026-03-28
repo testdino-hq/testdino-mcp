@@ -1,6 +1,6 @@
 # CLAUDE.md — TestDino MCP Server
 
-You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `testdino-mcp`. Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
+You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `@testdino/mcp` (previously `testdino-mcp`). Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
 
 Read this file fully before doing anything. Follow it without deviation.
 
@@ -11,7 +11,7 @@ Read this file fully before doing anything. Follow it without deviation.
 - **What**: MCP server (stdio transport, not HTTP)
 - **Language**: TypeScript (strict mode, ES modules)
 - **Runtime**: Node.js >= 20
-- **Published to**: npm (`testdino-mcp`)
+- **Published to**: npm (`@testdino/mcp`)
 - **API**: Talks to `https://api.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
 

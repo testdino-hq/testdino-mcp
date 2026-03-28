@@ -61,7 +61,7 @@ The server provides 12 powerful tools:
 **Option 2: Global Installation**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 - Install once, use in any project
@@ -71,7 +71,7 @@ npm install -g testdino-mcp
 **Option 3: Project Installation**
 
 ```bash
-npm install testdino-mcp
+npm install @testdino/mcp
 ```
 
 - Installed in your project's `node_modules`
@@ -102,7 +102,7 @@ npm install testdino-mcp
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -124,7 +124,7 @@ npm install testdino-mcp
 **If you prefer to install globally instead of using npx or project installation:**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 Then use this configuration:
