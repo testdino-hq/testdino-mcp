@@ -119,20 +119,20 @@ If you see an error, check the [Troubleshooting](#troubleshooting) section below
 
 Once installed and configured, the MCP server provides 12 powerful tools:
 
-| Tool                       | Purpose                           | When to Use                                     |
-| -------------------------- | --------------------------------- | ----------------------------------------------- |
-| `health`                   | Verify connection and PAT         | First thing after installation, troubleshooting |
-| `list_testruns`            | Browse and filter test runs       | Finding specific test executions                |
-| `get_run_details`          | Get complete test run overview    | Analyzing a specific test run                   |
-| `list_testcase`            | List test cases with filters      | Finding failed or flaky tests across runs       |
-| `get_testcase_details`     | Deep dive into a test case        | Debugging specific test failures                |
-| `debug_testcase`           | AI-assisted debugging with patterns| Root cause analysis, flaky test detection       |
-| `list_manual_test_cases`   | Search and list manual test cases | Finding manual test cases with filters          |
-| `get_manual_test_case`     | Get manual test case details      | Reviewing test steps and metadata               |
-| `create_manual_test_case`  | Create new manual test case       | Documenting new test scenarios                  |
-| `update_manual_test_case`  | Update existing test case         | Modifying test case details                     |
-| `list_manual_test_suites`  | List test suite hierarchy         | Finding suite IDs for organization              |
-| `create_manual_test_suite` | Create new test suite             | Organizing test cases                           |
+| Tool                       | Purpose                             | When to Use                                     |
+| -------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `health`                   | Verify connection and PAT           | First thing after installation, troubleshooting |
+| `list_testruns`            | Browse and filter test runs         | Finding specific test executions                |
+| `get_run_details`          | Get complete test run overview      | Analyzing a specific test run                   |
+| `list_testcase`            | List test cases with filters        | Finding failed or flaky tests across runs       |
+| `get_testcase_details`     | Deep dive into a test case          | Debugging specific test failures                |
+| `debug_testcase`           | AI-assisted debugging with patterns | Root cause analysis, flaky test detection       |
+| `list_manual_test_cases`   | Search and list manual test cases   | Finding manual test cases with filters          |
+| `get_manual_test_case`     | Get manual test case details        | Reviewing test steps and metadata               |
+| `create_manual_test_case`  | Create new manual test case         | Documenting new test scenarios                  |
+| `update_manual_test_case`  | Update existing test case           | Modifying test case details                     |
+| `list_manual_test_suites`  | List test suite hierarchy           | Finding suite IDs for organization              |
+| `create_manual_test_suite` | Create new test suite               | Organizing test cases                           |
 
 **Quick Examples:**
 
@@ -149,6 +149,7 @@ Once installed and configured, the MCP server provides 12 powerful tools:
 **Special Feature - AI-Assisted Debugging:**
 
 The `debug_testcase` tool is particularly powerful for debugging failing tests. It:
+
 - Aggregates historical execution data across multiple test runs
 - Identifies failure patterns, error categories, and common error messages
 - Provides file and line numbers for error locations

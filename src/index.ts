@@ -48,7 +48,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.7",
+      version: "1.0.8",
     },
     {
       capabilities: {
@@ -92,9 +92,10 @@ async function main() {
         {
           uri: "testdino://docs/skill.md",
           name: "TestDino MCP Skills Guide",
-          description: "AI agent guide for using TestDino MCP tools - patterns, workflows, and best practices",
+          description:
+            "AI agent guide for using TestDino MCP tools - patterns, workflows, and best practices",
           mimeType: "text/markdown",
-        }
+        },
       ],
     };
   });
@@ -102,7 +103,7 @@ async function main() {
   /**
    * Read resource content
    */
-  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
 
     if (uri === "testdino://docs/skill.md") {

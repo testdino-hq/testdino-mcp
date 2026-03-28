@@ -14,6 +14,7 @@ This MCP server bridges the gap between your TestDino test management platform a
 All through simple conversational commands.
 
 ## Features
+
 - **🔍 Health Check**: Verify your connection and validate your TestDino PAT. Get account information and list all available organizations and projects.
 - **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options (branch, time, author, commit, environment).
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, execution steps, and artifacts (screenshots, videos, traces).
@@ -222,6 +223,7 @@ The `debug_testcase` tool is a powerful feature that helps you understand why te
 - **Code Correlation**: Provides file and line numbers for error locations, enabling AI to correlate with source code
 
 **Example Workflow:**
+
 1. Ask: "Debug test case 'Verify user login' from testdino reports"
 2. AI calls `debug_testcase` with projectId and testcase_name
 3. Tool returns historical data with failure patterns

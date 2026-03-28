@@ -111,22 +111,26 @@ export const getTestCaseDetailsTool = {
       },
       include_screenshots: {
         type: "boolean",
-        description: "Include screenshot URLs from test attempts. Default: false.",
+        description:
+          "Include screenshot URLs from test attempts. Default: false.",
         default: false,
       },
       include_traces: {
         type: "boolean",
-        description: "Include Playwright trace links from test attempts. Default: false.",
+        description:
+          "Include Playwright trace links from test attempts. Default: false.",
         default: false,
       },
       include_videos: {
         type: "boolean",
-        description: "Include video recording URLs from test attempts. Default: false.",
+        description:
+          "Include video recording URLs from test attempts. Default: false.",
         default: false,
       },
       include_attachments: {
         type: "boolean",
-        description: "Include all attachment metadata from test attempts. Default: false.",
+        description:
+          "Include all attachment metadata from test attempts. Default: false.",
         default: false,
       },
       steps_filter: {
@@ -285,7 +289,10 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
     ];
 
     // If response contains screenshot/image attachments, instruct the agent to view them
-    if (responseText.includes('"contentType": "image/') || responseText.includes('"screenshots"')) {
+    if (
+      responseText.includes('"contentType": "image/') ||
+      responseText.includes('"screenshots"')
+    ) {
       content.push({
         type: "text",
         text: "This test case has screenshot images attached. You should fetch and view the screenshot URLs above (in the 'screenshots' or attachment 'path' fields) to visually inspect the application state at the time of failure — this is critical for accurate diagnosis.",

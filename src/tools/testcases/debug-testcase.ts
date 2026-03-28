@@ -22,8 +22,7 @@ export const debugTestCaseTool = {
     properties: {
       projectId: {
         type: "string",
-        description:
-          "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID (Required). The TestDino project identifier.",
       },
       testcase_name: {
         type: "string",
@@ -34,7 +33,6 @@ export const debugTestCaseTool = {
     required: ["projectId", "testcase_name"],
   },
 };
-
 
 export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
   const token = getApiKey(args);
@@ -74,7 +72,10 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
     ];
 
     // If response contains screenshot/image attachments, instruct the agent to view them
-    if (responseText.includes('"contentType": "image/') || responseText.includes('"name": "screenshot"')) {
+    if (
+      responseText.includes('"contentType": "image/') ||
+      responseText.includes('"name": "screenshot"')
+    ) {
       content.push({
         type: "text",
         text: "Screenshot images are available in the historical test data above. You should fetch and view the screenshot URLs in the attempts' attachments to visually inspect the application state at the time of each failure — this is critical for accurate root cause analysis.",
@@ -87,4 +88,3 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
     throw new Error(`Failed to debug test case: ${errorMessage}`);
   }
 }
-
