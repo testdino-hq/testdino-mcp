@@ -78,6 +78,15 @@ Each finding must include:
 - What's wrong (one sentence)
 - Specific fix (code snippet or instruction)
 
+## Track Findings
+
+After reporting, log all Critical and Important findings to `ISSUES.md`:
+
+1. Check existing issues to avoid duplicates
+2. Assign the next `ISS-NNN` ID for new findings
+3. Add entry with: severity, status (`FOUND`), symptoms, root cause (file:line), fix suggestion
+4. Update the summary table at the top
+
 ## Rules
 
 - Don't report style issues that lint/prettier would catch
@@ -85,3 +94,4 @@ Each finding must include:
 - Focus on logic bugs, protocol violations, and consistency issues
 - Verify findings against actual code before reporting — no false positives
 - Tool descriptions are a first-class concern — bad descriptions = broken AI tool usage
+- All Critical/Important findings MUST be logged to `ISSUES.md` — reviews without tracking are forgotten

@@ -76,6 +76,13 @@ If a lesson reveals a gap in a skill workflow (e.g., `/add-tool` missed a step, 
 [If any skill workflow gap was identified — propose the fix]
 ```
 
+### 6. Update Issue Tracker
+
+If bugs were found or fixed during this task:
+
+- Update `ISSUES.md` with any new issues discovered (assign ISS-NNN IDs)
+- Update status of fixed issues to `FIXED` with resolution details
+
 ## Rules
 
 - Be honest about mistakes — the point is improvement, not ego preservation
@@ -83,3 +90,4 @@ If a lesson reveals a gap in a skill workflow (e.g., `/add-tool` missed a step, 
 - Don't write lessons for things that went smoothly — noise drowns signal
 - Focus on lessons that are **reusable** across future tasks, not one-off fixes
 - If the same mistake happened because a CLAUDE.md rule wasn't followed, note that — the rule exists, the issue is compliance
+- Bugs found during retro MUST be logged to `ISSUES.md` — don't rely on memory

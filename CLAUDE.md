@@ -10,7 +10,7 @@ Read this file fully before doing anything. Follow it without deviation.
 
 - **What**: MCP server (stdio transport, not HTTP)
 - **Language**: TypeScript (strict mode, ES modules)
-- **Runtime**: Node.js >= 18
+- **Runtime**: Node.js >= 20
 - **Published to**: npm (`testdino-mcp`)
 - **API**: Talks to `https://api.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
@@ -35,8 +35,7 @@ src/
 │   ├── env.ts            ← API URL + PAT resolution
 │   ├── endpoints.ts      ← All API endpoint URL builders (centralized)
 │   ├── request.ts        ← HTTP fetch wrapper (apiRequest / apiRequestJson)
-│   ├── logger.ts         ← Logging utilities (writes to stderr)
-│   └── file-utils.ts     ← Local file reading + base64 encoding for attachments
+│   └── file-utils.ts     ← Local file reading, base64 encoding, step validation
 └── tools/
     ├── health.ts         ← PAT validation + account info
     ├── index.ts          ← Barrel export for all tools
@@ -191,6 +190,32 @@ Three docs files serve different purposes:
 | `docs/INSTALLATION.md` | Human users | Setup instructions for different AI tools          |
 
 When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/skill.md`.
+
+---
+
+## Issue Tracking
+
+All bugs, regressions, and technical debt are tracked in `ISSUES.md` at the project root.
+
+**Format:** Each issue has an `ISS-NNN` ID with: severity, status, symptoms, root cause (file:line), fix description, files changed, tests added.
+
+**Status flow:** `FOUND` → `IN PROGRESS` → `FIXED` (with resolution summary and date)
+
+**Severity levels:** `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
+
+**When to write issues:**
+
+- `/review` skill finds Critical/Important bugs → logs them to `ISSUES.md`
+- `/fix` skill starts from an `ISSUES.md` entry and updates it on completion
+- `/retro` skill checks if bugs were found during the task and logs new ones
+- Any time a bug is discovered during development → add it before you forget
+
+**Rules:**
+
+- Every issue must have a specific file:line reference
+- Every issue must have a concrete fix suggestion
+- Fixes without `ISSUES.md` updates are incomplete — tracking is not optional
+- Generalizable patterns get promoted to the Known Patterns & Pitfalls table in this file
 
 ---
 
