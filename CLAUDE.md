@@ -164,18 +164,67 @@ npm run format && npm run typecheck && npm run lint && npm run test && npm run b
 
 ---
 
-## Testing Strategy
+## Testing
 
-- Framework: Jest with `ts-jest` (ESM preset)
-- Test location: `__tests__/` directory (mirroring src structure)
+### Setup
+
+- Framework: Vitest with v8 coverage
+- Config: `vitest.config.ts`
 - Test pattern: `*.test.ts`
-- Every tool handler should have tests covering:
-  - Missing PAT → error
-  - Missing required params → error
-  - Successful API call → formatted response
-  - API error → wrapped error message
-- Utility functions (`lib/`) should have unit tests for edge cases
-- Mock `fetch` for API calls — never hit the real API in tests
+- Mock `fetch` via `tests/helpers/mockFetch.ts` — never hit the real API in tests
+- Shared test factories in `tests/helpers/mockTypes.ts`
+
+### Structure
+
+```
+tests/
+├── setup.ts            ← Global setup (env cleanup between tests)
+├── helpers/            ← Mock factories, shared types
+├── unit/               ← Unit tests (mirror src/ structure)
+│   ├── lib/            ← env, endpoints, request, file-utils
+│   └── tools/          ← All 12 tool handlers
+└── integration/        ← End-to-end MCP server tests
+```
+
+Unit tests in `tests/unit/` (mirror `src/`), integration in `tests/integration/`, helpers in `tests/helpers/`.
+
+### Coverage Thresholds
+
+| Metric     | Minimum |
+| ---------- | ------- |
+| Lines      | 80%     |
+| Functions  | 80%     |
+| Branches   | 60%     |
+| Statements | 80%     |
+
+### What to Test
+
+- **Branching logic** — every if/else, switch case, ternary path
+- **Boundary conditions** — empty arrays, undefined params, max limits, zero values
+- **Async coordination** — concurrent calls, promise races, init ordering
+- **Non-trivial data transforms** — query string building, response formatting, file encoding
+- **Error recovery paths** — not just error detection, verify actual recovery behavior
+- **Validation logic** — required params, enum values, type coercion edge cases
+- **Every bug fix must include a regression test** that would have caught the bug
+
+For tool handlers specifically:
+
+- Missing PAT → correct error message
+- Missing required params → specific error (not generic TypeError)
+- API returns error → properly wrapped with context
+- Params correctly forwarded to endpoint builder and API call
+
+### What NOT to Test
+
+- `expect(new Foo()).toBeDefined()` — constructor breaks → all tests break anyway
+- `expect(typeof obj.method).toBe('function')` — TypeScript enforces this at compile time
+- `expect(error.stack).toBeDefined()` — built-in JS Error behavior
+- `expect(Enum.VALUE).toBe('value')` — asserts source code equals source code
+- `resolves.not.toThrow()` with no state verification — proves nothing
+- Duplicate invocations — same assertions called twice add noise, not coverage
+- Code paths already exercised by another test — don't re-test what's covered
+- Tests that only check the happy path when the fix is about failure recovery
+- Runtime `readonly` checks — TS readonly is compile-time only
 
 ---
 

@@ -112,7 +112,7 @@ Two changes:
 
 ### Step 5: Tests
 
-Add test file at `__tests__/tools/<category>/<tool-name>.test.ts` covering:
+Add test file at `tests/tools/<category>/<tool-name>.test.ts` covering:
 
 - Missing PAT returns error
 - Missing required params returns error

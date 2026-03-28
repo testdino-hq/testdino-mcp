@@ -16,7 +16,7 @@ dist
 tests
 *.test.ts
 *.spec.ts
-jest.config.js
+vitest.config.ts
 coverage
 
 # CI/CD

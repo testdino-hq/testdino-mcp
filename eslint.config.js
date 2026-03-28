@@ -57,7 +57,8 @@ export default tseslint.config(
       "*.map",
       "coverage/**",
       "*.tgz",
-      "__tests__/**",
+      "tests/**",
+      "vitest.config.ts",
     ],
   }
 );
