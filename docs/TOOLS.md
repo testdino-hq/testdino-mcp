@@ -191,7 +191,7 @@ Perfect for answering questions like "What tests ran on the develop branch?" or 
 
 | Parameter          | Type    | Required | Default | Description                                                                                                                                                     |
 | ------------------ | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                        |
+| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                         |
 | `by_branch`        | string  | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
 | `by_time_interval` | string  | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
 | `by_author`        | string  | No       | -       | Filter by commit author name (case-insensitive, partial match)                                                                                                  |
@@ -947,6 +947,7 @@ This tool aggregates historical execution data for a specific test case across m
 - **Attachment Metadata**: Available debugging artifacts (screenshots, videos, traces)
 
 Unlike `get_testcase_details` which shows details for a single execution, `debug_testcase` analyzes patterns across multiple executions to help identify:
+
 - Recurring failure patterns
 - Flaky test behavior
 - Browser-specific issues
@@ -955,9 +956,9 @@ Unlike `get_testcase_details` which shows details for a single execution, `debug
 
 ### Parameters
 
-| Parameter       | Type   | Required | Description                                                                                                                              |
-| --------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                  |
+| Parameter       | Type   | Required | Description                                                                                                                                                                 |
+| --------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                     |
 | `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'. |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
@@ -1029,12 +1030,14 @@ The tool returns a structured JSON response with the following top-level structu
 ```
 
 **Top-Level Fields:**
+
 - `success`: Boolean indicating if the request was successful
 - `message`: Status message from the API
 - `Prompt`: Pre-formatted debugging prompt from the API (common for all debug requests) - provides guidance for AI analysis
 - `data`: Contains the actual debugging data
 
 **Test Metadata (`data.test_metadata`):**
+
 - `title`: Test case name/title
 - `total_executions`: Total number of executions found
 - `failed_count`: Number of failed executions
@@ -1044,6 +1047,7 @@ The tool returns a structured JSON response with the following top-level structu
 
 **Historical Data (`data.historical_data`):**
 Array of historical execution records, each containing:
+
 - `_id`: Test case execution ID
 - `title`: Test case name
 - `status`: Execution status (failed, passed, skipped, flaky)
@@ -1164,6 +1168,7 @@ The tool returns a JSON response with the following structure:
 ```
 
 **Key Response Fields:**
+
 - `success`: Boolean indicating if the request was successful
 - `message`: Status message
 - `Prompt`: Pre-formatted debugging prompt from the API (common for all debug requests)
@@ -2813,3 +2818,4 @@ When adding new tools to the MCP server:
 ```
 
 ```
+````

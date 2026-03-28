@@ -13,7 +13,14 @@ interface ListManualTestCasesArgs {
   suiteId?: string;
   status?: "active" | "draft" | "deprecated";
   priority?: "high" | "medium" | "low" | "Not set";
-  severity?: "Blocker" | "critical" | "major" | "Normal" | "minor" | "trivial" | "Not set";
+  severity?:
+    | "Blocker"
+    | "critical"
+    | "major"
+    | "Normal"
+    | "minor"
+    | "trivial"
+    | "Not set";
   type?:
     | "functional"
     | "smoke"
@@ -92,7 +99,15 @@ export const listManualTestCasesTool = {
       severity: {
         type: "string",
         description: "Filter by severity level.",
-        enum: ["Blocker", "critical", "major", "Normal", "minor", "trivial", "Not set"],
+        enum: [
+          "Blocker",
+          "critical",
+          "major",
+          "Normal",
+          "minor",
+          "trivial",
+          "Not set",
+        ],
       },
       type: {
         type: "string",

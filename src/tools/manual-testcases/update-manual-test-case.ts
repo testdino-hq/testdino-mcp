@@ -5,102 +5,13 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
-import { processAttachments, FileData, readFileData } from "../../lib/file-utils.js";
-
-interface SubStepImage {
-  url: string;
-  fileName: string;
-}
-
-interface SubStep {
-  action: string;
-  expectedResult: string;
-  data?: string;
-  images?: SubStepImage[];
-}
-
-interface ClassicTestStep {
-  action: string;
-  expectedResult: string;
-  data?: string;
-  subSteps?: SubStep[];
-}
-
-interface GherkinTestStep {
-  event: "Given" | "When" | "And" | "Then" | "But";
-  stepDescription: string;
-}
-
-type TestStep = ClassicTestStep | GherkinTestStep;
-
-/**
- * Check if a string is a local file path (not a URL)
- */
-function isLocalFilePath(input: string): boolean {
-  return (
-    !input.startsWith("http://") &&
-    !input.startsWith("https://") &&
-    !input.startsWith("blob:") &&
-    !input.startsWith("data:") &&
-    (input.includes("\\") || input.includes("/") || /^[A-Za-z]:/.test(input))
-  );
-}
-
-/**
- * Process subStep images: convert local file paths to base64 file data objects
- * so the server can upload them to Azure Storage.
- */
-function processSubStepImages(steps: TestStep[]): void {
-  for (const step of steps) {
-    const classicStep = step as ClassicTestStep;
-    if (!classicStep.subSteps) continue;
-    for (const subStep of classicStep.subSteps) {
-      if (!subStep.images) continue;
-      subStep.images = subStep.images.map((img) => {
-        if (img.url && isLocalFilePath(img.url)) {
-          try {
-            const fileData = readFileData(img.url);
-            return {
-              url: img.url,
-              fileName: img.fileName || fileData.fileName,
-              fileContent: fileData.fileContent,
-              mimeType: fileData.mimeType,
-              fileSize: fileData.fileSize,
-            } as SubStepImage & { fileContent: string; mimeType: string; fileSize: number };
-          } catch {
-            return img;
-          }
-        }
-        return img;
-      }) as SubStepImage[];
-    }
-  }
-}
-
-/**
- * Validate classic steps for sub-step and image constraints
- */
-function validateClassicSteps(steps: TestStep[]): void {
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i] as ClassicTestStep;
-    if (!step.subSteps) continue;
-
-    if (step.subSteps.length > 5) {
-      throw new Error(
-        `Step ${i + 1} has ${step.subSteps.length} sub-steps, but maximum 5 sub-steps are allowed per step.`
-      );
-    }
-
-    for (let j = 0; j < step.subSteps.length; j++) {
-      const subStep = step.subSteps[j];
-      if (subStep.images && subStep.images.length > 2) {
-        throw new Error(
-          `Step ${i + 1}, sub-step ${j + 1} has ${subStep.images.length} images, but maximum 2 images are allowed per sub-step.`
-        );
-      }
-    }
-  }
-}
+import {
+  processAttachments,
+  processSubStepImages,
+  validateClassicSteps,
+  FileData,
+} from "../../lib/file-utils.js";
+import type { TestStep } from "../../lib/file-utils.js";
 
 interface ManualTestCaseUpdates {
   name?: string; // Updated test case name/title
@@ -111,7 +22,14 @@ interface ManualTestCaseUpdates {
   postconditions?: string;
   steps?: TestStep[];
   priority?: "high" | "medium" | "low" | "Not set";
-  severity?: "Blocker" | "critical" | "major" | "Normal" | "minor" | "trivial" | "Not set";
+  severity?:
+    | "Blocker"
+    | "critical"
+    | "major"
+    | "Normal"
+    | "minor"
+    | "trivial"
+    | "Not set";
   type?:
     | "functional"
     | "smoke"
@@ -204,15 +122,18 @@ export const updateManualTestCaseTool = {
                   properties: {
                     action: {
                       type: "string",
-                      description: "The action to perform in this step (Classic format).",
+                      description:
+                        "The action to perform in this step (Classic format).",
                     },
                     expectedResult: {
                       type: "string",
-                      description: "The expected outcome of this action (Classic format).",
+                      description:
+                        "The expected outcome of this action (Classic format).",
                     },
                     data: {
                       type: "string",
-                      description: "Optional test data for this step (Classic format).",
+                      description:
+                        "Optional test data for this step (Classic format).",
                     },
                     subSteps: {
                       type: "array",
@@ -224,15 +145,18 @@ export const updateManualTestCaseTool = {
                         properties: {
                           action: {
                             type: "string",
-                            description: "The action to perform in this sub-step.",
+                            description:
+                              "The action to perform in this sub-step.",
                           },
                           expectedResult: {
                             type: "string",
-                            description: "The expected outcome of this sub-step action.",
+                            description:
+                              "The expected outcome of this sub-step action.",
                           },
                           data: {
                             type: "string",
-                            description: "Optional test data for this sub-step.",
+                            description:
+                              "Optional test data for this sub-step.",
                           },
                           images: {
                             type: "array",
@@ -282,7 +206,15 @@ export const updateManualTestCaseTool = {
           severity: {
             type: "string",
             description: "Updated severity.",
-            enum: ["Blocker", "critical", "major", "Normal", "minor", "trivial", "Not set"],
+            enum: [
+              "Blocker",
+              "critical",
+              "major",
+              "Normal",
+              "minor",
+              "trivial",
+              "Not set",
+            ],
           },
           type: {
             type: "string",
@@ -350,7 +282,8 @@ export const updateManualTestCaseTool = {
           },
           customFields: {
             type: "object",
-            description: "Updated custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
+            description:
+              "Updated custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
             additionalProperties: {
               type: "string",
             },
