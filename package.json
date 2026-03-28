@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "testdino-mcp": "dist/index.js"
+    "@testdino/mcp": "dist/index.js"
   },
   "repository": {
     "type": "git",

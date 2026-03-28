@@ -66,7 +66,7 @@ npm install -g @testdino/mcp
 
 - Install once, use in any project
 - Requires Node.js 18+ and npm
-- Use command: `testdino-mcp`
+- Use command: `@testdino/mcp`
 
 **Option 3: Project Installation**
 
@@ -75,7 +75,7 @@ npm install @testdino/mcp
 ```
 
 - Installed in your project's `node_modules`
-- Use command: `npx testdino-mcp`
+- Use command: `npx @testdino/mcp`
 
 ## Integration
 
@@ -133,7 +133,7 @@ Then use this configuration:
 {
   "mcpServers": {
     "TestDino": {
-      "command": "testdino-mcp",
+      "command": "@testdino/mcp",
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
