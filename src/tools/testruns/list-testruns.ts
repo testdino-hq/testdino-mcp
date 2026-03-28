@@ -148,6 +148,8 @@ export async function handleListTestRuns(args?: ListTestRunsArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list test runs: ${errorMessage}`);
+    throw new Error(`Failed to list test runs: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

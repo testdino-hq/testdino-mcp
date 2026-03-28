@@ -302,6 +302,8 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
     return { content };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve test case details: ${errorMessage}`);
+    throw new Error(`Failed to retrieve test case details: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

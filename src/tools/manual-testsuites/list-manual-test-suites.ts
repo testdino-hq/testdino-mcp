@@ -83,6 +83,8 @@ export async function handleListManualTestSuites(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list manual test suites: ${errorMessage}`);
+    throw new Error(`Failed to list manual test suites: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

@@ -407,6 +407,8 @@ export async function handleCreateManualTestCase(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create manual test case: ${errorMessage}`);
+    throw new Error(`Failed to create manual test case: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

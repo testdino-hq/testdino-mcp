@@ -293,6 +293,8 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list test cases: ${errorMessage}`);
+    throw new Error(`Failed to list test cases: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

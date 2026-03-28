@@ -75,6 +75,8 @@ export async function handleGetManualTestCase(args?: GetManualTestCaseArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get manual test case details: ${errorMessage}`);
+    throw new Error(`Failed to get manual test case details: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }
