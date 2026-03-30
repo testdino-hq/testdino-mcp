@@ -77,6 +77,10 @@ npm install testdino-mcp
 - Installed in your project's `node_modules`
 - Use command: `npx testdino-mcp`
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/testdino-hq-testdino-mcp).
+
 ## Integration
 
 ### A simple Integration guide for Cursor IDE:
