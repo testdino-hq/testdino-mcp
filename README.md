@@ -19,6 +19,7 @@ All through simple conversational commands.
 - **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options (branch, time, author, commit, environment).
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, execution steps, and artifacts (screenshots, videos, traces).
 - **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts. Analyze patterns across multiple executions to identify root causes.
+- **🧭 Test Quality Audit**: Fetch a server-curated audit prompt plus branch signals, analyze your local test code, and store the completed report back in TestDino without uploading raw source files.
 - **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization (status, priority, severity, type, layer, behavior, tags).
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
@@ -27,7 +28,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 12 powerful tools:
+The server provides 13 powerful tools:
 
 **Test Execution & Results:**
 
@@ -37,15 +38,16 @@ The server provides 12 powerful tools:
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
 6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
+7. **`test_audit`** - Run a single-pass test quality audit. Fetch the server-curated prompt and branch signals, analyze the repo locally, submit the completed report, browse historical audit reports, and optionally save `TEST-AUDIT.md` locally.
 
 **Test Case Management:**
 
-7. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
-8. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
-9. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
-10. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
-11. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
-12. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
+8. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
+9. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
+10. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
+11. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
+12. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
+13. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
 
 ### Installation Options
 
@@ -199,7 +201,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 ## Documentation
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 12 available tools with examples, parameters, and use cases
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 13 available tools with examples, parameters, and use cases
 - **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements

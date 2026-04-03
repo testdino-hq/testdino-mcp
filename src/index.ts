@@ -4,8 +4,10 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
+  ErrorCode,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  McpError,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync } from "fs";
@@ -26,6 +28,8 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
+  testAuditTool,
+  handleTestAudit,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -48,7 +52,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.8",
+      version: "1.0.9",
     },
     {
       capabilities: {
@@ -68,6 +72,7 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
+    testAuditTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -105,10 +110,21 @@ async function main() {
    */
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
+    const skillResourceUri = "testdino://docs/skill.md";
 
-    if (uri === "testdino://docs/skill.md") {
+    if (uri === skillResourceUri) {
       const skillPath = join(__dirname, "..", "docs", "skill.md");
-      const content = readFileSync(skillPath, "utf-8");
+      let content: string;
+
+      try {
+        content = readFileSync(skillPath, "utf-8");
+      } catch {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Resource unavailable: ${skillResourceUri}`
+        );
+      }
+
       return {
         contents: [
           {
@@ -120,7 +136,7 @@ async function main() {
       };
     }
 
-    throw new Error(`Unknown resource: ${uri}`);
+    throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`);
   });
 
   /**
@@ -161,6 +177,12 @@ async function main() {
     if (name === "debug_testcase") {
       return await handleDebugTestCase(
         args as Parameters<typeof handleDebugTestCase>[0]
+      );
+    }
+
+    if (name === "test_audit") {
+      return await handleTestAudit(
+        args as Parameters<typeof handleTestAudit>[0]
       );
     }
 

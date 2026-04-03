@@ -14,6 +14,7 @@
    - [list_testcase](#list_testcase)
    - [get_testcase_details](#get_testcase_details)
    - [debug_testcase](#debug_testcase)
+   - [test_audit](#test_audit)
    - [list_manual_test_cases](#list_manual_test_cases)
    - [get_manual_test_case](#get_manual_test_case)
    - [create_manual_test_case](#create_manual_test_case)
@@ -51,6 +52,18 @@
 
 - Most list tools default to `limit=20` or `limit=50`. Use `get_all=true` sparingly — only when you genuinely need every record.
 - Prefer filters over fetching everything.
+
+### Test Audit Principle
+
+- For Playwright automated test code review, prefer `test_audit` over a generic repo summary.
+- Only use `test_audit` when the user explicitly asks for a Playwright test code audit, Playwright test quality audit, or a clear audit of local Playwright specs/helpers/page objects/config.
+- Do not use `test_audit` for generic "audit" requests unless the request is clearly about Playwright automated test code quality.
+- Do not use `test_audit` for security audits, accessibility audits, dependency audits, infra audits, compliance audits, general code reviews, or manual-test audits.
+- If the user names a slice like auth/login, dashboards, alerts, or one spec file, keep the audit centered on that slice instead of drifting into generic suite hygiene.
+- If `test_audit` returns `PROJECT_NOT_FOUND`, auth, or access errors, stop and resolve `projectId` with `health()` before continuing. Do not generate a pseudo-audit from local files alone.
+- Keep raw code local and only send structured findings plus concise evidence.
+- Use the returned branch signals to decide which files to inspect first.
+- Avoid pasting long snippets when a metric, prevalence estimate, or file/line reference is enough.
 
 ---
 
@@ -259,8 +272,80 @@ debug_testcase(projectId, "Verify user login")
 → Read debugging_prompt from response
 → Analyze historical data using the debugging_prompt as context
 → Identify pattern: always fails? flaky? browser-specific? recent regression?
-→ Optionally: get_testcase_details(projectId, testcase_name, testrun_id=latestFailingRun, steps_filter='failed_only')
+→ Optionally: get_testcase_details(...)
 → Provide root cause analysis and fix suggestions
+```
+
+---
+
+### `test_audit`
+
+**Purpose**: Run a single-pass audit of test quality using TestDino for prompt orchestration and your local AI agent for repository analysis.
+
+**Trigger rule**:
+
+- Use this skill only when the user explicitly wants a Playwright automated test code audit.
+- Good triggers: "playwright test code audit", "audit our playwright tests", "test quality audit for this playwright suite", "find shallow tests in our playwright repo".
+- Do not trigger on vague requests like "run an audit", "audit this repo", or "do an audit" unless the request clearly points to Playwright test code.
+- If the audit type is ambiguous, ask what kind of audit they want instead of defaulting to `test_audit`.
+
+**Required parameters**: `projectId`, `action`
+
+**Actions**:
+| Action | When to use |
+|--------|-------------|
+| `analyze` | Fetch audit context, or submit the completed report when `score` and `markdownReport` are present |
+| `list` | Browse previous audits for the current project |
+| `get` | Retrieve a specific completed audit report |
+
+**Analyze parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `branch` | string | Branch to audit. Required for `analyze` unless it can be detected from git. Optional filter for `list` |
+| `scope` | string | `'testcase'`, `'feature'`, `'spec_file'`, or `'suite'` |
+| `target` | object | Audit target such as testcase name, spec path, or selected files |
+| `reportName` | string | Short human-readable title for the saved audit report |
+| `score` | number | Final audit score. Include to submit the completed report |
+| `findings` | array | Structured findings for the completed report |
+| `recommendations` | array | Recommendation strings for the completed report |
+| `markdownReport` | string | Completed markdown report. Required for submission |
+| `markdownReportPath` | string | Path to a local markdown file for submission. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd; absolute paths are also allowed |
+
+**Lifecycle parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `reportId` | string | Required for `get` |
+| `writeMarkdown` | boolean | Save the returned markdown report locally when available |
+| `outputPath` | string | Optional relative destination for the local markdown file. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd. Defaults to `TEST-AUDIT.md` |
+| `limit` | number | Page size for `list` |
+| `page` | number | Page number for `list` |
+
+**How to use it well**:
+
+1. Start with `test_audit(action="analyze", branch="...")` to fetch the prompt, branch signals, and prior audit findings.
+2. If the user named a feature/spec area, pass the smallest correct `scope` plus explicit `target`, and inspect only that local slice plus its shared helpers/setup.
+3. In scoped audits, spend most findings on feature-specific validation gaps and missing scenarios; generic waits/logging/duplication issues are secondary unless they materially invalidate confidence in that slice.
+4. If `analyze` fails because the project is missing or access is denied, call `health()` and resolve the right `projectId` before continuing. Do not write a fallback local-only audit and present it as a TestDino audit.
+5. Convert the audit into `score`, `findings`, `recommendations`, choose a short `reportName`, and write the markdown report to a local file.
+6. Submit the completed report with `test_audit(action="analyze", branch="...", reportName="...", score=..., markdownReportPath="TEST-AUDIT.md")`. Set `TESTDINO_MCP_WORKSPACE` to your repo root if the MCP starts outside the project, or pass an absolute path. Use inline `markdownReport` only when a local file is not practical.
+7. Use `test_audit(action="list")` to browse all saved reports, add `branch="..."` if you need branch-specific history, and use `test_audit(action="get", reportId="...", writeMarkdown=true)` to save `TEST-AUDIT.md` locally when needed.
+
+**Token efficiency rules**:
+
+- Never upload full files.
+- Prefer counts, ratios, clusters, and representative patterns.
+- If 20 tests share a problem, say that once with prevalence.
+- Let the branch signals drive the investigation order before broad scanning.
+
+**Pattern**:
+
+```
+test_audit(action="analyze", branch="main", scope="feature", target={ featureName: "Auth / Login" })
+→ Receive prompt + branchSignals + lastAudit
+→ Read only the relevant auth/login files plus shared setup/helpers
+→ Build score + findings + recommendations + reportName, then write TEST-AUDIT.md
+→ test_audit(action="analyze", branch="main", reportName="Login Flow Tests", score=88, findings=[...], markdownReportPath="TEST-AUDIT.md", writeMarkdown=true)
+→ Optionally: test_audit(action="list") or test_audit(action="get", reportId="<id>")
 ```
 
 ---
@@ -636,6 +721,7 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 | `list_testcase`            | `projectId` + (run ID or run filter)                                                                                             |
 | `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name`, `testcase_fulltitle`, `by_error_message`, `by_code_snippet`, `by_status`) |
 | `debug_testcase`           | `projectId`, `testcase_name`                                                                                                     |
+| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                                                           |
 | `list_manual_test_cases`   | `projectId`                                                                                                                      |
 | `get_manual_test_case`     | `projectId`, `caseId`                                                                                                            |
 | `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                                                                |

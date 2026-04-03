@@ -1,6 +1,7 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { apiRequest, apiRequestJson } from "../../../src/lib/request.js";
 import {
+  getLastFetchOptions,
   mockFetchSuccess,
   mockFetchError,
   mockFetchNetworkError,
@@ -10,6 +11,7 @@ import {
 describe("request", () => {
   afterEach(() => {
     restoreFetch();
+    vi.useRealTimers();
   });
 
   describe("apiRequest", () => {
@@ -29,6 +31,35 @@ describe("request", () => {
       await apiRequest("https://api.testdino.com/test");
       expect(fetchMock.mock.calls[1][1].body).toBeUndefined();
     });
+
+    it("should abort stalled requests after the default timeout", async () => {
+      vi.useFakeTimers();
+
+      const fetchMock = vi.fn().mockImplementation(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            const signal = init?.signal as AbortSignal | undefined;
+            signal?.addEventListener(
+              "abort",
+              () => {
+                reject(new Error("request aborted"));
+              },
+              { once: true }
+            );
+          })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const requestPromise = apiRequest("https://api.testdino.com/test");
+      const requestExpectation = expect(requestPromise).rejects.toThrow(
+        "API request timed out after 15000ms"
+      );
+      expect(getLastFetchOptions()?.signal).toBeDefined();
+
+      await vi.advanceTimersByTimeAsync(15_000);
+
+      await requestExpectation;
+    });
   });
 
   describe("apiRequestJson", () => {
@@ -39,11 +70,24 @@ describe("request", () => {
       ).rejects.toThrow("API request failed: 401");
     });
 
-    it("should include full error body text in thrown error", async () => {
-      mockFetchError(500, "Internal server error details");
-      await expect(
-        apiRequestJson("https://api.testdino.com/test")
-      ).rejects.toThrow("Internal server error details");
+    it("should truncate and redact error body text in thrown errors", async () => {
+      const oversizedErrorBody = `Authorization: Bearer secret-token ${"x".repeat(
+        600
+      )}`;
+      mockFetchError(500, oversizedErrorBody);
+
+      expect.assertions(4);
+
+      try {
+        await apiRequestJson("https://api.testdino.com/test");
+      } catch (error) {
+        const message = (error as Error).message;
+
+        expect(message).toContain("API request failed: 500");
+        expect(message).toContain("Bearer [REDACTED]");
+        expect(message).toContain("[truncated]");
+        expect(message).not.toContain("secret-token");
+      }
     });
 
     it("should throw on network error", async () => {

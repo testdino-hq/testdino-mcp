@@ -275,4 +275,51 @@ export const endpoints = {
     const queryParams = new URLSearchParams({ testcase_name });
     return `${baseUrl}/api/mcp/${projectId}/debug-testcase?${queryParams.toString()}`;
   },
+
+  /**
+   * Get audit context (prompt + branch signals + last audit)
+   * GET /api/mcp/:projectId/audit-context?branch=main
+   */
+  getAuditContext: (params: { projectId: string; branch: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/audit-context${queryString}`;
+  },
+
+  /**
+   * Submit completed audit report
+   * POST /api/mcp/:projectId/audit-report
+   */
+  submitAuditReport: (params: { projectId: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId } = params;
+    return `${baseUrl}/api/mcp/${projectId}/audit-report`;
+  },
+
+  /**
+   * List audit reports
+   * GET /api/mcp/:projectId/audit-reports
+   */
+  listAuditReports: (params: {
+    projectId: string;
+    branch?: string;
+    limit?: number;
+    page?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/audit-reports${queryString}`;
+  },
+
+  /**
+   * Get single audit report
+   * GET /api/mcp/:projectId/audit-reports/:reportId
+   */
+  getAuditReport: (params: { projectId: string; reportId: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, reportId } = params;
+    return `${baseUrl}/api/mcp/${projectId}/audit-reports/${reportId}`;
+  },
 };
