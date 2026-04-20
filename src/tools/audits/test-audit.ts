@@ -51,7 +51,28 @@ const AUDIT_CATEGORY_LIST = AUDIT_CATEGORY_CODES.join(", ");
 export const testAuditTool = {
   name: "test_audit",
   description:
-    "Run a single-pass test quality audit. Use action='analyze' to fetch the analysis prompt and branch signals from TestDino. Analyze local test code, write the markdown report to a local file, then call this tool again with markdownReportPath (the tool reads it) plus score/findings/recommendations to submit. Use feature/spec scopes when the user names a slice like auth/login. If analyze fails with project/auth access errors, resolve projectId with health() instead of writing a fallback pseudo-audit. Use action='list' to browse past reports, optionally filtered by an explicit branch, and action='get' to retrieve one.",
+    "TestDino-backed Playwright test quality audit. This tool is a NAMED CAPABILITY, not a style of output — when the user invokes it, you MUST call this tool, not simulate it in chat. " +
+    "=== TRIGGER PHRASES (explicit TestDino naming) === " +
+    "Any of the following REQUIRES an immediate tool call: 'TestDino test audit', 'Testdino Test Audit', 'Testdino audit', 'TestDino MCP audit', 'run a TestDino test audit', 'audit this with TestDino', 'I need a TestDino audit', 'TestDino audit on <file>', 'testdino test audit on this'. Case-insensitive. Typos like 'testdino', 'test dino', 'TD audit' with context also qualify. " +
+    "=== MANDATORY BEHAVIOR WHEN TRIGGERED === " +
+    "The moment you detect a TestDino trigger phrase AND the target is Playwright test code, your FIRST and IMMEDIATE action MUST be to call this tool with action='analyze'. Before that tool call returns: " +
+    "- DO NOT write any audit content in chat. " +
+    "- DO NOT produce a header like 'TestDino Test Audit — <file>'. " +
+    "- DO NOT list findings, score, severity, or recommendations. " +
+    "- DO NOT describe the file in audit-report language. " +
+    "- DO NOT simulate the TestDino audit output from your own knowledge. " +
+    "- Doing any of the above without calling the tool is a PROTOCOL VIOLATION — you are claiming to run a TestDino audit without actually running it. TestDino audits require the server-curated audit prompt and branch signals returned by action='analyze'; you do not have those without the tool call. " +
+    "The only valid first step is: test_audit(action='analyze', projectId=<resolved>). Branch is OPTIONAL — pass it only if the user named one or git auto-detects it; otherwise omit it and proceed with the audit anyway (do not ask the user for a branch). Resolve projectId via health() if you don't already have it. Only AFTER that call returns do you read the local Playwright code (guided by the returned prompt + branch signals), build the audit markdown locally, and submit it via a second tool call. " +
+    "=== PLAYWRIGHT GATE === " +
+    "The target code MUST be Playwright. Detect via `@playwright/test` imports, Playwright APIs (`page.`/`browser.`/`context.`/`locator(`/`test(`/`test.describe(`/`test.beforeEach(`/`test.step(`/`expect(page)`/`browserName`/`storageState`/`test.extend(`), `playwright.config.*`, or `.spec.ts`/`.spec.js`/`.test.ts`/`.test.js` files using those APIs. If the user names TestDino but the target is NOT Playwright, politely explain TestDino's test audit only covers Playwright automated test code and offer a regular (non-TestDino) audit instead — DO NOT call the tool in that case. " +
+    "=== WHEN NOT TO CALL THIS TOOL === " +
+    "If the user asks for a generic 'audit', 'test audit', 'code audit', 'security audit', 'accessibility audit', 'review', etc. WITHOUT explicitly naming TestDino, DO NOT call this tool — even if the target is Playwright test code. Those are normal AI-agent audits: read the target, write findings directly in chat. Do NOT mention TestDino, do NOT offer TestDino, do NOT say 'I can run a TestDino audit instead'. Behave as a plain AI assistant with no TestDino MCP installed. " +
+    "=== FULL FLOW (Playwright + TestDino explicitly named) === " +
+    "Step 1 (IMMEDIATE): test_audit(action='analyze', projectId=..., branch=...) — no score, no findings, no markdownReport on this call. This is the mandatory first action. " +
+    "Step 2: Using the prompt and branch signals returned from Step 1, analyze the local Playwright test code and write the full markdown audit report to a local file (e.g. TEST-AUDIT.md). " +
+    "Step 3: test_audit(action='analyze', markdownReportPath=<path from Step 2>, score=..., findings=[...], recommendations=[...], reportName=...) — submits to TestDino. " +
+    "Scope: use 'feature' or 'spec_file' when the user names a slice like auth/login. If analyze fails with project/auth access errors, resolve projectId with health() before retrying — never fabricate a fallback pseudo-audit. " +
+    "Other actions: action='list' browses past submitted reports (optionally filtered by branch); action='get' retrieves a specific submitted report.",
   inputSchema: {
     type: "object",
     properties: {
@@ -68,7 +89,7 @@ export const testAuditTool = {
       branch: {
         type: "string",
         description:
-          "Git branch to scope the audit to. Required for 'analyze' unless the tool can detect it from git. Optional for 'list' as a filter.",
+          "Git branch to scope the audit to. Optional — if omitted and not auto-detected from git, the audit still proceeds without a branch. Do not prompt the user for a branch; just call the tool without it. Also acts as a filter for 'list'.",
       },
       scope: {
         type: "string",
@@ -421,9 +442,6 @@ export async function handleTestAudit(args?: TestAuditArgs) {
       const isSubmission = args.score != null && normalizedMarkdownReport;
 
       if (isSubmission) {
-        if (!inferredBranch) {
-          throw new Error("branch is required when submitting an audit report");
-        }
         // Submit completed report
         const submitUrl = endpoints.submitAuditReport({
           projectId: String(args.projectId),
@@ -442,7 +460,7 @@ export async function handleTestAudit(args?: TestAuditArgs) {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: {
-            branch: inferredBranch,
+            ...(inferredBranch ? { branch: inferredBranch } : {}),
             scope,
             target,
             reportName: args.reportName || undefined,
@@ -482,14 +500,10 @@ export async function handleTestAudit(args?: TestAuditArgs) {
           }
         }
       } else {
-        // Fetch audit context
-        if (!inferredBranch) {
-          throw new Error("branch is required for analyze action");
-        }
-
+        // Fetch audit context — branch is optional; proceed without it if not provided/detected
         const contextUrl = endpoints.getAuditContext({
           projectId: String(args.projectId),
-          branch: inferredBranch,
+          ...(inferredBranch ? { branch: inferredBranch } : {}),
         });
 
         response = await apiRequestJson(contextUrl, {

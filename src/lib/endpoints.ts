@@ -280,7 +280,7 @@ export const endpoints = {
    * Get audit context (prompt + branch signals + last audit)
    * GET /api/mcp/:projectId/audit-context?branch=main
    */
-  getAuditContext: (params: { projectId: string; branch: string }): string => {
+  getAuditContext: (params: { projectId: string; branch?: string }): string => {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;
     const queryString = buildQueryString(queryParams);

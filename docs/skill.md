@@ -53,12 +53,52 @@
 - Most list tools default to `limit=20` or `limit=50`. Use `get_all=true` sparingly — only when you genuinely need every record.
 - Prefer filters over fetching everything.
 
-### Test Audit Principle
+### Test Audit Principle — Two Scenarios
 
-- For Playwright automated test code review, prefer `test_audit` over a generic repo summary.
-- Only use `test_audit` when the user explicitly asks for a Playwright test code audit, Playwright test quality audit, or a clear audit of local Playwright specs/helpers/page objects/config.
-- Do not use `test_audit` for generic "audit" requests unless the request is clearly about Playwright automated test code quality.
-- Do not use `test_audit` for security audits, accessibility audits, dependency audits, infra audits, compliance audits, general code reviews, or manual-test audits.
+The `test_audit` tool is triggered by a **named request only**. There are exactly two scenarios:
+
+#### Scenario 1 — Generic audit request (any kind) → DO NOT call `test_audit`, DO NOT mention TestDino
+
+When the user asks for any kind of audit without explicitly naming TestDino — e.g. "audit this", "run a test audit", "audit this file", "security audit", "code review", "accessibility audit", "audit our tests" — run the audit as a normal AI-agent conversation. Read the target, give your review, findings, and suggestions directly in chat.
+
+**This applies even when the target is Playwright test code.** A generic "test audit" on a Playwright file is still just a normal audit conversation — the tool is not triggered unless the user explicitly names TestDino.
+
+Do NOT say _"TestDino's audit is Playwright-only"_, _"I can run a TestDino audit instead"_, or anything that mentions TestDino. Behave exactly as a plain AI assistant with no TestDino MCP installed.
+
+#### Scenario 2 — Explicit TestDino audit request → call `test_audit` (Playwright only)
+
+**Trigger phrases (any of these REQUIRE an immediate tool call)**: "TestDino test audit", "Testdino Test Audit", "Testdino audit", "TestDino MCP audit", "run a TestDino test audit", "audit this with TestDino", "I need a TestDino audit", "testdino test audit on this". Case-insensitive.
+
+**Mandatory behavior when triggered (Playwright target + TestDino named)**:
+
+The moment a trigger phrase is detected, your **first and immediate action** MUST be `test_audit(action="analyze", projectId=..., branch=...)`. Before that call returns:
+
+- Do NOT write any audit content in chat.
+- Do NOT produce a heading like _"TestDino Test Audit — <file>"_.
+- Do NOT list findings, score, severity, or recommendations.
+- Do NOT describe the file in audit-report language.
+- Do NOT simulate a TestDino audit from your own analysis.
+
+**Doing any of the above without calling the tool is a protocol violation** — you would be claiming to produce a TestDino audit without actually running TestDino's audit flow. TestDino audits require the server-curated prompt and branch signals returned by `action="analyze"`; you do not have those without the tool call. "TestDino Test Audit" is the name of a capability that runs via this tool, not a style of output you can imitate.
+
+**Gate — target must be Playwright code.** Detect via any of:
+
+- `@playwright/test` imports
+- Playwright APIs in the file: `page.`, `browser.`, `context.`, `locator(`, `test(`, `test.describe(`, `test.beforeEach(`, `test.step(`, `expect(page)`, `browserName`, `storageState`, `test.extend(`
+- A `playwright.config.ts`/`playwright.config.js` in the repo
+- `.spec.ts`/`.spec.js`/`.test.ts`/`.test.js` files using the above APIs
+- The user explicitly naming Playwright
+
+**If the user names TestDino but the target is NOT Playwright**, politely explain TestDino's test audit only covers Playwright automated test code and offer a regular (non-TestDino) audit instead. Do NOT call the tool. This is the one place mentioning TestDino's Playwright-only scope is appropriate — because the user explicitly invoked TestDino.
+
+**When both conditions hold (explicit TestDino + Playwright target), run the full flow**:
+
+1. `test_audit(action="analyze", projectId=..., branch="...")` — IMMEDIATE first action. No `score`, no `findings`, no `markdownReport` on this call. Use `health()` first if you don't have a `projectId` yet.
+2. Only after Step 1 returns, analyze the local Playwright code using the returned prompt + signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
+3. Call `test_audit` again with `action="analyze"`, `markdownReportPath` pointing at the local file, plus `score`, `findings`, `recommendations`, `reportName` to submit to TestDino.
+
+**Other principles for Scenario 2**:
+
 - If the user names a slice like auth/login, dashboards, alerts, or one spec file, keep the audit centered on that slice instead of drifting into generic suite hygiene.
 - If `test_audit` returns `PROJECT_NOT_FOUND`, auth, or access errors, stop and resolve `projectId` with `health()` before continuing. Do not generate a pseudo-audit from local files alone.
 - Keep raw code local and only send structured findings plus concise evidence.
@@ -280,14 +320,14 @@ debug_testcase(projectId, "Verify user login")
 
 ### `test_audit`
 
-**Purpose**: Run a single-pass audit of test quality using TestDino for prompt orchestration and your local AI agent for repository analysis.
+**Purpose**: Run a single-pass audit of Playwright test quality using TestDino for prompt orchestration and your local AI agent for repository analysis. This tool is only triggered when the user explicitly names TestDino.
 
-**Trigger rule**:
+**Trigger rule — explicit TestDino naming required, tool call is MANDATORY and IMMEDIATE**:
 
-- Use this skill only when the user explicitly wants a Playwright automated test code audit.
-- Good triggers: "playwright test code audit", "audit our playwright tests", "test quality audit for this playwright suite", "find shallow tests in our playwright repo".
-- Do not trigger on vague requests like "run an audit", "audit this repo", or "do an audit" unless the request clearly points to Playwright test code.
-- If the audit type is ambiguous, ask what kind of audit they want instead of defaulting to `test_audit`.
+- When the user uses a TestDino trigger phrase ("TestDino test audit", "Testdino Test Audit", "Testdino audit", "TestDino MCP audit", "run a TestDino audit", "audit this with TestDino", etc.) AND the target is Playwright code, your **first action** MUST be `test_audit(action="analyze", ...)`. Do not write audit content in chat, do not produce a "TestDino Test Audit" heading, do not list findings or a score before the tool call. Simulating the audit output without calling the tool is a protocol violation.
+- For any generic audit request ("audit this", "test audit", "code audit", "security audit", etc.) where the user does NOT name TestDino, DO NOT call this tool — run a normal AI audit conversation instead, with zero TestDino mention. This applies even when the target is Playwright test code.
+- When TestDino is explicitly named, the target code must be Playwright (detected via `@playwright/test` imports, Playwright APIs like `page.`/`browser.`/`locator(`/`test.extend(`/`storageState`, `playwright.config.*`, or `.spec.ts`/`.spec.js`/`.test.ts`/`.test.js` files using those APIs).
+- If the user names TestDino but the target is not Playwright, politely explain that TestDino's test audit only covers Playwright automated test code and offer a regular (non-TestDino) audit instead. Do NOT call the tool.
 
 **Required parameters**: `projectId`, `action`
 

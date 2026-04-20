@@ -1520,20 +1520,26 @@ Error: Missing required parameter: testrun_id
 
 ## test_audit
 
-**Purpose**: Run a single-pass test quality audit without uploading raw source code.
+**Purpose**: Run a single-pass **Playwright** test quality audit and submit it to TestDino. Triggered only when the user explicitly names TestDino.
+
+> **Two scenarios — the AI agent picks based on what the user asks for.**
+>
+> **Scenario 1 — Generic audit request ("audit this", "test audit", "security audit", etc. without naming TestDino):** The agent does NOT call this tool and does NOT mention TestDino. It just runs a normal AI audit conversation — reads the target, gives findings and suggestions directly in chat. This applies even when the target is Playwright test code; naming TestDino is what triggers the tool, not the target's framework.
+>
+> **Scenario 2 — Explicit TestDino audit request ("TestDino test audit", "Testdino Test Audit", "run a TestDino audit", "audit this with TestDino"):** The agent's **first and immediate action** must be a `test_audit(action="analyze", ...)` tool call. It must NOT write audit content in chat, must NOT produce a "TestDino Test Audit" heading, and must NOT list findings or a score before the tool call — simulating a TestDino audit without calling the tool is a protocol violation. The target must be Playwright code (detected via `@playwright/test` imports, Playwright APIs like `page.`/`browser.`/`locator(`/`test.extend(`/`storageState`, `playwright.config.*`, or `.spec.ts`/`.spec.js`/`.test.ts`/`.test.js` files using those APIs). If the user names TestDino but the target is not Playwright, the agent politely explains TestDino's test audit only covers Playwright and offers a regular (non-TestDino) audit instead — no tool call.
 
 ### Description
 
-This tool runs a simple two-step flow:
+When triggered (Scenario 2), this tool runs a simple two-step flow:
 
 1. Fetch the server-curated audit prompt, branch signals, and the previous audit summary for a branch.
-2. Analyze the local repository, then submit the completed report back to TestDino.
+2. Analyze the local Playwright repository, then submit the completed report back to TestDino.
 
-Use it when you want to answer questions like:
+Use it when the user wants a TestDino-backed Playwright audit answering questions like:
 
-- "How shallow is this suite?"
-- "Which tests are giving us false confidence?"
-- "What are the biggest maintainability and flakiness risks in these tests?"
+- "How shallow is this Playwright suite?"
+- "Which Playwright tests are giving us false confidence?"
+- "What are the biggest maintainability and flakiness risks in our Playwright tests?"
 
 ### Parameters
 
