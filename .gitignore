@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 
 # Custom rules
 .cursor/
+
+todo.md

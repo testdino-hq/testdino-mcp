@@ -4,11 +4,13 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
+  ErrorCode,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  McpError,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -26,6 +28,8 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
+  testAuditTool,
+  handleTestAudit,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -42,6 +46,8 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const skillPath = join(__dirname, "..", "..", "docs", "skill.md");
+const hasSkillDoc = existsSync(skillPath);
 
 // All tool names as registered in server
 const ALL_TOOL_NAMES = [
@@ -51,6 +57,7 @@ const ALL_TOOL_NAMES = [
   "list_testcase",
   "get_testcase_details",
   "debug_testcase",
+  "test_audit",
   "list_manual_test_cases",
   "get_manual_test_case",
   "create_manual_test_case",
@@ -67,6 +74,7 @@ function createServer() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
+    testAuditTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -76,7 +84,7 @@ function createServer() {
   ];
 
   const server = new Server(
-    { name: "@testdino/mcp", version: "1.0.7" },
+    { name: "@testdino/mcp", version: "1.0.9" },
     { capabilities: { tools: {}, resources: {} } }
   );
 
@@ -95,14 +103,25 @@ function createServer() {
 
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
-    if (uri === "testdino://docs/skill.md") {
-      const skillPath = join(__dirname, "..", "..", "docs", "skill.md");
-      const content = readFileSync(skillPath, "utf-8");
+    const skillResourceUri = "testdino://docs/skill.md";
+
+    if (uri === skillResourceUri) {
+      let content: string;
+
+      try {
+        content = readFileSync(skillPath, "utf-8");
+      } catch {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Resource unavailable: ${skillResourceUri}`
+        );
+      }
+
       return {
         contents: [{ uri, mimeType: "text/markdown", text: content }],
       };
     }
-    throw new Error(`Unknown resource: ${uri}`);
+    throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`);
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -128,6 +147,10 @@ function createServer() {
     if (name === "debug_testcase")
       return await handleDebugTestCase(
         args as Parameters<typeof handleDebugTestCase>[0]
+      );
+    if (name === "test_audit")
+      return await handleTestAudit(
+        args as Parameters<typeof handleTestAudit>[0]
       );
     if (name === "list_manual_test_cases")
       return await handleListManualTestCases(
@@ -185,10 +208,10 @@ describe("MCP Server Integration", () => {
   });
 
   describe("tool listing", () => {
-    it("should expose all 12 tools", async () => {
+    it("should expose all 13 tools", async () => {
       const result = await client.listTools();
       const toolNames = result.tools.map((t) => t.name);
-      expect(toolNames).toHaveLength(12);
+      expect(toolNames).toHaveLength(13);
       for (const name of ALL_TOOL_NAMES) {
         expect(toolNames).toContain(name);
       }
@@ -277,6 +300,20 @@ describe("MCP Server Integration", () => {
 
   describe("resource reading", () => {
     it("should return skill.md content", async () => {
+      if (!hasSkillDoc) {
+        await client
+          .readResource({
+            uri: "testdino://docs/skill.md",
+          })
+          .catch((error) => {
+            expect((error as McpError).code).toBe(ErrorCode.InternalError);
+            expect((error as Error).message).toContain(
+              "Resource unavailable: testdino://docs/skill.md"
+            );
+          });
+        return;
+      }
+
       const result = await client.readResource({
         uri: "testdino://docs/skill.md",
       });
@@ -286,9 +323,14 @@ describe("MCP Server Integration", () => {
     });
 
     it("should throw for unknown resource URI", async () => {
-      await expect(
-        client.readResource({ uri: "testdino://docs/nonexistent.md" })
-      ).rejects.toThrow();
+      await client
+        .readResource({ uri: "testdino://docs/nonexistent.md" })
+        .catch((error) => {
+          expect((error as McpError).code).toBe(ErrorCode.InvalidParams);
+          expect((error as Error).message).toContain(
+            "Resource testdino://docs/nonexistent.md not found"
+          );
+        });
     });
   });
 });
@@ -314,6 +356,8 @@ function buildMinimalArgs(toolName: string): Record<string, unknown> {
       return { ...base, testcase_id: "tc-1" };
     case "debug_testcase":
       return { ...base, testcase_name: "test" };
+    case "test_audit":
+      return { ...base, action: "list" };
     case "list_manual_test_cases":
       return base;
     case "get_manual_test_case":
