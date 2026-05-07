@@ -1,4 +1,23 @@
-# TestDino MCP
+<h1 align="left">
+  <picture>
+    <source
+      srcset="https://testdino.com/images/logo-icon-white.svg"
+      media="(prefers-color-scheme: dark)"
+    />
+    <source
+      srcset="https://testdino.com/images/logo-icon-black.svg"
+      media="(prefers-color-scheme: light)"
+    />
+    <img
+      src="https://testdino.com/images/logo-icon-black.svg"
+      width="32"
+      height="32"
+      alt="TestDino Logo"
+      valign="middle"
+    />
+  </picture>
+  TestDino MCP
+</h1>
 
 A Model Context Protocol (MCP) server that connects TestDino to AI agents. This server enables you to interact with your TestDino test data directly through natural language commands.
 
