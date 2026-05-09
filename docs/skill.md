@@ -440,7 +440,7 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
 | `testStepsDeclarationType` | string | `'Classic'` (default) or `'Gherkin'` |
 | `preconditions` | string | Setup requirements before executing |
 | `postconditions` | string | Cleanup or expected state after execution |
-| `steps` | array | Test steps (see formats below) |
+| `steps` | array | Test steps (see formats below); each top-level step can include `attachments` |
 | `priority` | string | `'high'`, `'medium'`, `'low'`, `'Not set'` |
 | `severity` | string | `'Blocker'`, `'critical'`, `'major'`, `'Normal'`, `'minor'`, `'trivial'`, `'Not set'` |
 | `type` | string | `'functional'`, `'smoke'`, `'regression'`, `'security'`, `'performance'`, `'e2e'`, `'Integration'`, `'API'`, `'Unit'`, `'Accessability'`, `'Compatibility'`, `'Acceptance'`, `'Exploratory'`, `'Usability'`, `'Other'` |
@@ -448,7 +448,7 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
 | `behavior` | string | `'positive'`, `'negative'`, `'destructive'`, `'Not set'` |
 | `automationStatus` | string | `'Manual'`, `'Automated'`, `'To be automated'` |
 | `tags` | string | Comma-separated tags |
-| `automation` | array | `['To be Automated', 'Is flaky', 'Muted']` |
+| `flags` | array | `['To be Automated', 'Is flaky', 'Muted']` |
 | `attachments` | array | Array of URLs or local file paths (max 10MB each) |
 | `customFields` | object | Key-value pairs — only if custom fields are configured in project settings |
 
@@ -459,31 +459,17 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
   "action": "Click the login button",
   "expectedResult": "User is redirected to dashboard",
   "data": "Username: testuser@example.com",
-  "subSteps": [
-    {
-      "action": "Enter email",
-      "expectedResult": "Email field is populated",
-      "data": "testuser@example.com",
-      "images": [
-        {
-          "url": "https://example.com/screenshot.png",
-          "fileName": "screenshot.png"
-        }
-      ]
-    }
-  ]
+  "attachments": ["https://example.com/step-screenshot.png"]
 }
 ```
-
-- Max 5 sub-steps per step
-- Max 2 images per sub-step
 
 **Gherkin step format**:
 
 ```json
 {
   "event": "Given",
-  "stepDescription": "the user is on the login page"
+  "stepDescription": "the user is on the login page",
+  "attachments": ["https://example.com/step-screenshot.png"]
 }
 ```
 
@@ -514,7 +500,7 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
 | `behavior` | string | Same options as create |
 | `automationStatus` | string | Same options as create |
 | `tags` | string | Comma-separated tags |
-| `automation` | array | Automation checklist |
+| `flags` | array | Automation flags/checklist |
 | `attachments` | object | `{ "add": ["url-or-path"], "remove": ["attachment-id-or-url"] }` |
 | `customFields` | object | Updated custom fields |
 
@@ -528,6 +514,8 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
   }
 }
 ```
+
+Step-level attachments are added by including `attachments` on a top-level step in `updates.steps`.
 
 ---
 
@@ -779,8 +767,6 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 | `"projectId is required"`                               | No projectId passed                        | Call `health()` to get it first                                    |
 | `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details` | Add `testcase_id`, `testcase_name`, or another search param        |
 | `"testcase_name is required"`                           | `debug_testcase` called without name       | Ask user for the test case name                                    |
-| `"Step N has X sub-steps, maximum 5 allowed"`           | Sub-step limit exceeded                    | Reduce sub-steps to ≤ 5 per step                                   |
-| `"Sub-step N has X images, maximum 2 allowed"`          | Image limit exceeded                       | Reduce images to ≤ 2 per sub-step                                  |
 | HTTP 404                                                | Resource not found                         | Verify IDs exist — use `list_*` tools to find valid IDs            |
 | `{ count: 0, ... }`                                     | No results match filters                   | Broaden filters or inform user nothing matches                     |
 

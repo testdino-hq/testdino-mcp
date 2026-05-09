@@ -7,8 +7,7 @@ import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 import {
   processAttachments,
-  processSubStepImages,
-  validateClassicSteps,
+  processStepAttachments,
   FileData,
 } from "../../lib/file-utils.js";
 import type { TestStep } from "../../lib/file-utils.js";
@@ -50,7 +49,7 @@ interface ManualTestCaseUpdates {
   behavior?: "positive" | "negative" | "destructive" | "Not set";
   automationStatus?: "Manual" | "Automated" | "To be automated";
   tags?: string;
-  automation?: ("To be Automated" | "Is flaky" | "Muted")[];
+  flags?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: {
     add?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
     remove?: string[]; // Array of attachment IDs or URLs to remove
@@ -83,7 +82,7 @@ export const updateManualTestCaseTool = {
       updates: {
         type: "object",
         description:
-          "Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, automation, attachments, customFields, etc.",
+          "Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, flags, attachments, customFields, etc.",
         properties: {
           name: {
             type: "string",
@@ -114,7 +113,7 @@ export const updateManualTestCaseTool = {
           steps: {
             type: "array",
             description:
-              "Updated test steps array. For Classic format: action, expectedResult, optional data, and optional subSteps (max 5 per step, each with optional images max 2). For Gherkin format: event and stepDescription.",
+              "Updated test steps array. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription. Each top-level step can include attachments as URLs or local file paths.",
             items: {
               type: "object",
               oneOf: [
@@ -135,52 +134,11 @@ export const updateManualTestCaseTool = {
                       description:
                         "Optional test data for this step (Classic format).",
                     },
-                    subSteps: {
+                    attachments: {
                       type: "array",
                       description:
-                        "Optional array of sub-steps for this step (Classic format only). Maximum 5 sub-steps per step. Each sub-step can have up to 2 images.",
-                      maxItems: 5,
-                      items: {
-                        type: "object",
-                        properties: {
-                          action: {
-                            type: "string",
-                            description:
-                              "The action to perform in this sub-step.",
-                          },
-                          expectedResult: {
-                            type: "string",
-                            description:
-                              "The expected outcome of this sub-step action.",
-                          },
-                          data: {
-                            type: "string",
-                            description:
-                              "Optional test data for this sub-step.",
-                          },
-                          images: {
-                            type: "array",
-                            description:
-                              "Optional array of images for this sub-step. Maximum 2 images per sub-step. Each image requires a url and fileName.",
-                            maxItems: 2,
-                            items: {
-                              type: "object",
-                              properties: {
-                                url: {
-                                  type: "string",
-                                  description: "The URL of the image.",
-                                },
-                                fileName: {
-                                  type: "string",
-                                  description: "The file name of the image.",
-                                },
-                              },
-                              required: ["url", "fileName"],
-                            },
-                          },
-                        },
-                        required: ["action", "expectedResult"],
-                      },
+                        "Optional top-level step attachments as URLs or local file paths.",
+                      items: { type: "string" },
                     },
                   },
                   required: ["action", "expectedResult"],
@@ -192,6 +150,12 @@ export const updateManualTestCaseTool = {
                       enum: ["Given", "When", "And", "Then", "But"],
                     },
                     stepDescription: { type: "string" },
+                    attachments: {
+                      type: "array",
+                      description:
+                        "Optional top-level step attachments as URLs or local file paths.",
+                      items: { type: "string" },
+                    },
                   },
                   required: ["event", "stepDescription"],
                 },
@@ -256,9 +220,9 @@ export const updateManualTestCaseTool = {
             type: "string",
             description: "Updated tags.",
           },
-          automation: {
+          flags: {
             type: "array",
-            description: "Updated automation checklist options.",
+            description: "Updated automation flags/checklist options.",
             items: {
               type: "string",
               enum: ["To be Automated", "Is flaky", "Muted"],
@@ -320,21 +284,18 @@ export async function handleUpdateManualTestCase(
   }
 
   try {
-    // Validate sub-step and image constraints before sending
-    if (args.updates.steps && Array.isArray(args.updates.steps)) {
-      validateClassicSteps(args.updates.steps);
-      processSubStepImages(args.updates.steps);
-    }
-
     // Process attachments if present: convert local file paths to file data objects (same format as UI)
     const processedUpdates = { ...args.updates };
+    if (processedUpdates.steps && Array.isArray(processedUpdates.steps)) {
+      processedUpdates.steps = processStepAttachments(processedUpdates.steps);
+    }
     if (processedUpdates.attachments?.add) {
       processedUpdates.attachments.add = processAttachments(
-        processedUpdates.attachments.add.map(String)
+        processedUpdates.attachments.add
       );
     }
 
-    const body = { ...processedUpdates };
+    const body = { updates: processedUpdates };
 
     const updateManualTestCaseUrl = endpoints.updateManualTestCase(
       String(args.projectId),

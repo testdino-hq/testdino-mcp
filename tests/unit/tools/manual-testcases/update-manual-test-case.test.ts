@@ -39,7 +39,13 @@ describe("handleUpdateManualTestCase", () => {
           testStepsDeclarationType: "Gherkin",
           preconditions: "Precond updated",
           postconditions: "Postcond updated",
-          steps: [{ event: "Given", stepDescription: "user is on page" }],
+          steps: [
+            {
+              event: "Given",
+              stepDescription: "user is on page",
+              attachments: ["https://example.com/step.png"],
+            },
+          ],
           priority: "low",
           severity: "minor",
           type: "regression",
@@ -47,7 +53,8 @@ describe("handleUpdateManualTestCase", () => {
           behavior: "negative",
           automationStatus: "To be automated",
           tags: "updated-tag",
-          automation: ["Muted"],
+          flags: ["Muted"],
+          attachments: { add: ["https://example.com/case.png"] },
           customFields: { env: "staging" },
         },
       })
@@ -57,23 +64,29 @@ describe("handleUpdateManualTestCase", () => {
     expect(options?.method).toBe("PATCH");
 
     const body = JSON.parse(options?.body as string);
-    expect(body.name).toBe("Updated name");
-    expect(body.description).toBe("Updated desc");
-    expect(body.status).toBe("Draft");
-    expect(body.testStepsDeclarationType).toBe("Gherkin");
-    expect(body.preconditions).toBe("Precond updated");
-    expect(body.postconditions).toBe("Postcond updated");
-    expect(body.steps).toHaveLength(1);
-    expect(body.steps[0].event).toBe("Given");
-    expect(body.priority).toBe("low");
-    expect(body.severity).toBe("minor");
-    expect(body.type).toBe("regression");
-    expect(body.layer).toBe("api");
-    expect(body.behavior).toBe("negative");
-    expect(body.automationStatus).toBe("To be automated");
-    expect(body.tags).toBe("updated-tag");
-    expect(body.automation).toEqual(["Muted"]);
-    expect(body.customFields).toEqual({ env: "staging" });
+    expect(body.updates.name).toBe("Updated name");
+    expect(body.updates.description).toBe("Updated desc");
+    expect(body.updates.status).toBe("Draft");
+    expect(body.updates.testStepsDeclarationType).toBe("Gherkin");
+    expect(body.updates.preconditions).toBe("Precond updated");
+    expect(body.updates.postconditions).toBe("Postcond updated");
+    expect(body.updates.steps).toHaveLength(1);
+    expect(body.updates.steps[0].event).toBe("Given");
+    expect(body.updates.steps[0].attachments).toEqual([
+      "https://example.com/step.png",
+    ]);
+    expect(body.updates.priority).toBe("low");
+    expect(body.updates.severity).toBe("minor");
+    expect(body.updates.type).toBe("regression");
+    expect(body.updates.layer).toBe("api");
+    expect(body.updates.behavior).toBe("negative");
+    expect(body.updates.automationStatus).toBe("To be automated");
+    expect(body.updates.tags).toBe("updated-tag");
+    expect(body.updates.flags).toEqual(["Muted"]);
+    expect(body.updates.attachments.add).toEqual([
+      "https://example.com/case.png",
+    ]);
+    expect(body.updates.customFields).toEqual({ env: "staging" });
   });
 
   it("sends PATCH request with correct body", async () => {
@@ -94,8 +107,8 @@ describe("handleUpdateManualTestCase", () => {
     expect(options?.method).toBe("PATCH");
 
     const body = JSON.parse(options?.body as string);
-    expect(body.name).toBe("Updated title");
-    expect(body.priority).toBe("high");
-    expect(body.status).toBe("Active");
+    expect(body.updates.name).toBe("Updated title");
+    expect(body.updates.priority).toBe("high");
+    expect(body.updates.status).toBe("Active");
   });
 });
