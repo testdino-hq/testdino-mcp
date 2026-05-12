@@ -8,19 +8,38 @@
 
 1. [Core Concepts](#core-concepts)
 2. [Tool Reference](#tool-reference)
-   - [health](#health)
-   - [list_testruns](#list_testruns)
-   - [get_run_details](#get_run_details)
-   - [list_testcase](#list_testcase)
-   - [get_testcase_details](#get_testcase_details)
-   - [debug_testcase](#debug_testcase)
-   - [test_audit](#test_audit)
-   - [list_manual_test_cases](#list_manual_test_cases)
-   - [get_manual_test_case](#get_manual_test_case)
-   - [create_manual_test_case](#create_manual_test_case)
-   - [update_manual_test_case](#update_manual_test_case)
-   - [list_manual_test_suites](#list_manual_test_suites)
-   - [create_manual_test_suite](#create_manual_test_suite)
+   - **Automated test analytics**
+     - [health](#health)
+     - [list_testruns](#list_testruns)
+     - [get_run_details](#get_run_details)
+     - [list_testcase](#list_testcase)
+     - [get_testcase_details](#get_testcase_details)
+     - [debug_testcase](#debug_testcase)
+     - [test_audit](#test_audit)
+   - **Manual test cases**
+     - [list_manual_test_cases](#list_manual_test_cases)
+     - [get_manual_test_case](#get_manual_test_case)
+     - [create_manual_test_case](#create_manual_test_case)
+     - [update_manual_test_case](#update_manual_test_case)
+     - [list_manual_test_suites](#list_manual_test_suites)
+     - [create_manual_test_suite](#create_manual_test_suite)
+   - **Releases (a.k.a. milestones)**
+     - [list_releases](#list_releases)
+     - [get_release](#get_release)
+     - [create_release](#create_release)
+     - [update_release](#update_release)
+   - **Manual test runs**
+     - [list_manual_runs](#list_manual_runs)
+     - [get_manual_run](#get_manual_run)
+     - [create_manual_run](#create_manual_run)
+     - [update_manual_run](#update_manual_run)
+     - [list_run_test_cases](#list_run_test_cases)
+     - [update_run_test_case](#update_run_test_case)
+   - **Exploratory sessions**
+     - [list_sessions](#list_sessions)
+     - [get_session](#get_session)
+     - [create_session](#create_session)
+     - [update_session](#update_session)
 3. [Workflows & Patterns](#workflows--patterns)
 4. [Decision Trees](#decision-trees)
 5. [Parameter Quick Reference](#parameter-quick-reference)
@@ -47,11 +66,35 @@
 - **counter**: A sequential integer (e.g. `43`) — human-readable alias for a test run
 - **testcase_id**: A string ID for a specific test case execution
 - **caseId**: A string ID or human-readable ID (e.g. `"TC-123"`) for a manual test case
+- **releaseId**: Either an internal `tcm_milestone_...` _id or a counter-style ID like `"MS-12"`. The MCP layer resolves the counter form automatically.
+- **runId**: Either an internal `tcm_run_...` _id or a counter-style ID like `"RUN-12"`. Counter form resolves the same way.
+- **sessionId**: Either an internal `tcm_session_...` _id or a counter-style ID like `"SES-12"`.
+- **rtcRef** (per-case record in a run): One of three forms accepted by `update_run_test_case`:
+  1. The internal `tcm_rtc_...` _id of the run-test-case row.
+  2. The caseKey (e.g. `"TC-156"`) — what the UI shows in the ID column.
+  3. The underlying manual test case _id.
+  Works even when no run-test-case row exists yet (untested virtual cases) — the server creates the record on first edit.
+- **assigneeUserId**: Accepted as either a User _id (`"user_..."`) or an email address. Server resolves email to _id automatically. Used in `create_session`, `update_session`, `update_run_test_case`, and as a filter in `list_sessions` / `list_run_test_cases`.
 
 ### Pagination defaults
 
 - Most list tools default to `limit=20` or `limit=50`. Use `get_all=true` sparingly — only when you genuinely need every record.
 - Prefer filters over fetching everything.
+
+### Canonical values for state / type / result
+
+Some free-text fields drive the UI's color/badge map and have a **canonical
+stored form** that's lowercase + underscore-joined:
+
+- `state` on sessions and runs: `new`, `under_review`, `in_progress`, `on_hold`, `done`, `rejected`, …
+- `type` on releases: `iteration`, `major`, `minor`, `patch`, …
+- `result` / `status` on run test cases: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest`.
+
+You can pass either the canonical form or the display form (`"Under review"`, `"Iteration"`, `"Passed"`) — the server normalizes to canonical before storing. If you pass display form and the UI badge ever looks dull/grey, that means normalization didn't run; report the input to the user. The canonical form for result values is past tense (`"passed"`, not `"pass"`).
+
+### Arrays vs comma-separated strings
+
+When sending payloads (POST/PATCH bodies), `tags` and `linkedIssues` MUST be JSON arrays — `["smoke","regression"]`, not `"smoke,regression"`. The comma-separated form is only accepted on **list-tool query-filter parameters** because URLs can't carry arrays cleanly. Mixing these up returns a 400 from zod.
 
 ### Test Audit Principle — Two Scenarios
 
@@ -561,6 +604,239 @@ test_audit(action="analyze", branch="main", scope="feature", target={ featureNam
 
 ---
 
+### `list_releases`
+
+**Purpose**: Browse releases (a.k.a. milestones) for a project. Each release groups runs + sessions and may nest under a parent release up to 3 levels deep.
+
+**Required parameters**: `projectId`
+
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Substring match on release name |
+| `type` | string | Release type. Display or canonical form — server lowercases (`"Iteration"` → `"iteration"`) |
+| `isCompleted` | boolean | Filter completed vs in-progress |
+| `parentReleaseId` | string | Only direct children of a release |
+| `status` | string | Project-specific status field |
+| `sortBy` | string | `'createdAt'`, `'startDate'`, `'endDate'`, `'name'` |
+| `sortOrder` | string | `'asc'` or `'desc'` |
+| `page`, `limit` | number | Pagination (default `limit=25`, max 200) |
+
+---
+
+### `get_release`
+
+**Purpose**: Full details for one release — dates, status, parent/root hierarchy, rolled-up progress stats (run counts, test status breakdown across descendants), linked issues.
+
+**Required parameters**: `projectId`, `releaseId`
+
+- `releaseId` accepts either an internal `tcm_milestone_…` _id or a counter-style ID like `"MS-12"`.
+
+---
+
+### `create_release`
+
+**Purpose**: Create a new release.
+
+**Required parameters**: `projectId`, `name`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `description` | string | Plain-text description |
+| `note` | string | Rich HTML note |
+| `type` | string | Display or canonical form — server lowercases |
+| `parentReleaseId` | string | Parent release for nesting (max 3 levels deep) |
+| `startDate` | string | ISO date |
+| `endDate` | string | ISO date |
+| `isStarted`, `isCompleted` | boolean | Independent state flags |
+| `startedAt`, `completedAt` | string | ISO datetime markers |
+| `linkedIssues` | array | Array of linked-issue objects |
+
+---
+
+### `update_release`
+
+**Purpose**: Modify one release. Send only the fields you want to change inside `updates`.
+
+**Required parameters**: `projectId`, `releaseId`, `updates` (object)
+
+`updates` object accepts the same fields as create. Type passed in display form (`"Major"`) is normalized to canonical (`"major"`) before save.
+
+---
+
+### `list_manual_runs`
+
+**Purpose**: Browse manual test runs in a project — the executions of grouped test cases against a build/environment.
+
+**Required parameters**: `projectId`
+
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Match by run name |
+| `status` | enum | `'active'` or `'closed'` |
+| `state` | string | Workflow state (display or canonical form — server normalizes) |
+| `environment` | string | Free-text environment label |
+| `releaseId` | string | Filter to runs in this release. `"none"` returns unlinked runs |
+| `tags` | string | Single tag or comma-separated tags |
+| `isClosed` | boolean | Quick filter |
+| `sortBy` | string | `'createdAt'`, `'updatedAt'`, `'name'` |
+| `sortOrder`, `page`, `limit` | — | Standard |
+
+---
+
+### `get_manual_run`
+
+**Purpose**: Full details for one run — name, status, environment, linked release, test stats (total / passed / failed / blocked / untested), contributors, attachments, linked issues.
+
+**Required parameters**: `projectId`, `runId`
+
+- `runId` accepts the internal `tcm_run_…` _id OR a counter-style ID like `"RUN-12"`.
+
+---
+
+### `create_manual_run`
+
+**Purpose**: Create a new manual test run.
+
+**Required parameters**: `projectId`, `name`
+
+**Key optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `note` | string | Rich HTML note |
+| `environment` | string | e.g. `"Staging"` |
+| `releaseId` | string | Attach run to a release |
+| `state` | string | Workflow state (default `"new"` — display or canonical form) |
+| `selectionMode` | enum | `'all'` (default — every case in the project) or `'selected'` |
+| `testCaseIds` | array | Case IDs to include when `selectionMode='selected'` |
+| `suiteIds` | array | Suite IDs whose cases are included when `selectionMode='selected'` |
+| `includeUnsorted` | boolean | Also include cases with no suite (`selectionMode='selected'`) |
+| `tags` | array | Array of tag strings (NOT comma-separated) |
+| `linkedIssues`, `attachments`, `links` | array | Arrays of objects |
+
+---
+
+### `update_manual_run`
+
+**Purpose**: Modify an existing run's metadata. Per-case results live in `update_run_test_case` (NOT here).
+
+**Required parameters**: `projectId`, `runId`, `updates` (object)
+
+`updates` accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `attachments`, `links`, `selectionMode`.
+
+**Closed runs are read-only EXCEPT for `releaseId`** — so a closed run can be re-attached to a different release without re-opening it.
+
+---
+
+### `list_run_test_cases`
+
+**Purpose**: Get the per-case execution records inside a manual run — what the UI shows as rows in the run's test-case table. Each row carries the case identity (`caseKey` like `"TC-156"`, title), current assignee, and current result.
+
+**Required parameters**: `projectId`, `runId`
+
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Match by case title or caseKey |
+| `assignee` (or `assigneeUserId`) | string | User _id OR email — server resolves |
+| `result` (or `status`) | string | Filter by result — display or canonical form |
+| `sortBy` | string | `'createdAt'`, `'updatedAt'`, `'status'`, `'caseKey'` |
+| `sortOrder`, `page`, `limit` | — | Standard |
+
+**When to call**: Always before `update_run_test_case` — gives you the exact `rtcRef` (or just the caseKey) and the current state per case.
+
+---
+
+### `update_run_test_case`
+
+**Purpose**: Set the assignee and/or result for one test case inside a manual run — exactly what clicking "Assign to" + the result pill does in the UI.
+
+**Required parameters**: `projectId`, `runId`, `rtcRef`, `updates` (object)
+
+`rtcRef` accepts THREE forms:
+1. `tcm_rtc_…` _id (existing run-test-case row)
+2. `"TC-156"` (caseKey — the user-facing display ID)
+3. Underlying manual test case _id
+
+**Works for untested "virtual" cases too.** In an `'all'`-mode run, cases with no record yet still show "Untested" in the UI — passing the caseKey or test case _id auto-creates the run-test-case row on first edit. Same path the UI takes on first click.
+
+**`updates` object fields**:
+| Field | Type | Description |
+|-------|------|-------------|
+| `assigneeUserId` | string | User _id OR email. Pass `null` to unassign |
+| `result` (or `status`) | string | Display (`"Passed"`, `"Blocked"`) or canonical (`"passed"`, `"blocked"`) form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
+| `elapsed` | number | Seconds spent on the case |
+
+**For multiple cases**: call this tool in parallel — one call per case. Don't try to batch in `updates`.
+
+---
+
+### `list_sessions`
+
+**Purpose**: Browse exploratory testing sessions.
+
+**Required parameters**: `projectId`
+
+**Optional filters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Match by session name |
+| `status` | enum | `'active'` or `'closed'` |
+| `state` | string | Workflow state (display or canonical) |
+| `sessionType` | string | Free-text type (e.g. `"Exploratory"`, `"Regression"`) |
+| `assigneeUserId` | string | User _id OR email — server resolves |
+| `releaseId` | string | Filter to a release. `"none"` for unlinked |
+| `tags` | string | Single tag or comma-separated |
+| `isClosed` | boolean | Quick filter |
+| `sortBy`, `sortOrder`, `page`, `limit` | — | Standard |
+
+---
+
+### `get_session`
+
+**Purpose**: Full details for one session — name, mission, status, assignee, linked release, attachments, linked issues, findings.
+
+**Required parameters**: `projectId`, `sessionId`
+
+- `sessionId` accepts internal `tcm_session_…` _id OR counter-style `"SES-12"`.
+
+---
+
+### `create_session`
+
+**Purpose**: Create a new exploratory session.
+
+**Required parameters**: `projectId`, `name`
+
+**Key optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `mission` | string | Rich HTML mission/charter |
+| `sessionType` | string | Free-text type |
+| `config`, `environment` | string | Free-text |
+| `releaseId` | string | Attach session to a release |
+| `assigneeUserId` | string | User _id OR email — server resolves |
+| `state` | string | Workflow state (default `"new"`) |
+| `estimate` | number | Estimate in minutes |
+| `tags` | array | Array of tag strings |
+| `linkedIssues`, `attachments` | array | Arrays of objects |
+
+**Findings cannot be created here in v1** — add them via the UI.
+
+---
+
+### `update_session`
+
+**Purpose**: Modify an existing session's metadata.
+
+**Required parameters**: `projectId`, `sessionId`, `updates` (object)
+
+`updates` accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`, `attachments`. Findings are not editable via MCP in v1.
+
+---
+
 ## Workflows & Patterns
 
 ### Session Startup
@@ -650,6 +926,62 @@ list_testcase(projectId,
 → Find tests failing specifically in webkit across multiple runs
 ```
 
+### Spin Up a Release + Run for a Sprint
+
+```
+1. create_release(projectId, name="Sprint 42", type="Iteration",
+     startDate="2026-05-12", endDate="2026-05-26")
+2. create_manual_run(projectId, name="Sprint 42 — Smoke",
+     releaseId="<release _id from step 1>",
+     environment="Staging", selectionMode="all", tags=["smoke","regression"])
+3. list_run_test_cases(projectId, runId="RUN-N") → see the rows agents will assign
+```
+
+### Assign Run Test Cases to Multiple Testers
+
+```
+1. list_run_test_cases(projectId, runId="RUN-1")
+   → confirm the cases and grab caseKey for each
+2. In parallel:
+   update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-156",
+     updates={ assigneeUserId: "alice@company.com" })
+   update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-157",
+     updates={ assigneeUserId: "bob@company.com" })
+   …
+```
+
+Works against untested cases too — the row is auto-created on first edit.
+
+### Record Test Verdicts
+
+```
+update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-156",
+  updates={ result: "Passed", assigneeUserId: "alice@company.com" })
+update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-157",
+  updates={ result: "Failed" })
+```
+
+Pass either canonical (`"passed"`) or display (`"Passed"`) form — server normalizes. Valid result values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest`.
+
+### Spin Up an Exploratory Session
+
+```
+create_session(projectId, name="Auth charter — May 12",
+  mission="<p>find session-handling bugs around 2FA edge cases</p>",
+  sessionType="Exploratory",
+  assigneeUserId="tester@company.com",
+  estimate=60,
+  releaseId="<optional release ref>")
+```
+
+### Track Release Progress
+
+```
+get_release(projectId, releaseId="MS-12")
+→ Returns rolled-up stats: run counts, test status breakdown across all runs
+   linked to this release (and its descendants up to 3 levels deep).
+```
+
 ---
 
 ## Decision Trees
@@ -716,6 +1048,54 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
      updates={ steps: [...existing + new step...] })
 ```
 
+### "Show me the releases on this project"
+
+```
+list_releases(projectId)
+```
+
+### "Create a release for the upcoming sprint"
+
+```
+create_release(projectId, name="<sprint name>", type="Iteration",
+  startDate="<ISO>", endDate="<ISO>")
+```
+
+### "What runs are in release MS-12?"
+
+```
+list_manual_runs(projectId, releaseId="MS-12")
+```
+
+### "Assign TC-156 to alice@company.com in run RUN-1"
+
+```
+update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-156",
+  updates={ assigneeUserId: "alice@company.com" })
+```
+
+### "Mark TC-157 as failed in run RUN-1"
+
+```
+update_run_test_case(projectId, runId="RUN-1", rtcRef="TC-157",
+  updates={ result: "Failed" })
+```
+
+### "Close the manual run RUN-1"
+
+```
+update_manual_run(projectId, runId="RUN-1", updates={ state: "done" })
+```
+
+(Or use the UI's close button — the dedicated `close` tool is not in v1.)
+
+### "Start an exploratory session"
+
+```
+create_session(projectId, name="<charter title>",
+  mission="<HTML>", assigneeUserId="tester@company.com")
+```
+
 ---
 
 ## Parameter Quick Reference
@@ -732,6 +1112,19 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 
 - Automated test cases: `'passed'`, `'failed'`, `'skipped'`, `'flaky'`
 - Manual test cases: `'active'`, `'draft'`, `'deprecated'`
+- Manual runs / sessions lifecycle (`status`): `'active'`, `'closed'`
+- Run test case result (`result` / `status`): `'untested'`, `'passed'`, `'failed'`, `'blocked'`, `'skipped'`, `'retest'`
+
+### Workflow State Values (the `state` field)
+
+Project-configurable, but the canonical stored forms include:
+
+- Sessions/runs: `'new'`, `'under_review'`, `'in_progress'`, `'on_hold'`, `'done'`, `'rejected'`
+- Pass display form (`"Under review"`) or canonical (`"under_review"`) — server normalizes.
+
+### Release Type Values
+
+Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`, `'minor'`, `'patch'`. Display form (`"Iteration"`) is normalized to canonical (`"iteration"`).
 
 ### Error Categories (for `by_error_category`)
 
@@ -768,6 +1161,20 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 | `update_manual_test_case`  | `projectId`, `caseId`, `updates` (object)                                                                                        |
 | `list_manual_test_suites`  | `projectId`                                                                                                                      |
 | `create_manual_test_suite` | `projectId`, `name`                                                                                                              |
+| `list_releases`            | `projectId`                                                                                                                      |
+| `get_release`              | `projectId`, `releaseId`                                                                                                         |
+| `create_release`           | `projectId`, `name`                                                                                                              |
+| `update_release`           | `projectId`, `releaseId`, `updates` (object)                                                                                     |
+| `list_manual_runs`         | `projectId`                                                                                                                      |
+| `get_manual_run`           | `projectId`, `runId`                                                                                                             |
+| `create_manual_run`        | `projectId`, `name`                                                                                                              |
+| `update_manual_run`        | `projectId`, `runId`, `updates` (object)                                                                                         |
+| `list_run_test_cases`      | `projectId`, `runId`                                                                                                             |
+| `update_run_test_case`     | `projectId`, `runId`, `rtcRef`, `updates` (object)                                                                               |
+| `list_sessions`            | `projectId`                                                                                                                      |
+| `get_session`              | `projectId`, `sessionId`                                                                                                         |
+| `create_session`           | `projectId`, `name`                                                                                                              |
+| `update_session`           | `projectId`, `sessionId`, `updates` (object)                                                                                     |
 
 ---
 
@@ -779,8 +1186,10 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 | `"projectId is required"`                               | No projectId passed                        | Call `health()` to get it first                                    |
 | `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details` | Add `testcase_id`, `testcase_name`, or another search param        |
 | `"testcase_name is required"`                           | `debug_testcase` called without name       | Ask user for the test case name                                    |
-| `"Step N has X sub-steps, maximum 5 allowed"`           | Sub-step limit exceeded                    | Reduce sub-steps to ≤ 5 per step                                   |
-| `"Sub-step N has X images, maximum 2 allowed"`          | Image limit exceeded                       | Reduce images to ≤ 2 per sub-step                                  |
+| `"No user found with email \"...\""`                    | Assignee email doesn't match a TestDino user | Pass the User _id directly, or invite the user to TestDino first  |
+| `"No test case \"X\" found in this project"`            | `rtcRef` doesn't resolve to a case in this project | Verify caseKey via `list_run_test_cases` first              |
+| `"Cannot update a closed run"`                          | Trying to edit a closed run's metadata     | Only `releaseId` can be changed on closed runs                     |
+| `"updates must contain at least one field"`             | Empty `updates` object on a PATCH          | Include at least one field you want to change                      |
 | HTTP 404                                                | Resource not found                         | Verify IDs exist — use `list_*` tools to find valid IDs            |
 | `{ count: 0, ... }`                                     | No results match filters                   | Broaden filters or inform user nothing matches                     |
 
@@ -792,6 +1201,12 @@ get_testcase_details(projectId, by_error_message="element not found", by_status=
 4. **Passing `steps` without specifying `testStepsDeclarationType`** — Classic format is the default. If using Gherkin steps, explicitly set `testStepsDeclarationType: "Gherkin"`.
 5. **Creating test cases without checking suite names** — always call `list_manual_test_suites()` first; `suiteName` must be an exact match.
 6. **Ignoring the `debugging_prompt` in `debug_testcase` response** — this field contains pre-formatted analysis instructions from the API. Always read and apply it when analyzing failures.
+7. **Sending `tags` as a comma-separated string in create/update payloads** — they must be JSON arrays (`["smoke","regression"]`). The comma-separated form is only valid as a list-tool query filter.
+8. **Sending result as `"pass"` / `"fail"`** — the canonical run-test-case result values are **past tense**: `passed`, `failed`. Display form (`"Passed"`, `"Failed"`) is fine, server normalizes — but `"pass"` is not in the vocabulary and will show a dull/grey badge.
+9. **Trying to assign or set a result by `tcm_rtc_…` for an "Untested" case** — that record doesn't exist yet. Pass the caseKey (`"TC-156"`) or the underlying test case _id; the server auto-creates the row on first edit.
+10. **Looking for `assigneeUserId` on runs** — runs don't have a single assignee; assignment is per-case via `update_run_test_case`. Sessions DO have a session-level `assigneeUserId`.
+11. **Mixing up `releaseId` and `parentReleaseId`** — `releaseId` attaches a run/session to a release; `parentReleaseId` nests one release under another.
+12. **Bundling many per-case edits in `update_manual_run`** — that tool only updates run metadata. For per-case verdicts, call `update_run_test_case` once per case (parallel is fine).
 
 ---
 
