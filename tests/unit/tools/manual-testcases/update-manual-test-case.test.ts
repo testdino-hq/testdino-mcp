@@ -111,4 +111,25 @@ describe("handleUpdateManualTestCase", () => {
     expect(body.updates.priority).toBe("high");
     expect(body.updates.status).toBe("Active");
   });
+
+  it("forwards comments and issues arrays verbatim in the PATCH body", async () => {
+    mockFetchSuccess({ id: "TC-555" });
+
+    await handleUpdateManualTestCase(
+      createArgs({
+        caseId: "TC-555",
+        updates: {
+          comments: ["First comment", "Second comment"],
+          issues: ["PROJ-123", "ENG-9"],
+        },
+      })
+    );
+
+    const options = getLastFetchOptions();
+    expect(options?.method).toBe("PATCH");
+
+    const body = JSON.parse(options?.body as string);
+    expect(body.updates.comments).toEqual(["First comment", "Second comment"]);
+    expect(body.updates.issues).toEqual(["PROJ-123", "ENG-9"]);
+  });
 });

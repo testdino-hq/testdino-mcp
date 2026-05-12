@@ -1918,6 +1918,10 @@ The tool returns a JSON response with comprehensive test case information includ
 - Tags and custom fields
 - Automation status
 - Creation and update timestamps
+- `linkedIssues` — Jira tickets linked to the case (`provider`, `displayId`, `url`, `title`)
+- `comments` — latest comments on the case (read here; add via `update_manual_test_case`)
+- `versions` — latest 20 entries of the version history (read-only)
+- `results` — latest 100 execution results across every manual run that ran this case (read-only)
 
 ### Example Response
 
@@ -2319,6 +2323,8 @@ The `updates` object can contain any of the following fields:
 - `flags` (array): Updated automation flags/checklist ('To be Automated', 'Is flaky', 'Muted')
 - `attachments` (object): `{ add: string[], remove: string[] }` — add local paths/URLs or remove by attachment ID/URL
 - `customFields` (object): Updated custom fields as key-value pairs
+- `comments` (string[]): Comment bodies to append to the case. Each entry becomes a new comment authored by the PAT owner. The server caps comments at 20 per case.
+- `issues` (string[]): Jira ticket keys to link to the case (e.g. `["PROJ-123", "ENG-45"]`). The server resolves each one against the project's connected Jira: matches save with `title` + `url`; unresolved keys save as plain text stubs — same fallback as the UI's add-issue flow. Duplicate links are silently skipped.
 
 ### Configuration
 
@@ -2417,6 +2423,27 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   }
 }
 ```
+
+**Add Comments and Link Jira Issues:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "comments": [
+        "Verified on staging — looks good.",
+        "Need to re-run after the next deploy."
+      ],
+      "issues": ["PROJ-123", "ENG-45"]
+    }
+  }
+}
+```
+
+The server enriches each Jira key with `title` and `url` when the project's Jira integration finds the ticket; unresolved keys are saved as plain text stubs.
 
 ### Response Format
 
