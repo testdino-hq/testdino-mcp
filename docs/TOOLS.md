@@ -35,6 +35,29 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - [list_manual_test_suites](#list_manual_test_suites)
 - [create_manual_test_suite](#create_manual_test_suite)
 
+**Releases (a.k.a. Milestones):**
+
+- [list_releases](#list_releases)
+- [get_release](#get_release)
+- [create_release](#create_release)
+- [update_release](#update_release)
+
+**Manual Test Runs:**
+
+- [list_manual_runs](#list_manual_runs)
+- [get_manual_run](#get_manual_run)
+- [create_manual_run](#create_manual_run)
+- [update_manual_run](#update_manual_run)
+- [list_run_test_cases](#list_run_test_cases)
+- [update_run_test_case](#update_run_test_case)
+
+**Exploratory Sessions:**
+
+- [list_sessions](#list_sessions)
+- [get_session](#get_session)
+- [create_session](#create_session)
+- [update_session](#update_session)
+
 ---
 
 ## health
@@ -2866,6 +2889,489 @@ Error: Failed to create manual test suite: Parent suite not found
 
 - [TestDino API Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## list_releases
+
+**Purpose**: Browse the releases (a.k.a. milestones) in a project. Each release groups runs + sessions and can nest under a parent release up to 3 levels deep.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `search` | string | No | Substring match on release name |
+| `type` | string | No | Release type. Display or canonical form (`"Iteration"` → `"iteration"`) |
+| `isCompleted` | boolean | No | Filter by completion state |
+| `parentReleaseId` | string | No | Only the direct children of this release |
+| `status` | string | No | Project-specific status field |
+| `sortBy` | string | No | `'createdAt'`, `'startDate'`, `'endDate'`, `'name'` |
+| `sortOrder` | string | No | `'asc'` or `'desc'` |
+| `page` | number | No | Page number (1-indexed) |
+| `limit` | number | No | Page size (default 25, max 200) |
+
+### Example Usage
+
+```javascript
+// All releases for a project
+list_releases({ projectId: "project_abc" });
+
+// Active iterations
+list_releases({ projectId: "project_abc", type: "Iteration", isCompleted: false });
+
+// Direct children of release MS-5
+list_releases({ projectId: "project_abc", parentReleaseId: "MS-5" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/releases/:projectId`
+- **Authentication**: Bearer token from `TESTDINO_PAT`
+- **Module access**: `manualTestCases`
+
+---
+
+## get_release
+
+**Purpose**: Full details of one release — dates, status, parent/root hierarchy, rolled-up progress stats across all runs in this release and its descendants, linked issues.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `releaseId` | string | Yes | Internal `tcm_milestone_…` _id OR counter-style ID (`"MS-12"`) |
+
+### Example Usage
+
+```javascript
+get_release({ projectId: "project_abc", releaseId: "MS-12" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/releases/:projectId/:releaseId`
+
+---
+
+## create_release
+
+**Purpose**: Create a new release.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `name` | string | Yes | Release name |
+| `description` | string | No | Plain-text description |
+| `note` | string | No | Rich HTML note |
+| `type` | string | No | Release type. Display or canonical form — server lowercases |
+| `parentReleaseId` | string | No | Parent release ID for nesting (max 3 levels deep) |
+| `startDate` | string | No | ISO date |
+| `endDate` | string | No | ISO date |
+| `isStarted` | boolean | No | Whether the release has started |
+| `isCompleted` | boolean | No | Whether the release is completed |
+| `startedAt` | string | No | ISO datetime — when started |
+| `completedAt` | string | No | ISO datetime — when completed |
+| `linkedIssues` | array | No | Array of linked-issue objects |
+
+### Example Usage
+
+```javascript
+create_release({
+  projectId: "project_abc",
+  name: "Sprint 42",
+  type: "Iteration",
+  startDate: "2026-05-12",
+  endDate: "2026-05-26",
+  isStarted: true,
+  startedAt: "2026-05-12T09:00:00Z"
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `POST /api/mcp/releases/:projectId`
+- **Write permission required**: `org_owner`, `org_admin`, or `org_member`
+
+---
+
+## update_release
+
+**Purpose**: Modify an existing release. Send only the fields you want to change inside the `updates` object.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `releaseId` | string | Yes | Internal _id or counter-style (`"MS-12"`) |
+| `updates` | object | Yes | Fields to update — see below |
+
+**`updates` object** accepts: `name`, `description`, `note`, `type`, `startDate`, `endDate`, `isStarted`, `isCompleted`, `startedAt`, `completedAt`, `linkedIssues`. Type is normalized to canonical lowercase.
+
+### Example Usage
+
+```javascript
+update_release({
+  projectId: "project_abc",
+  releaseId: "MS-12",
+  updates: { isCompleted: true, completedAt: "2026-05-26T17:00:00Z" }
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `PATCH /api/mcp/releases/:projectId/:releaseId`
+- **Write permission required**
+
+---
+
+## list_manual_runs
+
+**Purpose**: Browse the manual test runs in a project — executions of grouped test cases against a build/environment.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `search` | string | No | Match by run name |
+| `status` | enum | No | `'active'` or `'closed'` |
+| `state` | string | No | Workflow state (display or canonical form) |
+| `environment` | string | No | Environment label |
+| `releaseId` | string | No | Filter to runs in this release. `"none"` returns unlinked runs |
+| `tags` | string | No | Single tag or comma-separated tags |
+| `isClosed` | boolean | No | Quick filter |
+| `sortBy` | string | No | `'createdAt'`, `'updatedAt'`, `'name'` |
+| `sortOrder` | string | No | `'asc'` or `'desc'` |
+| `page`, `limit` | number | No | Pagination (default 25, max 200) |
+
+### Example Usage
+
+```javascript
+// All active runs on staging
+list_manual_runs({ projectId: "project_abc", status: "active", environment: "Staging" });
+
+// Runs in release MS-12 that are still in progress
+list_manual_runs({ projectId: "project_abc", releaseId: "MS-12", state: "In Progress" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/manual-runs/:projectId`
+
+---
+
+## get_manual_run
+
+**Purpose**: Full details of one run — name, status, environment, linked release, test stats (total / passed / failed / blocked / untested), contributors, attachments, linked issues.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `runId` | string | Yes | Internal `tcm_run_…` _id OR counter-style (`"RUN-12"`) |
+
+### Example Usage
+
+```javascript
+get_manual_run({ projectId: "project_abc", runId: "RUN-12" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/manual-runs/:projectId/:runId`
+
+---
+
+## create_manual_run
+
+**Purpose**: Create a new manual test run.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `name` | string | Yes | Run name |
+| `note` | string | No | Rich HTML note |
+| `environment` | string | No | Environment label, e.g. `"Staging"` |
+| `releaseId` | string | No | Attach run to a release |
+| `state` | string | No | Workflow state (default `"new"`) |
+| `selectionMode` | enum | No | `'all'` (default) or `'selected'` |
+| `testCaseIds` | array | No | Case IDs when `selectionMode='selected'` |
+| `suiteIds` | array | No | Suite IDs whose cases are included when `selectionMode='selected'` |
+| `includeUnsorted` | boolean | No | Also include cases with no suite (with `selectionMode='selected'`) |
+| `forecast` | any | No | Free-form forecast metadata |
+| `tags` | array | No | Array of tag strings — **NOT comma-separated** |
+| `linkedIssues`, `attachments`, `links` | array | No | Arrays of objects |
+
+### Example Usage
+
+```javascript
+create_manual_run({
+  projectId: "project_abc",
+  name: "Sprint 42 — Smoke",
+  releaseId: "MS-12",
+  environment: "Staging",
+  state: "In Progress",
+  selectionMode: "selected",
+  suiteIds: ["tcm_suite_xxx"],
+  tags: ["smoke", "regression"]
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `POST /api/mcp/manual-runs/:projectId`
+- **Write permission required**
+
+---
+
+## update_manual_run
+
+**Purpose**: Modify an existing run's metadata. Per-case results are managed via `update_run_test_case`, not here.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `runId` | string | Yes | Internal _id or counter-style ID |
+| `updates` | object | Yes | Fields to update |
+
+**`updates` object** accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `attachments`, `links`, `selectionMode`.
+
+**Closed-run rules**: Closed runs are read-only EXCEPT for `releaseId` (so a run can be re-attached to a different release without re-opening).
+
+### Example Usage
+
+```javascript
+update_manual_run({
+  projectId: "project_abc",
+  runId: "RUN-12",
+  updates: { environment: "Production", state: "Done" }
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `PATCH /api/mcp/manual-runs/:projectId/:runId`
+- **Write permission required**
+
+---
+
+## list_run_test_cases
+
+**Purpose**: Get the per-case execution records inside a manual run — what the UI shows as rows in the run's test-case table. Each row carries the test case identity (caseKey like `"TC-156"`, title), the current assignee, and the current result/status.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `runId` | string | Yes | Run _id or counter-style (`"RUN-12"`) |
+| `search` | string | No | Match by case title or caseKey |
+| `assignee` (or `assigneeUserId`) | string | No | Filter by assignee — User _id OR email |
+| `result` (or `status`) | string | No | Filter by result — display or canonical form |
+| `sortBy` | string | No | `'createdAt'`, `'updatedAt'`, `'status'`, `'caseKey'` |
+| `sortOrder`, `page`, `limit` | — | No | Standard pagination |
+
+### Example Usage
+
+```javascript
+// All cases assigned to alice
+list_run_test_cases({
+  projectId: "project_abc",
+  runId: "RUN-12",
+  assigneeUserId: "alice@company.com"
+});
+
+// All cases that failed
+list_run_test_cases({ projectId: "project_abc", runId: "RUN-12", result: "Failed" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/manual-runs/:projectId/:runId/test-cases`
+
+---
+
+## update_run_test_case
+
+**Purpose**: Set the assignee and/or result for one test case inside a manual run — what clicking "Assign to" + the result pill does in the UI.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `runId` | string | Yes | Run _id or counter-style (`"RUN-12"`) |
+| `rtcRef` | string | Yes | One of: `tcm_rtc_…` _id, caseKey (`"TC-156"`), or underlying test case _id |
+| `updates` | object | Yes | Fields to update |
+
+**`updates` object** accepts:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `assigneeUserId` | string | User _id OR email. Pass `null` to unassign |
+| `result` (or `status`) | string | Display or canonical form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
+| `elapsed` | number | Seconds spent on the case |
+
+**Virtual cases supported**: in a `selectionMode='all'` run, cases without a record yet still show "Untested" in the UI. Passing the caseKey or the underlying test case _id auto-creates the row on first edit.
+
+### Example Usage
+
+```javascript
+// Pass and assign in one call (by caseKey, no record yet)
+update_run_test_case({
+  projectId: "project_abc",
+  runId: "RUN-12",
+  rtcRef: "TC-156",
+  updates: { assigneeUserId: "alice@company.com", result: "Passed" }
+});
+
+// Multiple cases — call in parallel
+update_run_test_case({ projectId, runId: "RUN-12", rtcRef: "TC-157", updates: { result: "Failed" } });
+update_run_test_case({ projectId, runId: "RUN-12", rtcRef: "TC-158", updates: { result: "Blocked" } });
+```
+
+### Technical Details
+
+- **API Endpoint**: `PATCH /api/mcp/manual-runs/:projectId/:runId/test-cases/:rtcRef`
+- **Write permission required**
+
+---
+
+## list_sessions
+
+**Purpose**: Browse exploratory testing sessions in a project.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `search` | string | No | Match by session name |
+| `status` | enum | No | `'active'` or `'closed'` |
+| `state` | string | No | Workflow state (display or canonical) |
+| `sessionType` | string | No | Free-text type, e.g. `"Exploratory"`, `"Regression"` |
+| `assigneeUserId` | string | No | User _id OR email |
+| `releaseId` | string | No | Filter to a release. `"none"` for unlinked |
+| `tags` | string | No | Single tag or comma-separated |
+| `isClosed` | boolean | No | Quick filter |
+| `sortBy`, `sortOrder`, `page`, `limit` | — | No | Standard |
+
+### Example Usage
+
+```javascript
+list_sessions({ projectId: "project_abc", status: "active", assigneeUserId: "alice@company.com" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/sessions/:projectId`
+
+---
+
+## get_session
+
+**Purpose**: Full details of one session — name, mission, status, assignee, linked release, attachments, linked issues, findings.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `sessionId` | string | Yes | Internal `tcm_session_…` _id OR counter-style (`"SES-12"`) |
+
+### Example Usage
+
+```javascript
+get_session({ projectId: "project_abc", sessionId: "SES-12" });
+```
+
+### Technical Details
+
+- **API Endpoint**: `GET /api/mcp/sessions/:projectId/:sessionId`
+
+---
+
+## create_session
+
+**Purpose**: Create a new exploratory session.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `name` | string | Yes | Session name |
+| `mission` | string | No | Rich HTML mission/charter |
+| `sessionType` | string | No | Free-text type, e.g. `"Exploratory"` |
+| `config` | string | No | Free-text configuration |
+| `environment` | string | No | Environment label |
+| `releaseId` | string | No | Attach session to a release |
+| `assigneeUserId` | string | No | User _id OR email — server resolves |
+| `state` | string | No | Workflow state (default `"new"`) |
+| `estimate` | number | No | Estimate in minutes |
+| `tags` | array | No | Array of tag strings (NOT comma-separated) |
+| `linkedIssues`, `attachments` | array | No | Arrays of objects |
+
+**Findings cannot be created via MCP in v1** — add them in the UI.
+
+### Example Usage
+
+```javascript
+create_session({
+  projectId: "project_abc",
+  name: "Auth charter — May 12",
+  mission: "<p>Look for session-handling bugs around 2FA edge cases.</p>",
+  sessionType: "Exploratory",
+  assigneeUserId: "tester@company.com",
+  estimate: 60
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `POST /api/mcp/sessions/:projectId`
+- **Write permission required**
+
+---
+
+## update_session
+
+**Purpose**: Modify an existing session's metadata.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectId` | string | Yes | Project ID |
+| `sessionId` | string | Yes | Internal _id or counter-style ID |
+| `updates` | object | Yes | Fields to update |
+
+**`updates` object** accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`, `attachments`. Findings are not editable here.
+
+### Example Usage
+
+```javascript
+update_session({
+  projectId: "project_abc",
+  sessionId: "SES-12",
+  updates: { state: "Done", assigneeUserId: "different@company.com" }
+});
+```
+
+### Technical Details
+
+- **API Endpoint**: `PATCH /api/mcp/sessions/:projectId/:sessionId`
+- **Write permission required**
 
 ---
 

@@ -322,4 +322,196 @@ export const endpoints = {
     const { projectId, reportId } = params;
     return `${baseUrl}/api/mcp/${projectId}/audit-reports/${reportId}`;
   },
+
+  // ─── Releases (UI label) / Milestones (data model) ─────────────────────────
+
+  /**
+   * List releases
+   * GET /api/mcp/releases/:projectId
+   */
+  listReleases: (params: {
+    projectId: string;
+    search?: string;
+    type?: string;
+    isCompleted?: boolean;
+    parentMilestone?: string;
+    status?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/releases/${projectId}${queryString}`;
+  },
+
+  /**
+   * Get a single release
+   * GET /api/mcp/releases/:projectId/:releaseId
+   */
+  getRelease: (params: { projectId: string; releaseId: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, releaseId } = params;
+    return `${baseUrl}/api/mcp/releases/${projectId}/${releaseId}`;
+  },
+
+  /**
+   * Create a new release
+   * POST /api/mcp/releases/:projectId
+   */
+  createRelease: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/releases/${projectId}`;
+  },
+
+  /**
+   * Update an existing release
+   * PATCH /api/mcp/releases/:projectId/:releaseId
+   */
+  updateRelease: (projectId: string, releaseId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/releases/${projectId}/${releaseId}`;
+  },
+
+  // ─── Manual Runs ───────────────────────────────────────────────────────────
+
+  /**
+   * List manual test runs
+   * GET /api/mcp/manual-runs/:projectId
+   */
+  listManualRuns: (params: {
+    projectId: string;
+    search?: string;
+    status?: string;
+    state?: string;
+    environment?: string;
+    milestone?: string;
+    tags?: string;
+    isClosed?: boolean;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}${queryString}`;
+  },
+
+  /**
+   * Get a single manual test run
+   * GET /api/mcp/manual-runs/:projectId/:runId
+   */
+  getManualRun: (params: { projectId: string; runId: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, runId } = params;
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}/${runId}`;
+  },
+
+  /**
+   * Create a new manual test run
+   * POST /api/mcp/manual-runs/:projectId
+   */
+  createManualRun: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}`;
+  },
+
+  /**
+   * Update a manual test run
+   * PATCH /api/mcp/manual-runs/:projectId/:runId
+   */
+  updateManualRun: (projectId: string, runId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}/${runId}`;
+  },
+
+  /**
+   * List the per-case execution records inside a run
+   * GET /api/mcp/manual-runs/:projectId/:runId/test-cases
+   */
+  listRunTestCases: (params: {
+    projectId: string;
+    runId: string;
+    search?: string;
+    assignee?: string;
+    result?: string;
+    status?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, runId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}/${runId}/test-cases${queryString}`;
+  },
+
+  /**
+   * Update one per-case record inside a run (assignee, result, elapsed)
+   * PATCH /api/mcp/manual-runs/:projectId/:runId/test-cases/:rtcRef
+   */
+  updateRunTestCase: (projectId: string, runId: string, rtcRef: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-runs/${projectId}/${runId}/test-cases/${rtcRef}`;
+  },
+
+  // ─── Exploratory Sessions ──────────────────────────────────────────────────
+
+  /**
+   * List exploratory sessions
+   * GET /api/mcp/sessions/:projectId
+   */
+  listSessions: (params: {
+    projectId: string;
+    search?: string;
+    status?: string;
+    state?: string;
+    sessionType?: string;
+    assignee?: string;
+    milestone?: string;
+    tags?: string;
+    isClosed?: boolean;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/sessions/${projectId}${queryString}`;
+  },
+
+  /**
+   * Get a single exploratory session
+   * GET /api/mcp/sessions/:projectId/:sessionId
+   */
+  getSession: (params: { projectId: string; sessionId: string }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, sessionId } = params;
+    return `${baseUrl}/api/mcp/sessions/${projectId}/${sessionId}`;
+  },
+
+  /**
+   * Create a new exploratory session
+   * POST /api/mcp/sessions/:projectId
+   */
+  createSession: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/sessions/${projectId}`;
+  },
+
+  /**
+   * Update an exploratory session
+   * PATCH /api/mcp/sessions/:projectId/:sessionId
+   */
+  updateSession: (projectId: string, sessionId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/sessions/${projectId}/${sessionId}`;
+  },
 };

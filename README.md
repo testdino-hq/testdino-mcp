@@ -29,6 +29,9 @@ This MCP server bridges the gap between your TestDino test management platform a
 - Analyze test failures
 - Get detailed test case information
 - Manage manual test cases and suites
+- Plan releases, spin up manual test runs, and assign testers
+- Run exploratory testing sessions
+- Record per-case verdicts (passed / failed / blocked / etc.) from chat
 
 All through simple conversational commands.
 
@@ -41,13 +44,17 @@ All through simple conversational commands.
 - **🧭 Test Quality Audit**: Fetch a server-curated audit prompt plus branch signals, analyze your local test code, and store the completed report back in TestDino without uploading raw source files.
 - **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization (status, priority, severity, type, layer, behavior, tags).
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
+- **🚀 Release Planning**: Create, browse, and update releases (a.k.a. milestones), nest them up to 3 levels deep, and track rolled-up progress stats across all runs in a release.
+- **▶️ Manual Test Runs**: Spin up runs scoped to specific suites or the whole project, attach them to a release, and update workflow state without leaving chat.
+- **✅ Per-case Assignment & Verdicts**: Inside a run, assign each test case to a tester (by User _id or email) and set the result — `passed`, `failed`, `blocked`, `skipped`, `retest` — exactly as the UI does.
+- **🔭 Exploratory Sessions**: Create exploratory testing sessions with mission/charter, assign a tester, link to a release, and track state.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
 - **⚡ Easy Setup**: Install and configure in minutes with npx. No installation required!
 - **🔐 Secure**: PAT stored securely in your local configuration. One PAT provides access to all organizations and projects you have permissions for.
 
 ### Available Tools
 
-The server provides 13 powerful tools:
+The server provides 27 powerful tools across five domains:
 
 **Test Execution & Results:**
 
@@ -67,6 +74,29 @@ The server provides 13 powerful tools:
 11. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
 12. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
 13. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
+
+**Releases (a.k.a. Milestones):**
+
+14. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
+15. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
+16. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
+17. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
+
+**Manual Test Runs:**
+
+18. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
+19. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
+20. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
+21. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
+22. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or _id) or result.
+23. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
+
+**Exploratory Sessions:**
+
+24. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or _id), release, tags.
+25. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
+26. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
+27. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
 
 ### Installation Options
 
@@ -217,10 +247,43 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 - "List all test suites in project proj_123"
 - "Create a new test suite called 'Authentication Tests' in project proj_123"
 
+**Releases:**
+
+- "List all releases in project proj_123"
+- "Show me the open iterations on this project"
+- "Get details for release MS-12 and show the rolled-up test progress"
+- "Create a release called 'Sprint 42' as an iteration from May 12 to May 26"
+- "Mark release MS-12 as completed"
+
+**Manual Test Runs:**
+
+- "List manual runs in release MS-12"
+- "Show me all in-progress runs on staging"
+- "Get details for run RUN-7"
+- "Create a manual run called 'Sprint 42 Smoke' linked to release MS-12 on staging, covering the Authentication suite"
+- "Set run RUN-7's state to Done"
+- "Re-attach run RUN-7 to release MS-13"
+
+**Assigning Cases & Recording Verdicts in a Run:**
+
+- "List the test cases in run RUN-1 with their current assignees and results"
+- "Assign TC-156 in run RUN-1 to alice@company.com and mark it Passed"
+- "Mark TC-157 in run RUN-1 as Failed"
+- "Assign TC-158 in run RUN-1 to bob@company.com — leave the result untested"
+- "Show me all cases in run RUN-1 assigned to alice@company.com that are still untested"
+
+**Exploratory Sessions:**
+
+- "List active exploratory sessions for project proj_123"
+- "Show me sessions assigned to tester@company.com"
+- "Get details for session SES-3"
+- "Create an exploratory session called 'Auth charter — May 12' with mission 'find session-handling bugs around 2FA' assigned to tester@company.com, 60 minute estimate"
+- "Update session SES-3 to mark it Done"
+
 ## Documentation
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 13 available tools with examples, parameters, and use cases
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 27 available tools with examples, parameters, and use cases
 - **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements
