@@ -1941,6 +1941,10 @@ The tool returns a JSON response with comprehensive test case information includ
 - Tags and custom fields
 - Automation status
 - Creation and update timestamps
+- `linkedIssues` — Jira tickets linked to the case (`provider`, `displayId`, `url`, `title`)
+- `comments` — latest comments on the case (read here; add via `update_manual_test_case`)
+- `versions` — latest 20 entries of the version history (read-only)
+- `results` — latest 100 execution results across every manual run that ran this case (read-only)
 
 ### Example Response
 
@@ -2050,9 +2054,9 @@ Error: Failed to get manual test case details: 404 Not Found
 This tool allows you to create new manual test cases in your TestDino project. You can specify:
 
 - **Basic Information**: Title, description, suite name
-- **Test Steps**: Classic format (action, expectedResult, data, subSteps with images) or Gherkin format (event, stepDescription)
+- **Test Steps**: Classic format (action, expectedResult, data) or Gherkin format (event, stepDescription), with optional top-level step attachments
 - **Preconditions/Postconditions**: Prerequisites and expected state after execution
-- **Metadata**: Status, priority, severity, type, layer, behavior, automationStatus, tags, automation
+- **Metadata**: Status, priority, severity, type, layer, behavior, automationStatus, tags, flags
 - **Attachments**: Local file paths or URLs (up to 10MB each)
 - **Custom Fields**: Key-value pairs for project-specific metadata
 
@@ -2069,7 +2073,7 @@ Use this to document new test scenarios, features, or requirements as they are d
 | `preconditions`  | string | No       | Prerequisites or setup required before executing this test case.                                                         |
 | `postconditions` | string | No       | Expected state or cleanup actions after executing this test case.                                                        |
 | `testStepsDeclarationType` | string | No       | 'Classic' or 'Gherkin'. Default: Classic.                                                       |
-| `steps`          | array  | No       | Array of test steps. Classic: action, expectedResult, data, subSteps (max 5, each with optional images max 2). Gherkin: event, stepDescription. |
+| `steps`          | array  | No       | Array of test steps. Classic: action, expectedResult, data. Gherkin: event, stepDescription. Each top-level step can include `attachments`. |
 | `status`         | string | No       | Test case status. Options: 'Active', 'Draft', 'Deprecated'.                                                              |
 | `priority`       | string | No       | Test case priority level. Options: 'high', 'medium', 'low', 'Not set'.                                                      |
 | `severity`       | string | No       | Test case severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                              |
@@ -2078,7 +2082,7 @@ Use this to document new test scenarios, features, or requirements as they are d
 | `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive', 'Not set'.                                            |
 | `automationStatus` | string | No       | Options: 'Manual', 'Automated', 'To be automated'.                                                                       |
 | `tags`           | string | No       | Comma-separated tags.                                                                                                     |
-| `automation`     | array  | No       | Options: 'To be Automated', 'Is flaky', 'Muted'.                                                                          |
+| `flags`          | array  | No       | Options: 'To be Automated', 'Is flaky', 'Muted'.                                                                          |
 | `attachments`    | array  | No       | Array of local file paths or URLs (up to 10MB each).                                                                      |
 | `customFields`   | object | No       | Custom fields as key-value pairs.                                                                                         |
 
@@ -2086,9 +2090,9 @@ Use this to document new test scenarios, features, or requirements as they are d
 
 ### Test Steps Structure
 
-**Classic format** (default): Each step has `action`, `expectedResult`, optional `data`, and optional `subSteps` (max 5 per step, each with optional `images` max 2).
+**Classic format** (default): Each step has `action`, `expectedResult`, optional `data`, and optional `attachments`.
 
-**Gherkin format**: Set `testStepsDeclarationType` to 'Gherkin'. Each step has `event` (Given/When/Then/And/But) and `stepDescription`.
+**Gherkin format**: Set `testStepsDeclarationType` to 'Gherkin'. Each step has `event` (Given/When/Then/And/But), `stepDescription`, and optional `attachments`.
 
 ### Configuration
 
@@ -2330,7 +2334,7 @@ The `updates` object can contain any of the following fields:
 - `preconditions` (string): Updated preconditions
 - `postconditions` (string): Updated postconditions
 - `testStepsDeclarationType` (string): 'Classic' or 'Gherkin'. When switching, provide steps in the new format.
-- `steps` (array): Updated test steps array (Classic: action, expectedResult, data, subSteps with images; Gherkin: event, stepDescription)
+- `steps` (array): Updated test steps array (Classic: action, expectedResult, data; Gherkin: event, stepDescription). Each top-level step can include `attachments`.
 - `status` (string): Updated status. Options: 'Active', 'Draft', 'Deprecated'
 - `priority` (string): Updated priority. Options: 'critical', 'high', 'medium', 'low'
 - `severity` (string): Updated severity. Options: 'critical', 'major', 'minor', 'trivial'
@@ -2339,9 +2343,11 @@ The `updates` object can contain any of the following fields:
 - `behavior` (string): Updated behavior. Options: 'positive', 'negative', 'destructive'
 - `automationStatus` (string): Updated automation status
 - `tags` (string): Updated tags (comma-separated)
-- `automation` (array): Updated automation checklist ('To be Automated', 'Is flaky', 'Muted')
+- `flags` (array): Updated automation flags/checklist ('To be Automated', 'Is flaky', 'Muted')
 - `attachments` (object): `{ add: string[], remove: string[] }` — add local paths/URLs or remove by attachment ID/URL
 - `customFields` (object): Updated custom fields as key-value pairs
+- `comments` (string[]): Comment bodies to append to the case. Each entry becomes a new comment authored by the PAT owner. The server caps comments at 20 per case.
+- `issues` (string[]): Jira ticket keys to link to the case (e.g. `["PROJ-123", "ENG-45"]`). The server resolves each one against the project's connected Jira: matches save with `title` + `url`; unresolved keys save as plain text stubs — same fallback as the UI's add-issue flow. Duplicate links are silently skipped.
 
 ### Configuration
 
@@ -2440,6 +2446,27 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   }
 }
 ```
+
+**Add Comments and Link Jira Issues:**
+
+```json
+{
+  "name": "update_manual_test_case",
+  "arguments": {
+    "projectId": "proj_690ded10f1fb81a3ca1bbc50",
+    "caseId": "TC-123",
+    "updates": {
+      "comments": [
+        "Verified on staging — looks good.",
+        "Need to re-run after the next deploy."
+      ],
+      "issues": ["PROJ-123", "ENG-45"]
+    }
+  }
+}
+```
+
+The server enriches each Jira key with `title` and `url` when the project's Jira integration finds the ticket; unresolved keys are saved as plain text stubs.
 
 ### Response Format
 

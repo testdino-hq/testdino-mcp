@@ -58,8 +58,11 @@ export interface FileData {
   fileSize: number;
   mimeType: string;
   fileContent: string; // Base64 encoded file content (for server to upload)
+  stepRef?: string | null;
   // blobUrl and containerName will be set by server after upload
 }
+
+export type AttachmentInput = FileData | string;
 
 /**
  * Read a local file and return file data in server-expected format
@@ -93,9 +96,13 @@ export function readFileData(filePath: string): FileData {
  * @returns Array with local paths converted to file data objects, URLs unchanged as strings
  */
 export function processAttachments(
-  attachments: string[]
-): (FileData | string)[] {
+  attachments: AttachmentInput[]
+): AttachmentInput[] {
   return attachments.map((attachment) => {
+    if (typeof attachment !== "string") {
+      return attachment;
+    }
+
     if (isLocalFilePath(attachment)) {
       try {
         return readFileData(attachment);
@@ -110,87 +117,30 @@ export function processAttachments(
   });
 }
 
-/**
- * Shared interfaces for manual test case steps
- */
-export interface SubStepImage {
-  url: string;
-  fileName: string;
-}
-
-export interface SubStep {
-  action: string;
-  expectedResult: string;
-  data?: string;
-  images?: SubStepImage[];
-}
-
 export interface ClassicTestStep {
   action: string;
   expectedResult: string;
   data?: string;
-  subSteps?: SubStep[];
+  attachments?: AttachmentInput[];
 }
 
 export interface GherkinTestStep {
   event: "Given" | "When" | "And" | "Then" | "But";
   stepDescription: string;
+  attachments?: AttachmentInput[];
 }
 
 export type TestStep = ClassicTestStep | GherkinTestStep;
 
-/**
- * Process subStep images: convert local file paths to base64 file data objects
- * so the server can upload them to Azure Storage.
- */
-export function processSubStepImages(steps: TestStep[]): void {
-  for (const step of steps) {
-    const classicStep = step as ClassicTestStep;
-    if (!classicStep.subSteps) continue;
-    for (const subStep of classicStep.subSteps) {
-      if (!subStep.images) continue;
-      subStep.images = subStep.images.map((img) => {
-        if (img.url && isLocalFilePath(img.url)) {
-          try {
-            const fileData = readFileData(img.url);
-            return {
-              ...img,
-              fileContent: fileData.fileContent,
-              mimeType: fileData.mimeType,
-              fileSize: fileData.fileSize,
-              fileName: img.fileName || fileData.fileName,
-            };
-          } catch {
-            return img;
-          }
-        }
-        return img;
-      });
-    }
-  }
-}
-
-/**
- * Validate classic steps for sub-step and image constraints
- */
-export function validateClassicSteps(steps: TestStep[]): void {
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i] as ClassicTestStep;
-    if (!step.subSteps) continue;
-
-    if (step.subSteps.length > 5) {
-      throw new Error(
-        `Step ${i + 1} has ${step.subSteps.length} sub-steps, but maximum 5 sub-steps are allowed per step.`
-      );
+export function processStepAttachments(steps: TestStep[]): TestStep[] {
+  return steps.map((step) => {
+    if (!Array.isArray(step.attachments)) {
+      return step;
     }
 
-    for (let j = 0; j < step.subSteps.length; j++) {
-      const subStep = step.subSteps[j];
-      if (subStep.images && subStep.images.length > 2) {
-        throw new Error(
-          `Step ${i + 1}, sub-step ${j + 1} has ${subStep.images.length} images, but maximum 2 images are allowed per sub-step.`
-        );
-      }
-    }
-  }
+    return {
+      ...step,
+      attachments: processAttachments(step.attachments),
+    };
+  });
 }

@@ -5,11 +5,9 @@ import { tmpdir } from "os";
 import {
   isLocalFilePath,
   processAttachments,
-  processSubStepImages,
+  processStepAttachments,
   readFileData,
-  validateClassicSteps,
 } from "../../../src/lib/file-utils.js";
-import type { ClassicTestStep } from "../../../src/lib/file-utils.js";
 
 describe("file-utils", () => {
   describe("isLocalFilePath", () => {
@@ -55,34 +53,17 @@ describe("file-utils", () => {
     });
   });
 
-  describe("processSubStepImages", () => {
-    it("should pass through non-local-file image URLs unchanged", () => {
-      const steps: ClassicTestStep[] = [
+  describe("processStepAttachments", () => {
+    it("should process attachments on top-level steps", () => {
+      const result = processStepAttachments([
         {
-          action: "Click button",
-          expectedResult: "Button clicked",
-          subSteps: [
-            {
-              action: "Sub action",
-              expectedResult: "Sub result",
-              images: [
-                {
-                  url: "https://cdn.example.com/image.png",
-                  fileName: "image.png",
-                },
-              ],
-            },
-          ],
+          action: "Open login",
+          expectedResult: "Login page opens",
+          attachments: ["https://example.com/step.png"],
         },
-      ];
+      ]);
 
-      processSubStepImages(steps);
-
-      const img = steps[0].subSteps![0].images![0];
-      expect(img.url).toBe("https://cdn.example.com/image.png");
-      expect(img.fileName).toBe("image.png");
-      // Should NOT have fileContent since it's a URL, not a local path
-      expect((img as Record<string, unknown>).fileContent).toBeUndefined();
+      expect(result[0].attachments).toEqual(["https://example.com/step.png"]);
     });
   });
 
@@ -107,64 +88,6 @@ describe("file-utils", () => {
 
     it("should throw for a non-existent file", () => {
       expect(() => readFileData("/no/such/file.txt")).toThrow("File not found");
-    });
-  });
-
-  describe("validateClassicSteps", () => {
-    it("should pass for valid steps without sub-steps", () => {
-      const steps: ClassicTestStep[] = [
-        { action: "Click button", expectedResult: "Button is clicked" },
-      ];
-      expect(() => validateClassicSteps(steps)).not.toThrow();
-    });
-
-    it("should pass for steps with <= 5 sub-steps", () => {
-      const steps: ClassicTestStep[] = [
-        {
-          action: "Step 1",
-          expectedResult: "Result 1",
-          subSteps: Array.from({ length: 5 }, (_, i) => ({
-            action: `Sub ${i}`,
-            expectedResult: `Result ${i}`,
-          })),
-        },
-      ];
-      expect(() => validateClassicSteps(steps)).not.toThrow();
-    });
-
-    it("should throw for steps with > 5 sub-steps", () => {
-      const steps: ClassicTestStep[] = [
-        {
-          action: "Step 1",
-          expectedResult: "Result 1",
-          subSteps: Array.from({ length: 6 }, (_, i) => ({
-            action: `Sub ${i}`,
-            expectedResult: `Result ${i}`,
-          })),
-        },
-      ];
-      expect(() => validateClassicSteps(steps)).toThrow("maximum 5 sub-steps");
-    });
-
-    it("should throw for sub-steps with > 2 images", () => {
-      const steps: ClassicTestStep[] = [
-        {
-          action: "Step 1",
-          expectedResult: "Result 1",
-          subSteps: [
-            {
-              action: "Sub 1",
-              expectedResult: "Result",
-              images: [
-                { url: "https://a.com/1.png", fileName: "1.png" },
-                { url: "https://a.com/2.png", fileName: "2.png" },
-                { url: "https://a.com/3.png", fileName: "3.png" },
-              ],
-            },
-          ],
-        },
-      ];
-      expect(() => validateClassicSteps(steps)).toThrow("maximum 2 images");
     });
   });
 });
