@@ -19,7 +19,10 @@ export const getReleaseTool = {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      releaseId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      releaseId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
     },
     required: ["projectId", "releaseId"],
   },

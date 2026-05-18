@@ -15,12 +15,15 @@ interface UpdateManualRunArgs {
 export const updateManualRunTool = {
   name: "update_manual_run",
   description:
-    "Modify an existing manual test run. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"smoke\",\"regression\"] — NOT a comma-separated string.",
+    'Modify an existing manual test run. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      runId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      runId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
       updates: {
         type: "object",
         description:
@@ -45,7 +48,10 @@ export async function handleUpdateManualRun(args?: UpdateManualRunArgs) {
   }
 
   try {
-    const url = endpoints.updateManualRun(String(args.projectId), String(args.runId));
+    const url = endpoints.updateManualRun(
+      String(args.projectId),
+      String(args.runId)
+    );
     const response = await apiRequestJson<unknown>(url, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },

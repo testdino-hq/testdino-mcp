@@ -66,15 +66,15 @@
 - **counter**: A sequential integer (e.g. `43`) — human-readable alias for a test run
 - **testcase_id**: A string ID for a specific test case execution
 - **caseId**: A string ID or human-readable ID (e.g. `"TC-123"`) for a manual test case
-- **releaseId**: Either an internal `tcm_milestone_...` _id or a counter-style ID like `"MS-12"`. The MCP layer resolves the counter form automatically.
-- **runId**: Either an internal `tcm_run_...` _id or a counter-style ID like `"RUN-12"`. Counter form resolves the same way.
-- **sessionId**: Either an internal `tcm_session_...` _id or a counter-style ID like `"SES-12"`.
+- **releaseId**: Either an internal `tcm_milestone_...` \_id or a counter-style ID like `"MS-12"`. The MCP layer resolves the counter form automatically.
+- **runId**: Either an internal `tcm_run_...` \_id or a counter-style ID like `"RUN-12"`. Counter form resolves the same way.
+- **sessionId**: Either an internal `tcm_session_...` \_id or a counter-style ID like `"SES-12"`.
 - **rtcRef** (per-case record in a run): One of three forms accepted by `update_run_test_case`:
-  1. The internal `tcm_rtc_...` _id of the run-test-case row.
+  1. The internal `tcm_rtc_...` \_id of the run-test-case row.
   2. The caseKey (e.g. `"TC-156"`) — what the UI shows in the ID column.
-  3. The underlying manual test case _id.
-  Works even when no run-test-case row exists yet (untested virtual cases) — the server creates the record on first edit.
-- **assigneeUserId**: Accepted as either a User _id (`"user_..."`) or an email address. Server resolves email to _id automatically. Used in `create_session`, `update_session`, `update_run_test_case`, and as a filter in `list_sessions` / `list_run_test_cases`.
+  3. The underlying manual test case \_id.
+     Works even when no run-test-case row exists yet (untested virtual cases) — the server creates the record on first edit.
+- **assigneeUserId**: Accepted as either a User _id (`"user_..."`) or an email address. Server resolves email to _id automatically. Used in `create_session`, `update_session`, `update_run_test_case`, and as a filter in `list_sessions`/`list_run_test_cases`.
 
 ### Pagination defaults
 
@@ -618,7 +618,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `releaseId`
 
-- `releaseId` accepts either an internal `tcm_milestone_…` _id or a counter-style ID like `"MS-12"`.
+- `releaseId` accepts either an internal `tcm_milestone_…` \_id or a counter-style ID like `"MS-12"`.
 
 ---
 
@@ -680,7 +680,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `runId`
 
-- `runId` accepts the internal `tcm_run_…` _id OR a counter-style ID like `"RUN-12"`.
+- `runId` accepts the internal `tcm_run_…` \_id OR a counter-style ID like `"RUN-12"`.
 
 ---
 
@@ -728,7 +728,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `search` | string | Match by case title or caseKey |
-| `assignee` (or `assigneeUserId`) | string | User _id OR email — server resolves |
+| `assignee` (or `assigneeUserId`) | string | User \_id OR email — server resolves |
 | `result` (or `status`) | string | Filter by result — display or canonical form |
 | `sortBy` | string | `'createdAt'`, `'updatedAt'`, `'status'`, `'caseKey'` |
 | `sortOrder`, `page`, `limit` | — | Standard |
@@ -744,16 +744,17 @@ Step-level attachments are added by including `attachments` on a top-level step 
 **Required parameters**: `projectId`, `runId`, `rtcRef`, `updates` (object)
 
 `rtcRef` accepts THREE forms:
-1. `tcm_rtc_…` _id (existing run-test-case row)
-2. `"TC-156"` (caseKey — the user-facing display ID)
-3. Underlying manual test case _id
 
-**Works for untested "virtual" cases too.** In an `'all'`-mode run, cases with no record yet still show "Untested" in the UI — passing the caseKey or test case _id auto-creates the run-test-case row on first edit. Same path the UI takes on first click.
+1. `tcm_rtc_…` \_id (existing run-test-case row)
+2. `"TC-156"` (caseKey — the user-facing display ID)
+3. Underlying manual test case \_id
+
+**Works for untested "virtual" cases too.** In an `'all'`-mode run, cases with no record yet still show "Untested" in the UI — passing the caseKey or test case \_id auto-creates the run-test-case row on first edit. Same path the UI takes on first click.
 
 **`updates` object fields**:
 | Field | Type | Description |
 |-------|------|-------------|
-| `assigneeUserId` | string | User _id OR email. Pass `null` to unassign |
+| `assigneeUserId` | string | User \_id OR email. Pass `null` to unassign |
 | `result` (or `status`) | string | Display (`"Passed"`, `"Blocked"`) or canonical (`"passed"`, `"blocked"`) form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
 | `elapsed` | number | Seconds spent on the case |
 
@@ -774,7 +775,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `status` | enum | `'active'` or `'closed'` |
 | `state` | string | Workflow state (display or canonical) |
 | `sessionType` | string | Free-text type (e.g. `"Exploratory"`, `"Regression"`) |
-| `assigneeUserId` | string | User _id OR email — server resolves |
+| `assigneeUserId` | string | User \_id OR email — server resolves |
 | `releaseId` | string | Filter to a release. `"none"` for unlinked |
 | `tags` | string | Single tag or comma-separated |
 | `isClosed` | boolean | Quick filter |
@@ -788,7 +789,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `sessionId`
 
-- `sessionId` accepts internal `tcm_session_…` _id OR counter-style `"SES-12"`.
+- `sessionId` accepts internal `tcm_session_…` \_id OR counter-style `"SES-12"`.
 
 ---
 
@@ -805,7 +806,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `sessionType` | string | Free-text type |
 | `config`, `environment` | string | Free-text |
 | `releaseId` | string | Attach session to a release |
-| `assigneeUserId` | string | User _id OR email — server resolves |
+| `assigneeUserId` | string | User \_id OR email — server resolves |
 | `state` | string | Workflow state (default `"new"`) |
 | `estimate` | number | Estimate in minutes |
 | `tags` | array | Array of tag strings |
@@ -1168,18 +1169,18 @@ Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`
 
 ## Error Handling
 
-| Error                                                   | Cause                                      | Resolution                                                         |
-| ------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| `"Missing TESTDINO_PAT"`                                | PAT not in environment                     | Tell user to add `TESTDINO_PAT` to the `env` section of `mcp.json` |
-| `"projectId is required"`                               | No projectId passed                        | Call `health()` to get it first                                    |
-| `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details` | Add `testcase_id`, `testcase_name`, or another search param        |
-| `"testcase_name is required"`                           | `debug_testcase` called without name       | Ask user for the test case name                                    |
-| `"No user found with email \"...\""`                    | Assignee email doesn't match a TestDino user | Pass the User _id directly, or invite the user to TestDino first  |
-| `"No test case \"X\" found in this project"`            | `rtcRef` doesn't resolve to a case in this project | Verify caseKey via `list_run_test_cases` first              |
-| `"Cannot update a closed run"`                          | Trying to edit a closed run's metadata     | Only `releaseId` can be changed on closed runs                     |
-| `"updates must contain at least one field"`             | Empty `updates` object on a PATCH          | Include at least one field you want to change                      |
-| HTTP 404                                                | Resource not found                         | Verify IDs exist — use `list_*` tools to find valid IDs            |
-| `{ count: 0, ... }`                                     | No results match filters                   | Broaden filters or inform user nothing matches                     |
+| Error                                                   | Cause                                              | Resolution                                                         |
+| ------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| `"Missing TESTDINO_PAT"`                                | PAT not in environment                             | Tell user to add `TESTDINO_PAT` to the `env` section of `mcp.json` |
+| `"projectId is required"`                               | No projectId passed                                | Call `health()` to get it first                                    |
+| `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details`         | Add `testcase_id`, `testcase_name`, or another search param        |
+| `"testcase_name is required"`                           | `debug_testcase` called without name               | Ask user for the test case name                                    |
+| `"No user found with email \"...\""`                    | Assignee email doesn't match a TestDino user       | Pass the User \_id directly, or invite the user to TestDino first  |
+| `"No test case \"X\" found in this project"`            | `rtcRef` doesn't resolve to a case in this project | Verify caseKey via `list_run_test_cases` first                     |
+| `"Cannot update a closed run"`                          | Trying to edit a closed run's metadata             | Only `releaseId` can be changed on closed runs                     |
+| `"updates must contain at least one field"`             | Empty `updates` object on a PATCH                  | Include at least one field you want to change                      |
+| HTTP 404                                                | Resource not found                                 | Verify IDs exist — use `list_*` tools to find valid IDs            |
+| `{ count: 0, ... }`                                     | No results match filters                           | Broaden filters or inform user nothing matches                     |
 
 ### Common Mistakes to Avoid
 
@@ -1191,7 +1192,7 @@ Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`
 6. **Ignoring the `debugging_prompt` in `debug_testcase` response** — this field contains pre-formatted analysis instructions from the API. Always read and apply it when analyzing failures.
 7. **Sending `tags` as a comma-separated string in create/update payloads** — they must be JSON arrays (`["smoke","regression"]`). The comma-separated form is only valid as a list-tool query filter.
 8. **Sending result as `"pass"` / `"fail"`** — the canonical run-test-case result values are **past tense**: `passed`, `failed`. Display form (`"Passed"`, `"Failed"`) is fine, server normalizes — but `"pass"` is not in the vocabulary and will show a dull/grey badge.
-9. **Trying to assign or set a result by `tcm_rtc_…` for an "Untested" case** — that record doesn't exist yet. Pass the caseKey (`"TC-156"`) or the underlying test case _id; the server auto-creates the row on first edit.
+9. **Trying to assign or set a result by `tcm_rtc_…` for an "Untested" case** — that record doesn't exist yet. Pass the caseKey (`"TC-156"`) or the underlying test case \_id; the server auto-creates the row on first edit.
 10. **Looking for `assigneeUserId` on runs** — runs don't have a single assignee; assignment is per-case via `update_run_test_case`. Sessions DO have a session-level `assigneeUserId`.
 11. **Mixing up `releaseId` and `parentReleaseId`** — `releaseId` attaches a run/session to a release; `parentReleaseId` nests one release under another.
 12. **Bundling many per-case edits in `update_manual_run`** — that tool only updates run metadata. For per-case verdicts, call `update_run_test_case` once per case (parallel is fine).

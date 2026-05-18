@@ -24,7 +24,8 @@ export const updateRunTestCaseTool = {
       projectId: { type: "string", description: "Project ID (required)." },
       runId: {
         type: "string",
-        description: "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
+        description:
+          "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
       },
       rtcRef: {
         type: "string",

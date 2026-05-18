@@ -272,50 +272,78 @@ async function main() {
 
     // Releases
     if (name === "list_releases") {
-      return await handleListReleases(args as Parameters<typeof handleListReleases>[0]);
+      return await handleListReleases(
+        args as Parameters<typeof handleListReleases>[0]
+      );
     }
     if (name === "get_release") {
-      return await handleGetRelease(args as Parameters<typeof handleGetRelease>[0]);
+      return await handleGetRelease(
+        args as Parameters<typeof handleGetRelease>[0]
+      );
     }
     if (name === "create_release") {
-      return await handleCreateRelease(args as Parameters<typeof handleCreateRelease>[0]);
+      return await handleCreateRelease(
+        args as Parameters<typeof handleCreateRelease>[0]
+      );
     }
     if (name === "update_release") {
-      return await handleUpdateRelease(args as Parameters<typeof handleUpdateRelease>[0]);
+      return await handleUpdateRelease(
+        args as Parameters<typeof handleUpdateRelease>[0]
+      );
     }
 
     // Manual runs
     if (name === "list_manual_runs") {
-      return await handleListManualRuns(args as Parameters<typeof handleListManualRuns>[0]);
+      return await handleListManualRuns(
+        args as Parameters<typeof handleListManualRuns>[0]
+      );
     }
     if (name === "get_manual_run") {
-      return await handleGetManualRun(args as Parameters<typeof handleGetManualRun>[0]);
+      return await handleGetManualRun(
+        args as Parameters<typeof handleGetManualRun>[0]
+      );
     }
     if (name === "create_manual_run") {
-      return await handleCreateManualRun(args as Parameters<typeof handleCreateManualRun>[0]);
+      return await handleCreateManualRun(
+        args as Parameters<typeof handleCreateManualRun>[0]
+      );
     }
     if (name === "update_manual_run") {
-      return await handleUpdateManualRun(args as Parameters<typeof handleUpdateManualRun>[0]);
+      return await handleUpdateManualRun(
+        args as Parameters<typeof handleUpdateManualRun>[0]
+      );
     }
     if (name === "list_run_test_cases") {
-      return await handleListRunTestCases(args as Parameters<typeof handleListRunTestCases>[0]);
+      return await handleListRunTestCases(
+        args as Parameters<typeof handleListRunTestCases>[0]
+      );
     }
     if (name === "update_run_test_case") {
-      return await handleUpdateRunTestCase(args as Parameters<typeof handleUpdateRunTestCase>[0]);
+      return await handleUpdateRunTestCase(
+        args as Parameters<typeof handleUpdateRunTestCase>[0]
+      );
     }
 
     // Sessions
     if (name === "list_sessions") {
-      return await handleListSessions(args as Parameters<typeof handleListSessions>[0]);
+      return await handleListSessions(
+        args as Parameters<typeof handleListSessions>[0]
+      );
     }
     if (name === "get_session") {
-      return await handleGetSession(args as Parameters<typeof handleGetSession>[0]);
+      return await handleGetSession(
+        args as Parameters<typeof handleGetSession>[0]
+      );
     }
     if (name === "create_session") {
-      return await handleCreateSession(args as Parameters<typeof handleCreateSession>[0]);
+      return await handleCreateSession(
+        args as Parameters<typeof handleCreateSession>[0]
+      );
     }
     if (name === "update_session") {
-      return await handleUpdateSession(args as Parameters<typeof handleUpdateSession>[0]);
+      return await handleUpdateSession(
+        args as Parameters<typeof handleUpdateSession>[0]
+      );
     }
 
     throw new Error(`Unknown tool: ${name}`);

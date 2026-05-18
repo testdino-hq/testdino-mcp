@@ -34,9 +34,18 @@ export const listReleasesTool = {
           "Release type. Either canonical ('iteration', 'major') or display ('Iteration', 'Major') form — server normalizes to lowercase so UI badge color matches.",
       },
       isCompleted: { type: "boolean" },
-      parentReleaseId: { type: "string", description: "Direct children of this release." },
-      status: { type: "string", description: "Release status (project-specific)." },
-      sortBy: { type: "string", enum: ["createdAt", "startDate", "endDate", "name"] },
+      parentReleaseId: {
+        type: "string",
+        description: "Direct children of this release.",
+      },
+      status: {
+        type: "string",
+        description: "Release status (project-specific).",
+      },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "startDate", "endDate", "name"],
+      },
       sortOrder: { type: "string", enum: ["asc", "desc"] },
       page: { type: "number" },
       limit: { type: "number", description: "Default 25 (max 200)." },

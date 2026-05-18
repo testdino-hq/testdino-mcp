@@ -19,7 +19,10 @@ export const getManualRunTool = {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      runId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      runId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
     },
     required: ["projectId", "runId"],
   },

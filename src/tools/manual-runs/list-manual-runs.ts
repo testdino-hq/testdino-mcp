@@ -37,7 +37,10 @@ export const listManualRunsTool = {
           "Workflow state. Either canonical ('in_progress', 'on_hold', 'done') or display ('In Progress', 'On Hold') form — the server normalizes lowercase+underscored.",
       },
       environment: { type: "string" },
-      releaseId: { type: "string", description: "Filter to runs in this release. 'none' = unlinked." },
+      releaseId: {
+        type: "string",
+        description: "Filter to runs in this release. 'none' = unlinked.",
+      },
       tags: { type: "string", description: "Single tag or comma-separated." },
       isClosed: { type: "boolean" },
       sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },

@@ -46,7 +46,7 @@ All through simple conversational commands.
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
 - **🚀 Release Planning**: Create, browse, and update releases (a.k.a. milestones), nest them up to 3 levels deep, and track rolled-up progress stats across all runs in a release.
 - **▶️ Manual Test Runs**: Spin up runs scoped to specific suites or the whole project, attach them to a release, and update workflow state without leaving chat.
-- **✅ Per-case Assignment & Verdicts**: Inside a run, assign each test case to a tester (by User _id or email) and set the result — `passed`, `failed`, `blocked`, `skipped`, `retest` — exactly as the UI does.
+- **✅ Per-case Assignment & Verdicts**: Inside a run, assign each test case to a tester (by User \_id or email) and set the result — `passed`, `failed`, `blocked`, `skipped`, `retest` — exactly as the UI does.
 - **🔭 Exploratory Sessions**: Create exploratory testing sessions with mission/charter, assign a tester, link to a release, and track state.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
 - **⚡ Easy Setup**: Install and configure in minutes with npx. No installation required!
@@ -88,12 +88,12 @@ The server provides 27 powerful tools across five domains:
 19. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
 20. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
 21. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
-22. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or _id) or result.
+22. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
 23. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
 
 **Exploratory Sessions:**
 
-24. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or _id), release, tags.
+24. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
 25. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
 26. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
 27. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.

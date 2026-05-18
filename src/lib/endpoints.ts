@@ -455,7 +455,11 @@ export const endpoints = {
    * Update one per-case record inside a run (assignee, result, elapsed)
    * PATCH /api/mcp/manual-runs/:projectId/:runId/test-cases/:rtcRef
    */
-  updateRunTestCase: (projectId: string, runId: string, rtcRef: string): string => {
+  updateRunTestCase: (
+    projectId: string,
+    runId: string,
+    rtcRef: string
+  ): string => {
     const baseUrl = getBaseUrl();
     return `${baseUrl}/api/mcp/manual-runs/${projectId}/${runId}/test-cases/${rtcRef}`;
   },

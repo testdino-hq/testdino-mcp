@@ -19,7 +19,10 @@ export const getSessionTool = {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      sessionId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      sessionId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
     },
     required: ["projectId", "sessionId"],
   },

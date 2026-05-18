@@ -40,9 +40,13 @@ export const listSessionsTool = {
       sessionType: { type: "string" },
       assigneeUserId: {
         type: "string",
-        description: "User _id OR email — both accepted (server resolves email to user _id).",
+        description:
+          "User _id OR email — both accepted (server resolves email to user _id).",
       },
-      releaseId: { type: "string", description: "'none' for unlinked sessions." },
+      releaseId: {
+        type: "string",
+        description: "'none' for unlinked sessions.",
+      },
       tags: { type: "string", description: "Single tag or comma-separated." },
       isClosed: { type: "boolean" },
       sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },

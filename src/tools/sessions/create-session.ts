@@ -25,21 +25,27 @@ interface CreateSessionArgs {
 export const createSessionTool = {
   name: "create_session",
   description:
-    "Create a new exploratory testing session. Requires write permission. mission accepts rich HTML (the high-level charter). assigneeUserId accepts either a User _id (\"user_abc...\") or an email address — the email is resolved against TestDino users automatically. estimate is in minutes. Findings cannot be created here — add them in the UI. IMPORTANT: tags must be a JSON array of strings — e.g. [\"exploratory\",\"auth\"] — NOT the comma-separated form that list_sessions accepts as a filter.",
+    'Create a new exploratory testing session. Requires write permission. mission accepts rich HTML (the high-level charter). assigneeUserId accepts either a User _id ("user_abc...") or an email address — the email is resolved against TestDino users automatically. estimate is in minutes. Findings cannot be created here — add them in the UI. IMPORTANT: tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT the comma-separated form that list_sessions accepts as a filter.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
       name: { type: "string", description: "Session name (required)." },
       mission: { type: "string", description: "Rich HTML mission/charter." },
-      sessionType: { type: "string", description: "Free-text type, e.g. 'Exploratory'." },
+      sessionType: {
+        type: "string",
+        description: "Free-text type, e.g. 'Exploratory'.",
+      },
       config: { type: "string" },
       environment: { type: "string" },
-      releaseId: { type: "string", description: "Attach session to this release." },
+      releaseId: {
+        type: "string",
+        description: "Attach session to this release.",
+      },
       assigneeUserId: {
         type: "string",
         description:
-          "User _id (\"user_abc...\") OR email address — both accepted. Email is looked up server-side.",
+          'User _id ("user_abc...") OR email address — both accepted. Email is looked up server-side.',
       },
       state: {
         type: "string",
@@ -50,10 +56,19 @@ export const createSessionTool = {
       tags: {
         type: "array",
         items: { type: "string" },
-        description: "Array of tag strings, e.g. [\"exploratory\",\"auth\"]. NOT a comma-separated string.",
+        description:
+          'Array of tag strings, e.g. ["exploratory","auth"]. NOT a comma-separated string.',
       },
-      linkedIssues: { type: "array", items: {}, description: "Array of linked-issue objects." },
-      attachments: { type: "array", items: {}, description: "Array of attachment objects or URLs." },
+      linkedIssues: {
+        type: "array",
+        items: {},
+        description: "Array of linked-issue objects.",
+      },
+      attachments: {
+        type: "array",
+        items: {},
+        description: "Array of attachment objects or URLs.",
+      },
     },
     required: ["projectId", "name"],
   },

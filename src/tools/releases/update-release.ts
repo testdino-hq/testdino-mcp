@@ -20,7 +20,10 @@ export const updateReleaseTool = {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      releaseId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      releaseId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
       updates: {
         type: "object",
         description:
@@ -45,7 +48,10 @@ export async function handleUpdateRelease(args?: UpdateReleaseArgs) {
   }
 
   try {
-    const url = endpoints.updateRelease(String(args.projectId), String(args.releaseId));
+    const url = endpoints.updateRelease(
+      String(args.projectId),
+      String(args.releaseId)
+    );
     const response = await apiRequestJson<unknown>(url, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },

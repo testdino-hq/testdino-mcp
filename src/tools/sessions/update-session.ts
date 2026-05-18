@@ -15,12 +15,15 @@ interface UpdateSessionArgs {
 export const updateSessionTool = {
   name: "update_session",
   description:
-    "Modify an existing exploratory session. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Findings are not editable here. updates.assigneeUserId accepts either a User _id or an email address. IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"exploratory\",\"auth\"] — NOT a comma-separated string.",
+    'Modify an existing exploratory session. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Findings are not editable here. updates.assigneeUserId accepts either a User _id or an email address. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
-      sessionId: { type: "string", description: "Internal _id or counter-style ID (required)." },
+      sessionId: {
+        type: "string",
+        description: "Internal _id or counter-style ID (required).",
+      },
       updates: {
         type: "object",
         description:
@@ -45,7 +48,10 @@ export async function handleUpdateSession(args?: UpdateSessionArgs) {
   }
 
   try {
-    const url = endpoints.updateSession(String(args.projectId), String(args.sessionId));
+    const url = endpoints.updateSession(
+      String(args.projectId),
+      String(args.sessionId)
+    );
     const response = await apiRequestJson<unknown>(url, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },

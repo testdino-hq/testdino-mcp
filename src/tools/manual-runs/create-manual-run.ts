@@ -34,14 +34,21 @@ export const createManualRunTool = {
       projectId: { type: "string", description: "Project ID (required)." },
       name: { type: "string", description: "Run name (required)." },
       note: { type: "string", description: "Rich HTML note." },
-      environment: { type: "string", description: "Environment label, e.g. 'Staging'." },
+      environment: {
+        type: "string",
+        description: "Environment label, e.g. 'Staging'.",
+      },
       releaseId: { type: "string", description: "Attach run to this release." },
       state: {
         type: "string",
         description:
           "Workflow state (default 'new'). Either canonical ('in_progress') or display ('In Progress') form — server normalizes to lowercase+underscored so UI colors render correctly.",
       },
-      selectionMode: { type: "string", enum: ["all", "selected"], description: "Default 'all'." },
+      selectionMode: {
+        type: "string",
+        enum: ["all", "selected"],
+        description: "Default 'all'.",
+      },
       testCaseIds: { type: "array", items: { type: "string" } },
       suiteIds: { type: "array", items: { type: "string" } },
       includeUnsorted: { type: "boolean" },
@@ -49,11 +56,25 @@ export const createManualRunTool = {
       tags: {
         type: "array",
         items: { type: "string" },
-        description: "Array of tag strings, e.g. [\"smoke\",\"regression\"]. NOT a comma-separated string.",
+        description:
+          'Array of tag strings, e.g. ["smoke","regression"]. NOT a comma-separated string.',
       },
-      linkedIssues: { type: "array", items: {}, description: "Array of linked-issue objects (same shape list_manual_runs returns)." },
-      attachments: { type: "array", items: {}, description: "Array of attachment objects or URLs." },
-      links: { type: "array", items: {}, description: "Array of link objects." },
+      linkedIssues: {
+        type: "array",
+        items: {},
+        description:
+          "Array of linked-issue objects (same shape list_manual_runs returns).",
+      },
+      attachments: {
+        type: "array",
+        items: {},
+        description: "Array of attachment objects or URLs.",
+      },
+      links: {
+        type: "array",
+        items: {},
+        description: "Array of link objects.",
+      },
     },
     required: ["projectId", "name"],
   },

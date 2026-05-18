@@ -30,12 +30,17 @@ export const listRunTestCasesTool = {
       projectId: { type: "string", description: "Project ID (required)." },
       runId: {
         type: "string",
-        description: "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
+        description:
+          "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
       },
-      search: { type: "string", description: "Match by case title or caseKey." },
+      search: {
+        type: "string",
+        description: "Match by case title or caseKey.",
+      },
       assignee: {
         type: "string",
-        description: "Filter by assignee — User _id OR email (server resolves email).",
+        description:
+          "Filter by assignee — User _id OR email (server resolves email).",
       },
       result: {
         type: "string",

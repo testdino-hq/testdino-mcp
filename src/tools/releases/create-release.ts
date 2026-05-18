@@ -38,7 +38,10 @@ export const createReleaseTool = {
         description:
           "Release type. Either canonical ('iteration', 'major') or display ('Iteration', 'Major') form — server normalizes to lowercase so UI badge color matches.",
       },
-      parentReleaseId: { type: "string", description: "Parent release for nesting." },
+      parentReleaseId: {
+        type: "string",
+        description: "Parent release for nesting.",
+      },
       startDate: { type: "string", description: "ISO date." },
       endDate: { type: "string", description: "ISO date." },
       isStarted: { type: "boolean" },
@@ -48,7 +51,8 @@ export const createReleaseTool = {
       linkedIssues: {
         type: "array",
         items: {},
-        description: "Array of linked-issue objects (same shape list_releases returns).",
+        description:
+          "Array of linked-issue objects (same shape list_releases returns).",
       },
     },
     required: ["projectId", "name"],
