@@ -2,7 +2,7 @@
 
 This comprehensive guide covers all available tools in the `testdino-mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
 
-> **Platform Support**: This documentation and examples are currently optimized for **Cursor**. Support for **Claude Desktop** and **VS Code** is planned for future releases. The tools work with any MCP-compatible client, but setup instructions focus on Cursor.
+> **Platform Support**: The tools work with any MCP-compatible client. Setup is verified on **Cursor**, **Claude Desktop**, **VS Code**, and **JetBrains** IDEs. Configuration paths in examples use Cursor's `.cursor/mcp.json` — substitute the equivalent file for your client.
 
 ## Understanding This Documentation
 
@@ -1464,9 +1464,8 @@ The tool returns a formatted markdown response with:
   "message": "Test run summary retrieved successfully",
   "data": { ... }
 }
-````
-
 ```
+````
 
 ### Use Cases
 
@@ -1479,6 +1478,7 @@ The tool returns a formatted markdown response with:
 ### Error Handling
 
 **API Request Failed:**
+
 ```
 
 ❌ Failed to retrieve test run details.
@@ -1498,6 +1498,7 @@ Please check:
 ```
 
 **Missing PAT:**
+
 ```
 
 Error: Missing TESTDINO_PAT environment variable.
@@ -1506,11 +1507,12 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 ```
 
 **Missing Run ID:**
+
 ```
 
 Error: Missing required parameter: testrun_id
 
-````
+```
 
 ### Prerequisites
 
@@ -1566,24 +1568,24 @@ Use it when the user wants a TestDino-backed Playwright audit answering question
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `action` | string | Yes | `analyze`, `list`, or `get` |
-| `branch` | string | No | Branch to audit. Required for `analyze` unless it can be detected from git. Optional filter for `list` |
-| `scope` | string | No | `testcase`, `feature`, `spec_file`, or `suite` |
-| `target` | object | No | Structured target information such as feature area or spec path |
-| `reportName` | string | No | Short human-readable title for the saved audit report |
-| `score` | number | No | Final audit score. Include together with `markdownReport` to submit a completed report |
-| `findings` | array | No | Structured findings for the completed report |
-| `recommendations` | array | No | Recommendation strings for the completed report |
-| `markdownReport` | string | No | Completed markdown report. Required when submitting a completed audit |
-| `markdownReportPath` | string | No | Path to a local markdown file to read for submission. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd; absolute paths are also allowed |
-| `reportId` | string | No | Required for `get` |
-| `limit` | number | No | Optional page size for `list` |
-| `page` | number | No | Optional page number for `list` |
-| `writeMarkdown` | boolean | No | When true, save the returned markdown report locally if available |
-| `outputPath` | string | No | Optional relative file path for the local markdown report. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd. Defaults to `TEST-AUDIT.md` when `writeMarkdown=true` |
+| Parameter            | Type    | Required | Description                                                                                                                                                                                                         |
+| -------------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`          | string  | Yes      | Project ID                                                                                                                                                                                                          |
+| `action`             | string  | Yes      | `analyze`, `list`, or `get`                                                                                                                                                                                         |
+| `branch`             | string  | No       | Branch to audit. Required for `analyze` unless it can be detected from git. Optional filter for `list`                                                                                                              |
+| `scope`              | string  | No       | `testcase`, `feature`, `spec_file`, or `suite`                                                                                                                                                                      |
+| `target`             | object  | No       | Structured target information such as feature area or spec path                                                                                                                                                     |
+| `reportName`         | string  | No       | Short human-readable title for the saved audit report                                                                                                                                                               |
+| `score`              | number  | No       | Final audit score. Include together with `markdownReport` to submit a completed report                                                                                                                              |
+| `findings`           | array   | No       | Structured findings for the completed report                                                                                                                                                                        |
+| `recommendations`    | array   | No       | Recommendation strings for the completed report                                                                                                                                                                     |
+| `markdownReport`     | string  | No       | Completed markdown report. Required when submitting a completed audit                                                                                                                                               |
+| `markdownReportPath` | string  | No       | Path to a local markdown file to read for submission. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd; absolute paths are also allowed                            |
+| `reportId`           | string  | No       | Required for `get`                                                                                                                                                                                                  |
+| `limit`              | number  | No       | Optional page size for `list`                                                                                                                                                                                       |
+| `page`               | number  | No       | Optional page number for `list`                                                                                                                                                                                     |
+| `writeMarkdown`      | boolean | No       | When true, save the returned markdown report locally if available                                                                                                                                                   |
+| `outputPath`         | string  | No       | Optional relative file path for the local markdown report. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd. Defaults to `TEST-AUDIT.md` when `writeMarkdown=true` |
 
 ### Best Practices
 
@@ -1631,20 +1633,20 @@ Perfect for finding specific test cases for execution, review, or management.
 
 ### Parameters
 
-| Parameter          | Type    | Required | Default | Description                                                                                                                                    |
-| ------------------ | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                      |
-| `search`           | string  | No       | -       | Search term to match against title, description, or caseId. Example: 'login' or 'TC-123'.                                                       |
-| `suiteId`          | string  | No       | -       | Filter by specific test suite ID. Use list_manual_test_suites to find suite IDs.                                                              |
-| `status`           | string  | No       | -       | Filter by test case status. Options: 'active', 'draft', 'deprecated'.                                                                         |
-| `priority`         | string  | No       | -       | Filter by priority level. Options: 'critical', 'high', 'medium', 'low'.                                                                       |
-| `severity`         | string  | No       | -       | Filter by severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                                                    |
-| `type`             | string  | No       | -       | Filter by test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                                     |
-| `layer`            | string  | No       | -       | Filter by test layer. Options: 'e2e', 'api', 'unit'.                                                                                          |
-| `behavior`         | string  | No       | -       | Filter by test behavior type. Options: 'positive', 'negative', 'destructive'.                                                                  |
-| `automationStatus` | string  | No       | -       | Filter by automation status. Options: 'automated', 'manual', 'not_automated'.                                                                   |
-| `tags`             | string  | No       | -       | Filter by tags (comma-separated list). Example: 'smoke,regression' or 'critical'.                                                              |
-| `limit`            | number  | No       | 10      | Maximum number of results to return (default: 10, max: 1000).                                                                                  |
+| Parameter          | Type   | Required | Default | Description                                                                                               |
+| ------------------ | ------ | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `projectId`        | string | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                   |
+| `search`           | string | No       | -       | Search term to match against title, description, or caseId. Example: 'login' or 'TC-123'.                 |
+| `suiteId`          | string | No       | -       | Filter by specific test suite ID. Use list_manual_test_suites to find suite IDs.                          |
+| `status`           | string | No       | -       | Filter by test case status. Options: 'active', 'draft', 'deprecated'.                                     |
+| `priority`         | string | No       | -       | Filter by priority level. Options: 'critical', 'high', 'medium', 'low'.                                   |
+| `severity`         | string | No       | -       | Filter by severity level. Options: 'critical', 'major', 'minor', 'trivial'.                               |
+| `type`             | string | No       | -       | Filter by test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'. |
+| `layer`            | string | No       | -       | Filter by test layer. Options: 'e2e', 'api', 'unit'.                                                      |
+| `behavior`         | string | No       | -       | Filter by test behavior type. Options: 'positive', 'negative', 'destructive'.                             |
+| `automationStatus` | string | No       | -       | Filter by automation status. Options: 'automated', 'manual', 'not_automated'.                             |
+| `tags`             | string | No       | -       | Filter by tags (comma-separated list). Example: 'smoke,regression' or 'critical'.                         |
+| `limit`            | number | No       | 10      | Maximum number of results to return (default: 10, max: 1000).                                             |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
@@ -2064,27 +2066,27 @@ Use this to document new test scenarios, features, or requirements as they are d
 
 ### Parameters
 
-| Parameter        | Type   | Required | Description                                                                                                              |
-| ---------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `projectId`      | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                  |
-| `title`          | string | Yes      | Test case title (Required). A clear, descriptive title for the test case.                                                |
-| `suiteName`      | string | Yes      | Test suite name (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite names. |
-| `description`    | string | No       | Detailed description of what this test case validates.                                                                   |
-| `preconditions`  | string | No       | Prerequisites or setup required before executing this test case.                                                         |
-| `postconditions` | string | No       | Expected state or cleanup actions after executing this test case.                                                        |
-| `testStepsDeclarationType` | string | No       | 'Classic' or 'Gherkin'. Default: Classic.                                                       |
-| `steps`          | array  | No       | Array of test steps. Classic: action, expectedResult, data. Gherkin: event, stepDescription. Each top-level step can include `attachments`. |
-| `status`         | string | No       | Test case status. Options: 'Active', 'Draft', 'Deprecated'.                                                              |
-| `priority`       | string | No       | Test case priority level. Options: 'high', 'medium', 'low', 'Not set'.                                                      |
-| `severity`       | string | No       | Test case severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                              |
-| `type`           | string | No       | Test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                          |
-| `layer`          | string | No       | Test layer. Options: 'e2e', 'api', 'unit'.                                                                               |
-| `behavior`       | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive', 'Not set'.                                            |
-| `automationStatus` | string | No       | Options: 'Manual', 'Automated', 'To be automated'.                                                                       |
-| `tags`           | string | No       | Comma-separated tags.                                                                                                     |
-| `flags`          | array  | No       | Options: 'To be Automated', 'Is flaky', 'Muted'.                                                                          |
-| `attachments`    | array  | No       | Array of local file paths or URLs (up to 10MB each).                                                                      |
-| `customFields`   | object | No       | Custom fields as key-value pairs.                                                                                         |
+| Parameter                  | Type   | Required | Description                                                                                                                                 |
+| -------------------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`                | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                     |
+| `title`                    | string | Yes      | Test case title (Required). A clear, descriptive title for the test case.                                                                   |
+| `suiteName`                | string | Yes      | Test suite name (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite names.                |
+| `description`              | string | No       | Detailed description of what this test case validates.                                                                                      |
+| `preconditions`            | string | No       | Prerequisites or setup required before executing this test case.                                                                            |
+| `postconditions`           | string | No       | Expected state or cleanup actions after executing this test case.                                                                           |
+| `testStepsDeclarationType` | string | No       | 'Classic' or 'Gherkin'. Default: Classic.                                                                                                   |
+| `steps`                    | array  | No       | Array of test steps. Classic: action, expectedResult, data. Gherkin: event, stepDescription. Each top-level step can include `attachments`. |
+| `status`                   | string | No       | Test case status. Options: 'Active', 'Draft', 'Deprecated'.                                                                                 |
+| `priority`                 | string | No       | Test case priority level. Options: 'high', 'medium', 'low', 'Not set'.                                                                      |
+| `severity`                 | string | No       | Test case severity level. Options: 'critical', 'major', 'minor', 'trivial'.                                                                 |
+| `type`                     | string | No       | Test case type. Options: 'functional', 'smoke', 'regression', 'security', 'performance', 'e2e'.                                             |
+| `layer`                    | string | No       | Test layer. Options: 'e2e', 'api', 'unit'.                                                                                                  |
+| `behavior`                 | string | No       | Test behavior type. Options: 'positive', 'negative', 'destructive', 'Not set'.                                                              |
+| `automationStatus`         | string | No       | Options: 'Manual', 'Automated', 'To be automated'.                                                                                          |
+| `tags`                     | string | No       | Comma-separated tags.                                                                                                                       |
+| `flags`                    | array  | No       | Options: 'To be Automated', 'Is flaky', 'Muted'.                                                                                            |
+| `attachments`              | array  | No       | Array of local file paths or URLs (up to 10MB each).                                                                                        |
+| `customFields`             | object | No       | Custom fields as key-value pairs.                                                                                                           |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
@@ -2317,10 +2319,10 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 
 ### Parameters
 
-| Parameter   | Type   | Required | Description                                                                                                                                                            |
-| ----------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                |
-| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                      |
+| Parameter   | Type   | Required | Description                                                                                                                                                                                                                |
+| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                                                                    |
+| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                                                                          |
 | `updates`   | object | Yes      | Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, testStepsDeclarationType, attachments, customFields, etc. |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
@@ -2898,18 +2900,18 @@ Error: Failed to create manual test suite: Parent suite not found
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `search` | string | No | Substring match on release name |
-| `type` | string | No | Release type. Display or canonical form (`"Iteration"` → `"iteration"`) |
-| `isCompleted` | boolean | No | Filter by completion state |
-| `parentReleaseId` | string | No | Only the direct children of this release |
-| `status` | string | No | Project-specific status field |
-| `sortBy` | string | No | `'createdAt'`, `'startDate'`, `'endDate'`, `'name'` |
-| `sortOrder` | string | No | `'asc'` or `'desc'` |
-| `page` | number | No | Page number (1-indexed) |
-| `limit` | number | No | Page size (default 25, max 200) |
+| Parameter         | Type    | Required | Description                                                             |
+| ----------------- | ------- | -------- | ----------------------------------------------------------------------- |
+| `projectId`       | string  | Yes      | Project ID                                                              |
+| `search`          | string  | No       | Substring match on release name                                         |
+| `type`            | string  | No       | Release type. Display or canonical form (`"Iteration"` → `"iteration"`) |
+| `isCompleted`     | boolean | No       | Filter by completion state                                              |
+| `parentReleaseId` | string  | No       | Only the direct children of this release                                |
+| `status`          | string  | No       | Project-specific status field                                           |
+| `sortBy`          | string  | No       | `'createdAt'`, `'startDate'`, `'endDate'`, `'name'`                     |
+| `sortOrder`       | string  | No       | `'asc'` or `'desc'`                                                     |
+| `page`            | number  | No       | Page number (1-indexed)                                                 |
+| `limit`           | number  | No       | Page size (default 25, max 200)                                         |
 
 ### Example Usage
 
@@ -2918,7 +2920,11 @@ Error: Failed to create manual test suite: Parent suite not found
 list_releases({ projectId: "project_abc" });
 
 // Active iterations
-list_releases({ projectId: "project_abc", type: "Iteration", isCompleted: false });
+list_releases({
+  projectId: "project_abc",
+  type: "Iteration",
+  isCompleted: false,
+});
 
 // Direct children of release MS-5
 list_releases({ projectId: "project_abc", parentReleaseId: "MS-5" });
@@ -2938,10 +2944,10 @@ list_releases({ projectId: "project_abc", parentReleaseId: "MS-5" });
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `releaseId` | string | Yes | Internal `tcm_milestone_…` _id OR counter-style ID (`"MS-12"`) |
+| Parameter   | Type   | Required | Description                                                     |
+| ----------- | ------ | -------- | --------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID                                                      |
+| `releaseId` | string | Yes      | Internal `tcm_milestone_…` \_id OR counter-style ID (`"MS-12"`) |
 
 ### Example Usage
 
@@ -2961,21 +2967,21 @@ get_release({ projectId: "project_abc", releaseId: "MS-12" });
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `name` | string | Yes | Release name |
-| `description` | string | No | Plain-text description |
-| `note` | string | No | Rich HTML note |
-| `type` | string | No | Release type. Display or canonical form — server lowercases |
-| `parentReleaseId` | string | No | Parent release ID for nesting (max 3 levels deep) |
-| `startDate` | string | No | ISO date |
-| `endDate` | string | No | ISO date |
-| `isStarted` | boolean | No | Whether the release has started |
-| `isCompleted` | boolean | No | Whether the release is completed |
-| `startedAt` | string | No | ISO datetime — when started |
-| `completedAt` | string | No | ISO datetime — when completed |
-| `linkedIssues` | array | No | Array of linked-issue objects |
+| Parameter         | Type    | Required | Description                                                 |
+| ----------------- | ------- | -------- | ----------------------------------------------------------- |
+| `projectId`       | string  | Yes      | Project ID                                                  |
+| `name`            | string  | Yes      | Release name                                                |
+| `description`     | string  | No       | Plain-text description                                      |
+| `note`            | string  | No       | Rich HTML note                                              |
+| `type`            | string  | No       | Release type. Display or canonical form — server lowercases |
+| `parentReleaseId` | string  | No       | Parent release ID for nesting (max 3 levels deep)           |
+| `startDate`       | string  | No       | ISO date                                                    |
+| `endDate`         | string  | No       | ISO date                                                    |
+| `isStarted`       | boolean | No       | Whether the release has started                             |
+| `isCompleted`     | boolean | No       | Whether the release is completed                            |
+| `startedAt`       | string  | No       | ISO datetime — when started                                 |
+| `completedAt`     | string  | No       | ISO datetime — when completed                               |
+| `linkedIssues`    | array   | No       | Array of linked-issue objects                               |
 
 ### Example Usage
 
@@ -2987,7 +2993,7 @@ create_release({
   startDate: "2026-05-12",
   endDate: "2026-05-26",
   isStarted: true,
-  startedAt: "2026-05-12T09:00:00Z"
+  startedAt: "2026-05-12T09:00:00Z",
 });
 ```
 
@@ -3004,11 +3010,11 @@ create_release({
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `releaseId` | string | Yes | Internal _id or counter-style (`"MS-12"`) |
-| `updates` | object | Yes | Fields to update — see below |
+| Parameter   | Type   | Required | Description                                |
+| ----------- | ------ | -------- | ------------------------------------------ |
+| `projectId` | string | Yes      | Project ID                                 |
+| `releaseId` | string | Yes      | Internal \_id or counter-style (`"MS-12"`) |
+| `updates`   | object | Yes      | Fields to update — see below               |
 
 **`updates` object** accepts: `name`, `description`, `note`, `type`, `startDate`, `endDate`, `isStarted`, `isCompleted`, `startedAt`, `completedAt`, `linkedIssues`. Type is normalized to canonical lowercase.
 
@@ -3018,7 +3024,7 @@ create_release({
 update_release({
   projectId: "project_abc",
   releaseId: "MS-12",
-  updates: { isCompleted: true, completedAt: "2026-05-26T17:00:00Z" }
+  updates: { isCompleted: true, completedAt: "2026-05-26T17:00:00Z" },
 });
 ```
 
@@ -3035,28 +3041,36 @@ update_release({
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `search` | string | No | Match by run name |
-| `status` | enum | No | `'active'` or `'closed'` |
-| `state` | string | No | Workflow state (display or canonical form) |
-| `environment` | string | No | Environment label |
-| `releaseId` | string | No | Filter to runs in this release. `"none"` returns unlinked runs |
-| `tags` | string | No | Single tag or comma-separated tags |
-| `isClosed` | boolean | No | Quick filter |
-| `sortBy` | string | No | `'createdAt'`, `'updatedAt'`, `'name'` |
-| `sortOrder` | string | No | `'asc'` or `'desc'` |
-| `page`, `limit` | number | No | Pagination (default 25, max 200) |
+| Parameter       | Type    | Required | Description                                                    |
+| --------------- | ------- | -------- | -------------------------------------------------------------- |
+| `projectId`     | string  | Yes      | Project ID                                                     |
+| `search`        | string  | No       | Match by run name                                              |
+| `status`        | enum    | No       | `'active'` or `'closed'`                                       |
+| `state`         | string  | No       | Workflow state (display or canonical form)                     |
+| `environment`   | string  | No       | Environment label                                              |
+| `releaseId`     | string  | No       | Filter to runs in this release. `"none"` returns unlinked runs |
+| `tags`          | string  | No       | Single tag or comma-separated tags                             |
+| `isClosed`      | boolean | No       | Quick filter                                                   |
+| `sortBy`        | string  | No       | `'createdAt'`, `'updatedAt'`, `'name'`                         |
+| `sortOrder`     | string  | No       | `'asc'` or `'desc'`                                            |
+| `page`, `limit` | number  | No       | Pagination (default 25, max 200)                               |
 
 ### Example Usage
 
 ```javascript
 // All active runs on staging
-list_manual_runs({ projectId: "project_abc", status: "active", environment: "Staging" });
+list_manual_runs({
+  projectId: "project_abc",
+  status: "active",
+  environment: "Staging",
+});
 
 // Runs in release MS-12 that are still in progress
-list_manual_runs({ projectId: "project_abc", releaseId: "MS-12", state: "In Progress" });
+list_manual_runs({
+  projectId: "project_abc",
+  releaseId: "MS-12",
+  state: "In Progress",
+});
 ```
 
 ### Technical Details
@@ -3071,10 +3085,10 @@ list_manual_runs({ projectId: "project_abc", releaseId: "MS-12", state: "In Prog
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `runId` | string | Yes | Internal `tcm_run_…` _id OR counter-style (`"RUN-12"`) |
+| Parameter   | Type   | Required | Description                                             |
+| ----------- | ------ | -------- | ------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID                                              |
+| `runId`     | string | Yes      | Internal `tcm_run_…` \_id OR counter-style (`"RUN-12"`) |
 
 ### Example Usage
 
@@ -3094,21 +3108,21 @@ get_manual_run({ projectId: "project_abc", runId: "RUN-12" });
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `name` | string | Yes | Run name |
-| `note` | string | No | Rich HTML note |
-| `environment` | string | No | Environment label, e.g. `"Staging"` |
-| `releaseId` | string | No | Attach run to a release |
-| `state` | string | No | Workflow state (default `"new"`) |
-| `selectionMode` | enum | No | `'all'` (default) or `'selected'` |
-| `testCaseIds` | array | No | Case IDs when `selectionMode='selected'` |
-| `suiteIds` | array | No | Suite IDs whose cases are included when `selectionMode='selected'` |
-| `includeUnsorted` | boolean | No | Also include cases with no suite (with `selectionMode='selected'`) |
-| `forecast` | any | No | Free-form forecast metadata |
-| `tags` | array | No | Array of tag strings — **NOT comma-separated** |
-| `linkedIssues`, `attachments`, `links` | array | No | Arrays of objects |
+| Parameter                              | Type    | Required | Description                                                        |
+| -------------------------------------- | ------- | -------- | ------------------------------------------------------------------ |
+| `projectId`                            | string  | Yes      | Project ID                                                         |
+| `name`                                 | string  | Yes      | Run name                                                           |
+| `note`                                 | string  | No       | Rich HTML note                                                     |
+| `environment`                          | string  | No       | Environment label, e.g. `"Staging"`                                |
+| `releaseId`                            | string  | No       | Attach run to a release                                            |
+| `state`                                | string  | No       | Workflow state (default `"new"`)                                   |
+| `selectionMode`                        | enum    | No       | `'all'` (default) or `'selected'`                                  |
+| `testCaseIds`                          | array   | No       | Case IDs when `selectionMode='selected'`                           |
+| `suiteIds`                             | array   | No       | Suite IDs whose cases are included when `selectionMode='selected'` |
+| `includeUnsorted`                      | boolean | No       | Also include cases with no suite (with `selectionMode='selected'`) |
+| `forecast`                             | any     | No       | Free-form forecast metadata                                        |
+| `tags`                                 | array   | No       | Array of tag strings — **NOT comma-separated**                     |
+| `linkedIssues`, `attachments`, `links` | array   | No       | Arrays of objects                                                  |
 
 ### Example Usage
 
@@ -3121,7 +3135,7 @@ create_manual_run({
   state: "In Progress",
   selectionMode: "selected",
   suiteIds: ["tcm_suite_xxx"],
-  tags: ["smoke", "regression"]
+  tags: ["smoke", "regression"],
 });
 ```
 
@@ -3138,11 +3152,11 @@ create_manual_run({
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `runId` | string | Yes | Internal _id or counter-style ID |
-| `updates` | object | Yes | Fields to update |
+| Parameter   | Type   | Required | Description                       |
+| ----------- | ------ | -------- | --------------------------------- |
+| `projectId` | string | Yes      | Project ID                        |
+| `runId`     | string | Yes      | Internal \_id or counter-style ID |
+| `updates`   | object | Yes      | Fields to update                  |
 
 **`updates` object** accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `attachments`, `links`, `selectionMode`.
 
@@ -3154,7 +3168,7 @@ create_manual_run({
 update_manual_run({
   projectId: "project_abc",
   runId: "RUN-12",
-  updates: { environment: "Production", state: "Done" }
+  updates: { environment: "Production", state: "Done" },
 });
 ```
 
@@ -3171,15 +3185,15 @@ update_manual_run({
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `runId` | string | Yes | Run _id or counter-style (`"RUN-12"`) |
-| `search` | string | No | Match by case title or caseKey |
-| `assignee` (or `assigneeUserId`) | string | No | Filter by assignee — User _id OR email |
-| `result` (or `status`) | string | No | Filter by result — display or canonical form |
-| `sortBy` | string | No | `'createdAt'`, `'updatedAt'`, `'status'`, `'caseKey'` |
-| `sortOrder`, `page`, `limit` | — | No | Standard pagination |
+| Parameter                        | Type   | Required | Description                                           |
+| -------------------------------- | ------ | -------- | ----------------------------------------------------- |
+| `projectId`                      | string | Yes      | Project ID                                            |
+| `runId`                          | string | Yes      | Run \_id or counter-style (`"RUN-12"`)                |
+| `search`                         | string | No       | Match by case title or caseKey                        |
+| `assignee` (or `assigneeUserId`) | string | No       | Filter by assignee — User \_id OR email               |
+| `result` (or `status`)           | string | No       | Filter by result — display or canonical form          |
+| `sortBy`                         | string | No       | `'createdAt'`, `'updatedAt'`, `'status'`, `'caseKey'` |
+| `sortOrder`, `page`, `limit`     | —      | No       | Standard pagination                                   |
 
 ### Example Usage
 
@@ -3188,11 +3202,15 @@ update_manual_run({
 list_run_test_cases({
   projectId: "project_abc",
   runId: "RUN-12",
-  assigneeUserId: "alice@company.com"
+  assigneeUserId: "alice@company.com",
 });
 
 // All cases that failed
-list_run_test_cases({ projectId: "project_abc", runId: "RUN-12", result: "Failed" });
+list_run_test_cases({
+  projectId: "project_abc",
+  runId: "RUN-12",
+  result: "Failed",
+});
 ```
 
 ### Technical Details
@@ -3207,22 +3225,22 @@ list_run_test_cases({ projectId: "project_abc", runId: "RUN-12", result: "Failed
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `runId` | string | Yes | Run _id or counter-style (`"RUN-12"`) |
-| `rtcRef` | string | Yes | One of: `tcm_rtc_…` _id, caseKey (`"TC-156"`), or underlying test case _id |
-| `updates` | object | Yes | Fields to update |
+| Parameter   | Type   | Required | Description                                                                  |
+| ----------- | ------ | -------- | ---------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID                                                                   |
+| `runId`     | string | Yes      | Run \_id or counter-style (`"RUN-12"`)                                       |
+| `rtcRef`    | string | Yes      | One of: `tcm_rtc_…` \_id, caseKey (`"TC-156"`), or underlying test case \_id |
+| `updates`   | object | Yes      | Fields to update                                                             |
 
 **`updates` object** accepts:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `assigneeUserId` | string | User _id OR email. Pass `null` to unassign |
+| Field                  | Type   | Description                                                                                                 |
+| ---------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
+| `assigneeUserId`       | string | User \_id OR email. Pass `null` to unassign                                                                 |
 | `result` (or `status`) | string | Display or canonical form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
-| `elapsed` | number | Seconds spent on the case |
+| `elapsed`              | number | Seconds spent on the case                                                                                   |
 
-**Virtual cases supported**: in a `selectionMode='all'` run, cases without a record yet still show "Untested" in the UI. Passing the caseKey or the underlying test case _id auto-creates the row on first edit.
+**Virtual cases supported**: in a `selectionMode='all'` run, cases without a record yet still show "Untested" in the UI. Passing the caseKey or the underlying test case \_id auto-creates the row on first edit.
 
 ### Example Usage
 
@@ -3232,12 +3250,22 @@ update_run_test_case({
   projectId: "project_abc",
   runId: "RUN-12",
   rtcRef: "TC-156",
-  updates: { assigneeUserId: "alice@company.com", result: "Passed" }
+  updates: { assigneeUserId: "alice@company.com", result: "Passed" },
 });
 
 // Multiple cases — call in parallel
-update_run_test_case({ projectId, runId: "RUN-12", rtcRef: "TC-157", updates: { result: "Failed" } });
-update_run_test_case({ projectId, runId: "RUN-12", rtcRef: "TC-158", updates: { result: "Blocked" } });
+update_run_test_case({
+  projectId,
+  runId: "RUN-12",
+  rtcRef: "TC-157",
+  updates: { result: "Failed" },
+});
+update_run_test_case({
+  projectId,
+  runId: "RUN-12",
+  rtcRef: "TC-158",
+  updates: { result: "Blocked" },
+});
 ```
 
 ### Technical Details
@@ -3253,23 +3281,27 @@ update_run_test_case({ projectId, runId: "RUN-12", rtcRef: "TC-158", updates: { 
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `search` | string | No | Match by session name |
-| `status` | enum | No | `'active'` or `'closed'` |
-| `state` | string | No | Workflow state (display or canonical) |
-| `sessionType` | string | No | Free-text type, e.g. `"Exploratory"`, `"Regression"` |
-| `assigneeUserId` | string | No | User _id OR email |
-| `releaseId` | string | No | Filter to a release. `"none"` for unlinked |
-| `tags` | string | No | Single tag or comma-separated |
-| `isClosed` | boolean | No | Quick filter |
-| `sortBy`, `sortOrder`, `page`, `limit` | — | No | Standard |
+| Parameter                              | Type    | Required | Description                                          |
+| -------------------------------------- | ------- | -------- | ---------------------------------------------------- |
+| `projectId`                            | string  | Yes      | Project ID                                           |
+| `search`                               | string  | No       | Match by session name                                |
+| `status`                               | enum    | No       | `'active'` or `'closed'`                             |
+| `state`                                | string  | No       | Workflow state (display or canonical)                |
+| `sessionType`                          | string  | No       | Free-text type, e.g. `"Exploratory"`, `"Regression"` |
+| `assigneeUserId`                       | string  | No       | User \_id OR email                                   |
+| `releaseId`                            | string  | No       | Filter to a release. `"none"` for unlinked           |
+| `tags`                                 | string  | No       | Single tag or comma-separated                        |
+| `isClosed`                             | boolean | No       | Quick filter                                         |
+| `sortBy`, `sortOrder`, `page`, `limit` | —       | No       | Standard                                             |
 
 ### Example Usage
 
 ```javascript
-list_sessions({ projectId: "project_abc", status: "active", assigneeUserId: "alice@company.com" });
+list_sessions({
+  projectId: "project_abc",
+  status: "active",
+  assigneeUserId: "alice@company.com",
+});
 ```
 
 ### Technical Details
@@ -3284,10 +3316,10 @@ list_sessions({ projectId: "project_abc", status: "active", assigneeUserId: "ali
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `sessionId` | string | Yes | Internal `tcm_session_…` _id OR counter-style (`"SES-12"`) |
+| Parameter   | Type   | Required | Description                                                 |
+| ----------- | ------ | -------- | ----------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID                                                  |
+| `sessionId` | string | Yes      | Internal `tcm_session_…` \_id OR counter-style (`"SES-12"`) |
 
 ### Example Usage
 
@@ -3307,20 +3339,20 @@ get_session({ projectId: "project_abc", sessionId: "SES-12" });
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `name` | string | Yes | Session name |
-| `mission` | string | No | Rich HTML mission/charter |
-| `sessionType` | string | No | Free-text type, e.g. `"Exploratory"` |
-| `config` | string | No | Free-text configuration |
-| `environment` | string | No | Environment label |
-| `releaseId` | string | No | Attach session to a release |
-| `assigneeUserId` | string | No | User _id OR email — server resolves |
-| `state` | string | No | Workflow state (default `"new"`) |
-| `estimate` | number | No | Estimate in minutes |
-| `tags` | array | No | Array of tag strings (NOT comma-separated) |
-| `linkedIssues`, `attachments` | array | No | Arrays of objects |
+| Parameter                     | Type   | Required | Description                                |
+| ----------------------------- | ------ | -------- | ------------------------------------------ |
+| `projectId`                   | string | Yes      | Project ID                                 |
+| `name`                        | string | Yes      | Session name                               |
+| `mission`                     | string | No       | Rich HTML mission/charter                  |
+| `sessionType`                 | string | No       | Free-text type, e.g. `"Exploratory"`       |
+| `config`                      | string | No       | Free-text configuration                    |
+| `environment`                 | string | No       | Environment label                          |
+| `releaseId`                   | string | No       | Attach session to a release                |
+| `assigneeUserId`              | string | No       | User \_id OR email — server resolves       |
+| `state`                       | string | No       | Workflow state (default `"new"`)           |
+| `estimate`                    | number | No       | Estimate in minutes                        |
+| `tags`                        | array  | No       | Array of tag strings (NOT comma-separated) |
+| `linkedIssues`, `attachments` | array  | No       | Arrays of objects                          |
 
 **Findings cannot be created via MCP in v1** — add them in the UI.
 
@@ -3333,7 +3365,7 @@ create_session({
   mission: "<p>Look for session-handling bugs around 2FA edge cases.</p>",
   sessionType: "Exploratory",
   assigneeUserId: "tester@company.com",
-  estimate: 60
+  estimate: 60,
 });
 ```
 
@@ -3350,11 +3382,11 @@ create_session({
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectId` | string | Yes | Project ID |
-| `sessionId` | string | Yes | Internal _id or counter-style ID |
-| `updates` | object | Yes | Fields to update |
+| Parameter   | Type   | Required | Description                       |
+| ----------- | ------ | -------- | --------------------------------- |
+| `projectId` | string | Yes      | Project ID                        |
+| `sessionId` | string | Yes      | Internal \_id or counter-style ID |
+| `updates`   | object | Yes      | Fields to update                  |
 
 **`updates` object** accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`, `attachments`. Findings are not editable here.
 
@@ -3364,7 +3396,7 @@ create_session({
 update_session({
   projectId: "project_abc",
   sessionId: "SES-12",
-  updates: { state: "Done", assigneeUserId: "different@company.com" }
+  updates: { state: "Done", assigneeUserId: "different@company.com" },
 });
 ```
 
@@ -3414,8 +3446,3 @@ When adding new tools to the MCP server:
   - All tools support automatic PAT reading from `TESTDINO_PAT` environment variable
   - Added `runtime` parameter to upload tool for environment selection
   - Improved workspace detection and report directory search
-
-```
-
-```
-````
