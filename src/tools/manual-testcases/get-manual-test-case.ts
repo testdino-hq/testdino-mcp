@@ -14,7 +14,10 @@ interface GetManualTestCaseArgs {
 export const getManualTestCaseTool = {
   name: "get_manual_test_case",
   description:
-    "Retrieve detailed information of a single manual test case, including steps, custom fields, preconditions, and all metadata. Use this to get comprehensive details about a specific test case for execution or review.",
+    "Retrieve detailed information of a single manual test case, including steps, custom fields, preconditions, and all metadata. " +
+    "Activity is included inline: `comments` (latest), `versions` (latest 20 of the version history), `results` (latest 100 execution results across every manual run that ran this case), and `linkedIssues` (Jira tickets linked to the case). " +
+    "`versions` and `results` are READ-ONLY — they reflect what happened, you cannot mutate them. " +
+    "Use update_manual_test_case to add comments (updates.comments) or link issues (updates.issues).",
   inputSchema: {
     type: "object",
     properties: {

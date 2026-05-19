@@ -41,7 +41,11 @@ describe("handleCreateManualTestCase", () => {
         preconditions: "User is logged in",
         postconditions: "User is logged out",
         steps: [
-          { action: "Click login", expectedResult: "Login form appears" },
+          {
+            action: "Click login",
+            expectedResult: "Login form appears",
+            attachments: ["https://example.com/step.png"],
+          },
         ],
         priority: "high",
         severity: "critical",
@@ -50,7 +54,8 @@ describe("handleCreateManualTestCase", () => {
         behavior: "positive",
         automationStatus: "Automated",
         tags: "smoke,regression",
-        automation: ["To be Automated", "Is flaky"],
+        flags: ["To be Automated", "Is flaky"],
+        attachments: ["https://example.com/case.png"],
         customFields: { team: "backend", sprint: "42" },
       })
     );
@@ -69,6 +74,7 @@ describe("handleCreateManualTestCase", () => {
     expect(body.postconditions).toBe("User is logged out");
     expect(body.steps).toHaveLength(1);
     expect(body.steps[0].action).toBe("Click login");
+    expect(body.steps[0].attachments).toEqual(["https://example.com/step.png"]);
     expect(body.priority).toBe("high");
     expect(body.severity).toBe("critical");
     expect(body.type).toBe("functional");
@@ -76,7 +82,8 @@ describe("handleCreateManualTestCase", () => {
     expect(body.behavior).toBe("positive");
     expect(body.automationStatus).toBe("Automated");
     expect(body.tags).toBe("smoke,regression");
-    expect(body.automation).toEqual(["To be Automated", "Is flaky"]);
+    expect(body.flags).toEqual(["To be Automated", "Is flaky"]);
+    expect(body.attachments).toEqual(["https://example.com/case.png"]);
     expect(body.customFields).toEqual({ team: "backend", sprint: "42" });
   });
 

@@ -7,8 +7,7 @@ import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 import {
   processAttachments,
-  processSubStepImages,
-  validateClassicSteps,
+  processStepAttachments,
   FileData,
 } from "../../lib/file-utils.js";
 import type { TestStep } from "../../lib/file-utils.js";
@@ -52,7 +51,7 @@ interface CreateManualTestCaseArgs {
   behavior?: "positive" | "negative" | "destructive" | "Not set";
   automationStatus?: "Manual" | "Automated" | "To be automated";
   tags?: string;
-  automation?: ("To be Automated" | "Is flaky" | "Muted")[];
+  flags?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB) - will be processed to FileData objects
   customFields?: Record<string, string>; // Custom fields as key-value pairs
 }
@@ -74,7 +73,7 @@ interface CreateManualTestCaseBody {
   behavior?: string;
   automationStatus?: string;
   tags?: string;
-  automation?: string[];
+  flags?: string[];
   attachments?: (FileData | string)[];
   customFields?: Record<string, string>;
 }
@@ -127,7 +126,7 @@ export const createManualTestCaseTool = {
       steps: {
         type: "array",
         description:
-          "Array of test steps. For Classic format: action, expectedResult, optional data, and optional subSteps (max 5 per step, each with optional images max 2). For Gherkin format: event and stepDescription.",
+          "Array of test steps. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription. Each top-level step can include attachments as URLs or local file paths.",
         items: {
           type: "object",
           oneOf: [
@@ -148,50 +147,11 @@ export const createManualTestCaseTool = {
                   description:
                     "Optional test data for this step (Classic format).",
                 },
-                subSteps: {
+                attachments: {
                   type: "array",
                   description:
-                    "Optional array of sub-steps for this step (Classic format only). Maximum 5 sub-steps per step. Each sub-step can have up to 2 images.",
-                  maxItems: 5,
-                  items: {
-                    type: "object",
-                    properties: {
-                      action: {
-                        type: "string",
-                        description: "The action to perform in this sub-step.",
-                      },
-                      expectedResult: {
-                        type: "string",
-                        description:
-                          "The expected outcome of this sub-step action.",
-                      },
-                      data: {
-                        type: "string",
-                        description: "Optional test data for this sub-step.",
-                      },
-                      images: {
-                        type: "array",
-                        description:
-                          "Optional array of images for this sub-step. Maximum 2 images per sub-step. Each image requires a url and fileName.",
-                        maxItems: 2,
-                        items: {
-                          type: "object",
-                          properties: {
-                            url: {
-                              type: "string",
-                              description: "The URL of the image.",
-                            },
-                            fileName: {
-                              type: "string",
-                              description: "The file name of the image.",
-                            },
-                          },
-                          required: ["url", "fileName"],
-                        },
-                      },
-                    },
-                    required: ["action", "expectedResult"],
-                  },
+                    "Optional top-level step attachments as URLs or local file paths.",
+                  items: { type: "string" },
                 },
               },
               required: ["action", "expectedResult"],
@@ -206,6 +166,12 @@ export const createManualTestCaseTool = {
                 stepDescription: {
                   type: "string",
                   description: "The step description (Gherkin format).",
+                },
+                attachments: {
+                  type: "array",
+                  description:
+                    "Optional top-level step attachments as URLs or local file paths.",
+                  items: { type: "string" },
                 },
               },
               required: ["event", "stepDescription"],
@@ -271,9 +237,9 @@ export const createManualTestCaseTool = {
         type: "string",
         description: "Tags to add to your test cases.",
       },
-      automation: {
+      flags: {
         type: "array",
-        description: "Automation checklist options.",
+        description: "Automation flags/checklist options.",
         items: {
           type: "string",
           enum: ["To be Automated", "Is flaky", "Muted"],
@@ -348,10 +314,7 @@ export async function handleCreateManualTestCase(
       body.postconditions = String(args.postconditions);
     }
     if (args?.steps) {
-      // Validate sub-step and image constraints before sending
-      validateClassicSteps(args.steps);
-      processSubStepImages(args.steps);
-      body.steps = args.steps;
+      body.steps = processStepAttachments(args.steps);
     }
     if (args?.priority) {
       body.priority = String(args.priority);
@@ -374,12 +337,12 @@ export async function handleCreateManualTestCase(
     if (args?.tags) {
       body.tags = String(args.tags);
     }
-    if (args?.automation) {
-      body.automation = args.automation.map(String);
+    if (args?.flags) {
+      body.flags = args.flags.map(String);
     }
     if (args?.attachments) {
       // Process attachments: convert local file paths to file data objects (same format as UI)
-      body.attachments = processAttachments(args.attachments.map(String));
+      body.attachments = processAttachments(args.attachments);
     }
     if (args?.customFields) {
       body.customFields = args.customFields;

@@ -57,3 +57,59 @@ export {
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
 } from "./manual-testsuites/create-manual-test-suite.js";
+
+// Releases (a.k.a. Milestones) tools
+export {
+  listReleasesTool,
+  handleListReleases,
+} from "./releases/list-releases.js";
+export { getReleaseTool, handleGetRelease } from "./releases/get-release.js";
+export {
+  createReleaseTool,
+  handleCreateRelease,
+} from "./releases/create-release.js";
+export {
+  updateReleaseTool,
+  handleUpdateRelease,
+} from "./releases/update-release.js";
+
+// Manual runs tools
+export {
+  listManualRunsTool,
+  handleListManualRuns,
+} from "./manual-runs/list-manual-runs.js";
+export {
+  getManualRunTool,
+  handleGetManualRun,
+} from "./manual-runs/get-manual-run.js";
+export {
+  createManualRunTool,
+  handleCreateManualRun,
+} from "./manual-runs/create-manual-run.js";
+export {
+  updateManualRunTool,
+  handleUpdateManualRun,
+} from "./manual-runs/update-manual-run.js";
+export {
+  listRunTestCasesTool,
+  handleListRunTestCases,
+} from "./manual-runs/list-run-test-cases.js";
+export {
+  updateRunTestCaseTool,
+  handleUpdateRunTestCase,
+} from "./manual-runs/update-run-test-case.js";
+
+// Exploratory sessions tools
+export {
+  listSessionsTool,
+  handleListSessions,
+} from "./sessions/list-sessions.js";
+export { getSessionTool, handleGetSession } from "./sessions/get-session.js";
+export {
+  createSessionTool,
+  handleCreateSession,
+} from "./sessions/create-session.js";
+export {
+  updateSessionTool,
+  handleUpdateSession,
+} from "./sessions/update-session.js";

@@ -42,6 +42,37 @@ import {
   handleListManualTestSuites,
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
+  // Releases
+  listReleasesTool,
+  handleListReleases,
+  getReleaseTool,
+  handleGetRelease,
+  createReleaseTool,
+  handleCreateRelease,
+  updateReleaseTool,
+  handleUpdateRelease,
+  // Manual runs
+  listManualRunsTool,
+  handleListManualRuns,
+  getManualRunTool,
+  handleGetManualRun,
+  createManualRunTool,
+  handleCreateManualRun,
+  updateManualRunTool,
+  handleUpdateManualRun,
+  listRunTestCasesTool,
+  handleListRunTestCases,
+  updateRunTestCaseTool,
+  handleUpdateRunTestCase,
+  // Sessions
+  listSessionsTool,
+  handleListSessions,
+  getSessionTool,
+  handleGetSession,
+  createSessionTool,
+  handleCreateSession,
+  updateSessionTool,
+  handleUpdateSession,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -52,7 +83,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.9",
+      version: "1.0.10",
     },
     {
       capabilities: {
@@ -79,6 +110,23 @@ async function main() {
     updateManualTestCaseTool,
     listManualTestSuitesTool,
     createManualTestSuiteTool,
+    // Releases
+    listReleasesTool,
+    getReleaseTool,
+    createReleaseTool,
+    updateReleaseTool,
+    // Manual runs
+    listManualRunsTool,
+    getManualRunTool,
+    createManualRunTool,
+    updateManualRunTool,
+    listRunTestCasesTool,
+    updateRunTestCaseTool,
+    // Sessions
+    listSessionsTool,
+    getSessionTool,
+    createSessionTool,
+    updateSessionTool,
   ];
 
   /**
@@ -219,6 +267,82 @@ async function main() {
     if (name === "create_manual_test_suite") {
       return await handleCreateManualTestSuite(
         args as Parameters<typeof handleCreateManualTestSuite>[0]
+      );
+    }
+
+    // Releases
+    if (name === "list_releases") {
+      return await handleListReleases(
+        args as Parameters<typeof handleListReleases>[0]
+      );
+    }
+    if (name === "get_release") {
+      return await handleGetRelease(
+        args as Parameters<typeof handleGetRelease>[0]
+      );
+    }
+    if (name === "create_release") {
+      return await handleCreateRelease(
+        args as Parameters<typeof handleCreateRelease>[0]
+      );
+    }
+    if (name === "update_release") {
+      return await handleUpdateRelease(
+        args as Parameters<typeof handleUpdateRelease>[0]
+      );
+    }
+
+    // Manual runs
+    if (name === "list_manual_runs") {
+      return await handleListManualRuns(
+        args as Parameters<typeof handleListManualRuns>[0]
+      );
+    }
+    if (name === "get_manual_run") {
+      return await handleGetManualRun(
+        args as Parameters<typeof handleGetManualRun>[0]
+      );
+    }
+    if (name === "create_manual_run") {
+      return await handleCreateManualRun(
+        args as Parameters<typeof handleCreateManualRun>[0]
+      );
+    }
+    if (name === "update_manual_run") {
+      return await handleUpdateManualRun(
+        args as Parameters<typeof handleUpdateManualRun>[0]
+      );
+    }
+    if (name === "list_run_test_cases") {
+      return await handleListRunTestCases(
+        args as Parameters<typeof handleListRunTestCases>[0]
+      );
+    }
+    if (name === "update_run_test_case") {
+      return await handleUpdateRunTestCase(
+        args as Parameters<typeof handleUpdateRunTestCase>[0]
+      );
+    }
+
+    // Sessions
+    if (name === "list_sessions") {
+      return await handleListSessions(
+        args as Parameters<typeof handleListSessions>[0]
+      );
+    }
+    if (name === "get_session") {
+      return await handleGetSession(
+        args as Parameters<typeof handleGetSession>[0]
+      );
+    }
+    if (name === "create_session") {
+      return await handleCreateSession(
+        args as Parameters<typeof handleCreateSession>[0]
+      );
+    }
+    if (name === "update_session") {
+      return await handleUpdateSession(
+        args as Parameters<typeof handleUpdateSession>[0]
       );
     }
 
