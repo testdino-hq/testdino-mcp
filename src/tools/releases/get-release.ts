@@ -13,6 +13,7 @@ interface GetReleaseArgs {
 
 export const getReleaseTool = {
   name: "get_release",
+  annotations: { readOnlyHint: true },
   description:
     "Get the full details of one release: dates, status, linked issues, parent/root, and rolled-up progress stats (run counts, test status breakdown). releaseId accepts either the internal _id or a counter-style ID like 'MS-12'.",
   inputSchema: {

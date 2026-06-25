@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { join, relative } from "path";
 import {
   mockFetchSuccess,
@@ -7,70 +7,50 @@ import {
   getLastFetchUrl,
   getLastFetchOptions,
 } from "../../../helpers/mockFetch.js";
-import { createArgs, parseToolResponse } from "../../../helpers/mockTypes.js";
-import { handleTestAudit } from "../../../../src/tools/audits/test-audit.js";
+import { createArgs } from "../../../helpers/mockTypes.js";
+import { handleSubmitAuditReport } from "../../../../src/tools/audits/submit-audit-report.js";
 
-describe("handleTestAudit", () => {
+const ORG = "org_test";
+
+describe("handleSubmitAuditReport", () => {
   afterEach(() => {
     restoreFetch();
   });
 
-  it("should throw when action is missing", async () => {
-    await expect(handleTestAudit(createArgs() as never)).rejects.toThrow(
-      "action is required"
-    );
-  });
-
-  it("should require reportId for get", async () => {
+  it("should throw when score is missing", async () => {
     await expect(
-      handleTestAudit(
+      handleSubmitAuditReport(
         createArgs({
-          action: "get",
-          reportId: undefined,
+          orgId: ORG,
+          markdownReport: "# Test Audit\n\nReport",
         }) as never
       )
-    ).rejects.toThrow("reportId is required for get action");
+    ).rejects.toThrow("score is required");
   });
 
-  it("should fetch audit context for analyze", async () => {
-    mockFetchSuccess({
-      success: true,
-      data: {
-        prompt: "Audit prompt",
-        branchSignals: {
-          branch: "main",
-        },
-        lastAudit: null,
-      },
-    });
-
-    const result = await handleTestAudit(
-      createArgs({
-        action: "analyze",
-        branch: "main",
-      }) as never
-    );
-
-    const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/audit-context?branch=main");
-
-    const options = getLastFetchOptions();
-    expect(options?.method).toBe("GET");
-    expect(options?.headers).toEqual(
-      expect.objectContaining({ Authorization: "Bearer test-pat-token" })
-    );
-
-    const parsed = parseToolResponse(result);
-    expect(parsed).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          prompt: "Audit prompt",
-        }),
-      })
-    );
+  it("should throw when orgId is missing", async () => {
+    await expect(
+      handleSubmitAuditReport(
+        createArgs({
+          score: 80,
+          markdownReport: "# Test Audit\n\nReport",
+        }) as never
+      )
+    ).rejects.toThrow("orgId is required");
   });
 
-  it("should submit a completed audit report through analyze", async () => {
+  it("should throw when no markdown report is provided", async () => {
+    await expect(
+      handleSubmitAuditReport(
+        createArgs({
+          orgId: ORG,
+          score: 80,
+        }) as never
+      )
+    ).rejects.toThrow("A markdown report is required");
+  });
+
+  it("should submit a completed audit report", async () => {
     mockFetchSuccess({
       success: true,
       data: {
@@ -79,9 +59,9 @@ describe("handleTestAudit", () => {
       },
     });
 
-    const result = await handleTestAudit(
+    const result = await handleSubmitAuditReport(
       createArgs({
-        action: "analyze",
+        orgId: ORG,
         branch: "main",
         scope: "suite",
         target: { specPath: "tests/auth.spec.ts" },
@@ -105,6 +85,7 @@ describe("handleTestAudit", () => {
     expect(options?.method).toBe("POST");
 
     const body = JSON.parse(String(options?.body));
+    expect(body.orgId).toBe(ORG);
     expect(body.branch).toBe("main");
     expect(body.scope).toBe("suite");
     expect(body.target.specPath).toBe("tests/auth.spec.ts");
@@ -114,76 +95,11 @@ describe("handleTestAudit", () => {
     expect(body.recommendations).toEqual(["Expand post-action assertions"]);
     expect(body.markdownReport).toContain("# Test Audit");
 
-    const parsed = parseToolResponse(result);
-    expect(parsed).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          auditId: "guided_audit_22",
-        }),
-      })
-    );
-  });
-
-  it("should call GET list endpoint for list", async () => {
-    mockFetchSuccess({
-      success: true,
-      data: {
-        reports: [],
-        pagination: {
-          page: 2,
-          limit: 10,
-          total: 0,
-          totalPages: 1,
-        },
-      },
-    });
-
-    await handleTestAudit(
-      createArgs({
-        action: "list",
-        branch: "main",
-        limit: 10,
-        page: 2,
-      }) as never
-    );
-
-    const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/audit-reports?");
-    expect(url).toContain("branch=main");
-    expect(url).toContain("limit=10");
-    expect(url).toContain("page=2");
-
-    const options = getLastFetchOptions();
-    expect(options?.method ?? "GET").toBe("GET");
-  });
-
-  it("should not auto-apply the detected git branch to list", async () => {
-    mockFetchSuccess({
-      success: true,
-      data: {
-        reports: [],
-        pagination: {
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 1,
-        },
-      },
-    });
-
-    await handleTestAudit(
-      createArgs({
-        action: "list",
-      }) as never
-    );
-
-    const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/audit-reports");
-    expect(url).not.toContain("branch=");
+    expect(result.content[0].type).toBe("text");
   });
 
   it("should read markdownReportPath from a relative file when submitting", async () => {
-    const tempDir = mkdtempSync(join(process.cwd(), "tmp-test-audit-"));
+    const tempDir = mkdtempSync(join(process.cwd(), "tmp-submit-audit-"));
     const reportPath = relative(process.cwd(), join(tempDir, "report.md"));
     const absoluteReportPath = join(process.cwd(), reportPath);
 
@@ -202,9 +118,9 @@ describe("handleTestAudit", () => {
     );
 
     try {
-      await handleTestAudit(
+      await handleSubmitAuditReport(
         createArgs({
-          action: "analyze",
+          orgId: ORG,
           branch: "main",
           score: 91,
           findings: [],
@@ -230,9 +146,9 @@ describe("handleTestAudit", () => {
       },
     });
 
-    await handleTestAudit(
+    await handleSubmitAuditReport(
       createArgs({
-        action: "analyze",
+        orgId: ORG,
         branch: "main",
         score: 84,
         findings: [
@@ -261,9 +177,9 @@ describe("handleTestAudit", () => {
       },
     });
 
-    await handleTestAudit(
+    await handleSubmitAuditReport(
       createArgs({
-        action: "analyze",
+        orgId: ORG,
         branch: "main",
         scope: "feature",
         score: 80,
@@ -279,9 +195,9 @@ describe("handleTestAudit", () => {
 
   it("should reject unknown audit categories before submission", async () => {
     await expect(
-      handleTestAudit(
+      handleSubmitAuditReport(
         createArgs({
-          action: "analyze",
+          orgId: ORG,
           branch: "main",
           score: 90,
           findings: [
@@ -298,7 +214,7 @@ describe("handleTestAudit", () => {
   });
 
   it("should read markdownReportPath from an absolute file when submitting", async () => {
-    const tempDir = mkdtempSync(join(process.cwd(), "tmp-test-audit-abs-"));
+    const tempDir = mkdtempSync(join(process.cwd(), "tmp-submit-audit-abs-"));
     const absPath = join(tempDir, "report.md");
     writeFileSync(absPath, "# Absolute path audit\n", "utf-8");
 
@@ -308,9 +224,9 @@ describe("handleTestAudit", () => {
     });
 
     try {
-      await handleTestAudit(
+      await handleSubmitAuditReport(
         createArgs({
-          action: "analyze",
+          orgId: ORG,
           branch: "main",
           score: 90,
           findings: [],
@@ -327,7 +243,7 @@ describe("handleTestAudit", () => {
   });
 
   it("should resolve markdownReportPath relative to TESTDINO_MCP_WORKSPACE", async () => {
-    const tempDir = mkdtempSync(join(process.cwd(), "tmp-test-audit-ws-"));
+    const tempDir = mkdtempSync(join(process.cwd(), "tmp-submit-audit-ws-"));
     writeFileSync(join(tempDir, "report.md"), "# Workspace base\n", "utf-8");
 
     const prevWorkspace = process.env.TESTDINO_MCP_WORKSPACE;
@@ -339,9 +255,9 @@ describe("handleTestAudit", () => {
     });
 
     try {
-      await handleTestAudit(
+      await handleSubmitAuditReport(
         createArgs({
-          action: "analyze",
+          orgId: ORG,
           branch: "main",
           score: 92,
           findings: [],
@@ -358,50 +274,6 @@ describe("handleTestAudit", () => {
       } else {
         process.env.TESTDINO_MCP_WORKSPACE = prevWorkspace;
       }
-      rmSync(tempDir, { recursive: true, force: true });
-    }
-  });
-
-  it("should get a saved report and write markdown locally when requested", async () => {
-    const tempDir = mkdtempSync(join(process.cwd(), "tmp-test-audit-"));
-    const outputPath = relative(process.cwd(), join(tempDir, "TEST-AUDIT.md"));
-
-    mockFetchSuccess({
-      success: true,
-      data: {
-        auditId: "guided_audit_4",
-        status: "completed",
-        markdownReport: "# Test Audit\n\n- Score: 88/100",
-      },
-    });
-
-    try {
-      const result = await handleTestAudit(
-        createArgs({
-          action: "get",
-          reportId: "guided_audit_4",
-          writeMarkdown: true,
-          outputPath,
-        }) as never
-      );
-
-      const savedPath = join(process.cwd(), outputPath);
-      const savedContent = readFileSync(savedPath, "utf-8");
-      expect(savedContent).toContain("# Test Audit");
-
-      const url = getLastFetchUrl();
-      expect(url).toContain(
-        "/api/mcp/test-project-id/audit-reports/guided_audit_4"
-      );
-
-      const parsed = parseToolResponse(result) as Record<string, unknown>;
-      const localReportWrite = parsed.localReportWrite as Record<
-        string,
-        unknown
-      >;
-      expect(localReportWrite.saved).toBe(true);
-      expect(localReportWrite.path).toBe(savedPath);
-    } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });

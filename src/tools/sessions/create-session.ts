@@ -24,6 +24,7 @@ interface CreateSessionArgs {
 
 export const createSessionTool = {
   name: "create_session",
+  annotations: { readOnlyHint: false, destructiveHint: false },
   description:
     'Create a new exploratory testing session. Requires write permission. mission accepts rich HTML (the high-level charter). assigneeUserId accepts either a User _id ("user_abc...") or an email address — the email is resolved against TestDino users automatically. estimate is in minutes. Findings cannot be created here — add them in the UI. IMPORTANT: tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT the comma-separated form that list_sessions accepts as a filter.',
   inputSchema: {

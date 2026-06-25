@@ -56,6 +56,7 @@ interface ListTestCasesParams {
 
 export const listTestCasesTool = {
   name: "list_testcase",
+  annotations: { readOnlyHint: true },
   description:
     "List test cases with comprehensive filtering options. You can filter by test run (ID or counter), status, spec file, error category, browser, tags, runtime, artifacts, error messages, attempt number, branch, time interval, environment, author, or commit hash. When using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all), the tool first lists test runs matching those criteria, then returns test cases from those filtered test runs. Use this to find specific test cases across your test runs.",
   inputSchema: {

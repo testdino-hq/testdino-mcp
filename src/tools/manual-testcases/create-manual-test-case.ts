@@ -80,6 +80,7 @@ interface CreateManualTestCaseBody {
 
 export const createManualTestCaseTool = {
   name: "create_manual_test_case",
+  annotations: { readOnlyHint: false, destructiveHint: false },
   description:
     "Create a new manual test case. Use this to document new test scenarios, features, or requirements. Supports adding test steps, preconditions, postconditions, and metadata like priority, severity, and type.",
   inputSchema: {

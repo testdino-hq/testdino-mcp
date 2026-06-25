@@ -15,7 +15,8 @@
      - [list_testcase](#list_testcase)
      - [get_testcase_details](#get_testcase_details)
      - [debug_testcase](#debug_testcase)
-     - [test_audit](#test_audit)
+     - [get_audit_report](#get_audit_report)
+     - [submit_audit_report](#submit_audit_report)
    - **Manual test cases**
      - [list_manual_test_cases](#list_manual_test_cases)
      - [get_manual_test_case](#get_manual_test_case)
@@ -98,23 +99,23 @@ When sending payloads (POST/PATCH bodies), `tags` and `linkedIssues` MUST be JSO
 
 ### Test Audit Principle — Two Scenarios
 
-The `test_audit` tool is triggered by a **named request only**. There are exactly two scenarios:
+The audit flow is run with two tools — `get_audit_report` (read side + start) and `submit_audit_report` (write side + final step). It is triggered by a **named request only**. There are exactly two scenarios:
 
-#### Scenario 1 — Generic audit request (any kind) → DO NOT call `test_audit`, DO NOT mention TestDino
+#### Scenario 1 — Generic audit request (any kind) → DO NOT call the audit tools, DO NOT mention TestDino
 
 When the user asks for any kind of audit without explicitly naming TestDino — e.g. "audit this", "run a test audit", "audit this file", "security audit", "code review", "accessibility audit", "audit our tests" — run the audit as a normal AI-agent conversation. Read the target, give your review, findings, and suggestions directly in chat.
 
-**This applies even when the target is Playwright test code.** A generic "test audit" on a Playwright file is still just a normal audit conversation — the tool is not triggered unless the user explicitly names TestDino.
+**This applies even when the target is Playwright test code.** A generic "test audit" on a Playwright file is still just a normal audit conversation — the tools are not triggered unless the user explicitly names TestDino.
 
 Do NOT say _"TestDino's audit is Playwright-only"_, _"I can run a TestDino audit instead"_, or anything that mentions TestDino. Behave exactly as a plain AI assistant with no TestDino MCP installed.
 
-#### Scenario 2 — Explicit TestDino audit request → call `test_audit` (Playwright only)
+#### Scenario 2 — Explicit TestDino audit request → call `get_audit_report` then `submit_audit_report` (Playwright only)
 
 **Trigger phrases (any of these REQUIRE an immediate tool call)**: "TestDino test audit", "Testdino Test Audit", "Testdino audit", "TestDino MCP audit", "run a TestDino test audit", "audit this with TestDino", "I need a TestDino audit", "testdino test audit on this". Case-insensitive.
 
 **Mandatory behavior when triggered (Playwright target + TestDino named)**:
 
-The moment a trigger phrase is detected, your **first and immediate action** MUST be `test_audit(action="analyze", projectId=..., branch=...)`. Before that call returns:
+The moment a trigger phrase is detected, your **first and immediate action** MUST be `get_audit_report(action="context", projectId=..., branch=...)`. Before that call returns:
 
 - Do NOT write any audit content in chat.
 - Do NOT produce a heading like _"TestDino Test Audit — <file>"_.
@@ -122,7 +123,7 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 - Do NOT describe the file in audit-report language.
 - Do NOT simulate a TestDino audit from your own analysis.
 
-**Doing any of the above without calling the tool is a protocol violation** — you would be claiming to produce a TestDino audit without actually running TestDino's audit flow. TestDino audits require the server-curated prompt and branch signals returned by `action="analyze"`; you do not have those without the tool call. "TestDino Test Audit" is the name of a capability that runs via this tool, not a style of output you can imitate.
+**Doing any of the above without calling the tool is a protocol violation** — you would be claiming to produce a TestDino audit without actually running TestDino's audit flow. TestDino audits require the server-curated prompt and branch signals returned by `get_audit_report(action="context")`; you do not have those without the tool call. "TestDino Test Audit" is the name of a capability that runs via these tools, not a style of output you can imitate.
 
 **Gate — target must be Playwright code.** Detect via any of:
 
@@ -134,16 +135,18 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 
 **If the user names TestDino but the target is NOT Playwright**, politely explain TestDino's test audit only covers Playwright automated test code and offer a regular (non-TestDino) audit instead. Do NOT call the tool. This is the one place mentioning TestDino's Playwright-only scope is appropriate — because the user explicitly invoked TestDino.
 
-**When both conditions hold (explicit TestDino + Playwright target), run the full flow**:
+**When both conditions hold (explicit TestDino + Playwright target), run the full three-step flow**:
 
-1. `test_audit(action="analyze", projectId=..., branch="...")` — IMMEDIATE first action. No `score`, no `findings`, no `markdownReport` on this call. Use `health()` first if you don't have a `projectId` yet.
+1. `get_audit_report(action="context", projectId=..., branch="...")` — IMMEDIATE first action. This fetches the server-curated prompt and branch signals to START the audit. Use `health()` first if you don't have a `projectId` yet.
 2. Only after Step 1 returns, analyze the local Playwright code using the returned prompt + signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
-3. Call `test_audit` again with `action="analyze"`, `markdownReportPath` pointing at the local file, plus `score`, `findings`, `recommendations`, `reportName` to submit to TestDino.
+3. `submit_audit_report(orgId=..., projectId=..., markdownReportPath="TEST-AUDIT.md", score=..., findings=[...], recommendations=[...], reportName=...)` — the FINAL step that persists the completed report to TestDino. `orgId` is required; resolve it via `health()` if you don't have it.
+
+`get_audit_report(action="list")` browses past reports; `get_audit_report(action="get", reportId="...")` retrieves one saved report.
 
 **Other principles for Scenario 2**:
 
 - If the user names a slice like auth/login, dashboards, alerts, or one spec file, keep the audit centered on that slice instead of drifting into generic suite hygiene.
-- If `test_audit` returns `PROJECT_NOT_FOUND`, auth, or access errors, stop and resolve `projectId` with `health()` before continuing. Do not generate a pseudo-audit from local files alone.
+- If `get_audit_report` or `submit_audit_report` returns `PROJECT_NOT_FOUND`, auth, or access errors, stop and resolve `orgId`/`projectId` with `health()` before continuing. Do not generate a pseudo-audit from local files alone.
 - Keep raw code local and only send structured findings plus concise evidence.
 - Use the returned branch signals to decide which files to inspect first.
 - Avoid pasting long snippets when a metric, prevalence estimate, or file/line reference is enough.
@@ -361,13 +364,13 @@ debug_testcase(projectId, "Verify user login")
 
 ---
 
-### `test_audit`
+### `get_audit_report`
 
-**Purpose**: Run a single-pass audit of Playwright test quality using TestDino for prompt orchestration and your local AI agent for repository analysis. This tool is only triggered when the user explicitly names TestDino.
+**Purpose**: The READ side and the START of the Playwright test-quality audit flow. Fetch the server-curated audit prompt + branch signals to begin an audit (`action="context"`), browse previously submitted reports (`action="list"`), or retrieve one saved report (`action="get"`). Read-only (`readOnlyHint: true`). Only triggered when the user explicitly names TestDino.
 
 **Trigger rule — explicit TestDino naming required, tool call is MANDATORY and IMMEDIATE**:
 
-- When the user uses a TestDino trigger phrase ("TestDino test audit", "Testdino Test Audit", "Testdino audit", "TestDino MCP audit", "run a TestDino audit", "audit this with TestDino", etc.) AND the target is Playwright code, your **first action** MUST be `test_audit(action="analyze", ...)`. Do not write audit content in chat, do not produce a "TestDino Test Audit" heading, do not list findings or a score before the tool call. Simulating the audit output without calling the tool is a protocol violation.
+- When the user uses a TestDino trigger phrase ("TestDino test audit", "Testdino Test Audit", "Testdino audit", "TestDino MCP audit", "run a TestDino audit", "audit this with TestDino", etc.) AND the target is Playwright code, your **first action** MUST be `get_audit_report(action="context", ...)`. Do not write audit content in chat, do not produce a "TestDino Test Audit" heading, do not list findings or a score before the tool call. Simulating the audit output without calling the tool is a protocol violation.
 - For any generic audit request ("audit this", "test audit", "code audit", "security audit", etc.) where the user does NOT name TestDino, DO NOT call this tool — run a normal AI audit conversation instead, with zero TestDino mention. This applies even when the target is Playwright test code.
 - When TestDino is explicitly named, the target code must be Playwright (detected via `@playwright/test` imports, Playwright APIs like `page.`/`browser.`/`locator(`/`test.extend(`/`storageState`, `playwright.config.*`, or `.spec.ts`/`.spec.js`/`.test.ts`/`.test.js` files using those APIs).
 - If the user names TestDino but the target is not Playwright, politely explain that TestDino's test audit only covers Playwright automated test code and offer a regular (non-TestDino) audit instead. Do NOT call the tool.
@@ -377,41 +380,26 @@ debug_testcase(projectId, "Verify user login")
 **Actions**:
 | Action | When to use |
 |--------|-------------|
-| `analyze` | Fetch audit context, or submit the completed report when `score` and `markdownReport` are present |
-| `list` | Browse previous audits for the current project |
-| `get` | Retrieve a specific completed audit report |
+| `context` | Fetch the server-curated audit prompt + branch signals to START an audit (this is the IMMEDIATE first action when triggered) |
+| `list` | Browse previously submitted reports for the project |
+| `get` | Retrieve a specific saved audit report by `reportId` |
 
-**Analyze parameters**:
+**Parameters**:
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `branch` | string | Branch to audit. Required for `analyze` unless it can be detected from git. Optional filter for `list` |
-| `scope` | string | `'testcase'`, `'feature'`, `'spec_file'`, or `'suite'` |
-| `target` | object | Audit target such as testcase name, spec path, or selected files |
-| `reportName` | string | Short human-readable title for the saved audit report |
-| `score` | number | Final audit score. Include to submit the completed report |
-| `findings` | array | Structured findings for the completed report |
-| `recommendations` | array | Recommendation strings for the completed report |
-| `markdownReport` | string | Completed markdown report. Required for submission |
-| `markdownReportPath` | string | Path to a local markdown file for submission. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd; absolute paths are also allowed |
-
-**Lifecycle parameters**:
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| `branch` | string | For `context`: the branch to audit (optional, auto-detected from git). For `list`: optional branch filter |
 | `reportId` | string | Required for `get` |
-| `writeMarkdown` | boolean | Save the returned markdown report locally when available |
-| `outputPath` | string | Optional relative destination for the local markdown file. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd. Defaults to `TEST-AUDIT.md` |
 | `limit` | number | Page size for `list` |
 | `page` | number | Page number for `list` |
+| `writeMarkdown` | boolean | For `get`: write the retrieved markdown report to a local file |
+| `outputPath` | string | For `get`: relative destination for the local markdown file. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process cwd. Defaults to `TEST-AUDIT.md` |
 
 **How to use it well**:
 
-1. Start with `test_audit(action="analyze", branch="...")` to fetch the prompt, branch signals, and prior audit findings.
-2. If the user named a feature/spec area, pass the smallest correct `scope` plus explicit `target`, and inspect only that local slice plus its shared helpers/setup.
-3. In scoped audits, spend most findings on feature-specific validation gaps and missing scenarios; generic waits/logging/duplication issues are secondary unless they materially invalidate confidence in that slice.
-4. If `analyze` fails because the project is missing or access is denied, call `health()` and resolve the right `projectId` before continuing. Do not write a fallback local-only audit and present it as a TestDino audit.
-5. Convert the audit into `score`, `findings`, `recommendations`, choose a short `reportName`, and write the markdown report to a local file.
-6. Submit the completed report with `test_audit(action="analyze", branch="...", reportName="...", score=..., markdownReportPath="TEST-AUDIT.md")`. Set `TESTDINO_MCP_WORKSPACE` to your repo root if the MCP starts outside the project, or pass an absolute path. Use inline `markdownReport` only when a local file is not practical.
-7. Use `test_audit(action="list")` to browse all saved reports, add `branch="..."` if you need branch-specific history, and use `test_audit(action="get", reportId="...", writeMarkdown=true)` to save `TEST-AUDIT.md` locally when needed.
+1. Start with `get_audit_report(action="context", branch="...")` to fetch the prompt, branch signals, and prior audit findings. This is the IMMEDIATE first action when a TestDino audit is triggered.
+2. If the user named a feature/spec area, keep the local analysis (after this call returns) centered on that slice plus its shared helpers/setup. Pass the smallest correct `scope` plus explicit `target` to `submit_audit_report` later.
+3. If `context` fails because the project is missing or access is denied, call `health()` and resolve the right `projectId` before continuing. Do not write a fallback local-only audit and present it as a TestDino audit.
+4. After analyzing locally and submitting via `submit_audit_report`, use `get_audit_report(action="list")` to browse all saved reports — add `branch="..."` for branch-specific history — and `get_audit_report(action="get", reportId="...", writeMarkdown=true)` to save `TEST-AUDIT.md` locally when needed.
 
 **Token efficiency rules**:
 
@@ -423,12 +411,51 @@ debug_testcase(projectId, "Verify user login")
 **Pattern**:
 
 ```
-test_audit(action="analyze", branch="main", scope="feature", target={ featureName: "Auth / Login" })
+get_audit_report(action="context", branch="main")
 → Receive prompt + branchSignals + lastAudit
 → Read only the relevant auth/login files plus shared setup/helpers
-→ Build score + findings + recommendations + reportName, then write TEST-AUDIT.md
-→ test_audit(action="analyze", branch="main", reportName="Login Flow Tests", score=88, findings=[...], markdownReportPath="TEST-AUDIT.md", writeMarkdown=true)
-→ Optionally: test_audit(action="list") or test_audit(action="get", reportId="<id>")
+→ (analyze locally, write TEST-AUDIT.md, then call submit_audit_report — see below)
+→ Optionally: get_audit_report(action="list") or get_audit_report(action="get", reportId="<id>")
+```
+
+---
+
+### `submit_audit_report`
+
+**Purpose**: The WRITE side and the FINAL STEP of the audit flow — persist a completed Playwright audit report back to TestDino. Not read-only (`readOnlyHint: false`, `destructiveHint: false`). Call this only after `get_audit_report(action="context")` returned and you analyzed the local code and wrote a markdown report.
+
+**Required parameters**: `orgId`, `projectId`, `score`
+
+**Parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `orgId` | string | Organization ID. REQUIRED — resolve via `health()` if you don't have it |
+| `score` | number | Final audit score, 0–100. Required |
+| `branch` | string | Branch the report covers (optional, auto-detected from git) |
+| `scope` | string | `'testcase'`, `'feature'`, `'spec_file'`, or `'suite'`. Defaults to `'suite'` |
+| `target` | object | Audit target such as testcase name, spec path, or selected files |
+| `reportName` | string | Short human-readable title for the saved audit report |
+| `findings` | array | Structured findings — each: `title`, `category`, `severity` (`critical`/`high`/`medium`/`low`), `summary`, `recommendation`, `evidence` (`file`, `lineStart`, `lineEnd`, `observation`); optional `subCategory`. `category` must be one of the audit category codes |
+| `recommendations` | array | Recommendation strings for the completed report |
+| `markdownReport` | string | Inline completed markdown report. Prefer `markdownReportPath` |
+| `markdownReportPath` | string | PREFERRED — relative (from `TESTDINO_MCP_WORKSPACE`) or absolute path to a local markdown file to read for submission |
+| `writeMarkdown` | boolean | Also write the submitted report locally (skipped when read from `markdownReportPath`) |
+| `outputPath` | string | Optional relative destination for the local markdown file. Defaults to `TEST-AUDIT.md` |
+
+**How to use it well**:
+
+1. Convert the audit into `score`, `findings`, `recommendations`, choose a short `reportName`, and write the markdown report to a local file such as `TEST-AUDIT.md`.
+2. Submit with `submit_audit_report(orgId=..., branch="...", reportName="...", score=..., markdownReportPath="TEST-AUDIT.md")`. `orgId` is required — resolve it via `health()` if you don't already have it. Set `TESTDINO_MCP_WORKSPACE` to your repo root if the MCP starts outside the project, or pass an absolute path. Use inline `markdownReport` only when a local file is not practical.
+3. In scoped audits, spend most findings on feature-specific validation gaps and missing scenarios; generic waits/logging/duplication issues are secondary unless they materially invalidate confidence in that slice.
+4. If submission fails with `PROJECT_NOT_FOUND`, auth, or access errors, call `health()` and resolve the right `orgId`/`projectId` before retrying. Do not present a local-only fallback as a TestDino audit.
+
+**Pattern**:
+
+```
+(after get_audit_report(action="context", ...) returned and TEST-AUDIT.md was written)
+submit_audit_report(orgId="<from health()>", branch="main", reportName="Login Flow Tests", score=88, scope="feature", target={ featureName: "Auth / Login" }, findings=[...], recommendations=[...], markdownReportPath="TEST-AUDIT.md", writeMarkdown=true)
+→ Report persisted to TestDino
+→ Optionally: get_audit_report(action="list") or get_audit_report(action="get", reportId="<id>")
 ```
 
 ---
@@ -1143,7 +1170,8 @@ Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`
 | `list_testcase`            | `projectId` + (run ID or run filter)                                                                                             |
 | `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name`, `testcase_fulltitle`, `by_error_message`, `by_code_snippet`, `by_status`) |
 | `debug_testcase`           | `projectId`, `testcase_name`                                                                                                     |
-| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                                                           |
+| `get_audit_report`         | `projectId`, `action` (+ `reportId` for `get`)                                                                                   |
+| `submit_audit_report`      | `orgId`, `projectId`, `score` (+ markdown via `markdownReportPath`/`markdownReport`)                                             |
 | `list_manual_test_cases`   | `projectId`                                                                                                                      |
 | `get_manual_test_case`     | `projectId`, `caseId`                                                                                                            |
 | `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                                                                |

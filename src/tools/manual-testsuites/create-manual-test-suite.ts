@@ -22,6 +22,7 @@ interface CreateManualTestSuiteBody {
 
 export const createManualTestSuiteTool = {
   name: "create_manual_test_suite",
+  annotations: { readOnlyHint: false, destructiveHint: false },
   description:
     "Create a new test suite folder to organize test cases. Use this to create a logical grouping for related test cases. Suites can be nested by providing a parentSuiteId.",
   inputSchema: {

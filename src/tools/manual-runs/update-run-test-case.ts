@@ -16,6 +16,7 @@ interface UpdateRunTestCaseArgs {
 
 export const updateRunTestCaseTool = {
   name: "update_run_test_case",
+  annotations: { readOnlyHint: false, destructiveHint: true },
   description:
     "Set the assignee and/or result for one test case inside a manual run — exactly what clicking 'Assign to' and changing the result pill does in the UI. Requires write permission. rtcRef accepts the caseKey ('TC-156'), the internal `tcm_rtc_...` RTC ID, or the underlying test case _id. Works for both already-touched cases and 'untested' virtual cases (the server auto-creates the per-case record on first edit). IMPORTANT: updates.assigneeUserId accepts an email OR a User _id — both work. updates.result canonical values are 'untested', 'passed', 'failed', 'blocked', 'skipped', 'retest' — pass display ('Passed', 'Blocked') or canonical form, server normalizes lowercase+underscored. To assign or update multiple cases at once, call this tool in parallel (one call per case).",
   inputSchema: {

@@ -21,6 +21,7 @@ interface ListReleasesArgs {
 
 export const listReleasesTool = {
   name: "list_releases",
+  annotations: { readOnlyHint: true },
   description:
     "Browse releases (a.k.a. milestones) for a project. Use search to match by name; type filters by free-text release type; isCompleted filters by completion state; parentReleaseId returns the direct children of a release (releases nest up to 3 levels deep). Default page size 25 (max 200).",
   inputSchema: {

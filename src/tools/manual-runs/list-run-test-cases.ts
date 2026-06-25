@@ -22,6 +22,7 @@ interface ListRunTestCasesArgs {
 
 export const listRunTestCasesTool = {
   name: "list_run_test_cases",
+  annotations: { readOnlyHint: true },
   description:
     "Get the per-case execution records inside a manual run — what the UI shows as rows in the run's test-case table. Each row carries the test case identity (caseKey like 'TC-156', title), the current assignee, and the current result/status ('untested', 'passed', 'failed', etc.). Filter by assignee (email or User _id) or result/status. Use this before update_run_test_case so you have the rtcRef for each case you want to update.",
   inputSchema: {

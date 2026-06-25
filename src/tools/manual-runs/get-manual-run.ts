@@ -13,6 +13,7 @@ interface GetManualRunArgs {
 
 export const getManualRunTool = {
   name: "get_manual_run",
+  annotations: { readOnlyHint: true },
   description:
     "Get the full details of one manual test run: name, status, environment, linked release, test stats (total/passed/failed/blocked/untested), contributors, attachments, linked issues. runId accepts either the internal _id or a counter-style ID like 'RUN-12'.",
   inputSchema: {

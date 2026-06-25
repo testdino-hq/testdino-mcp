@@ -24,6 +24,7 @@ interface CreateReleaseArgs {
 
 export const createReleaseTool = {
   name: "create_release",
+  annotations: { readOnlyHint: false, destructiveHint: false },
   description:
     "Create a new release. Requires write permission (org_owner, org_admin, or org_member). Use parentReleaseId to nest under another release (max 3 levels deep). startDate/endDate are ISO date strings. isStarted/isCompleted are independent flags — startedAt/completedAt record when those transitions happened.",
   inputSchema: {

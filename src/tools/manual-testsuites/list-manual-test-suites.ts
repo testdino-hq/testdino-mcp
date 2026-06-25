@@ -18,6 +18,7 @@ interface ListManualTestSuitesParams {
 
 export const listManualTestSuitesTool = {
   name: "list_manual_test_suites",
+  annotations: { readOnlyHint: true },
   description:
     "List the test suite hierarchy to help users find suiteIds for test case creation. Use this to navigate the test suite structure and understand test organization.",
   inputSchema: {

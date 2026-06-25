@@ -14,6 +14,7 @@ interface UpdateSessionArgs {
 
 export const updateSessionTool = {
   name: "update_session",
+  annotations: { readOnlyHint: false, destructiveHint: true },
   description:
     'Modify an existing exploratory session. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Findings are not editable here. updates.assigneeUserId accepts either a User _id or an email address. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
   inputSchema: {

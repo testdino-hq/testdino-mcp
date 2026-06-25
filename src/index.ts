@@ -28,8 +28,10 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
-  testAuditTool,
-  handleTestAudit,
+  getAuditReportTool,
+  handleGetAuditReport,
+  submitAuditReportTool,
+  handleSubmitAuditReport,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -103,7 +105,8 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
-    testAuditTool,
+    getAuditReportTool,
+    submitAuditReportTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -228,9 +231,15 @@ async function main() {
       );
     }
 
-    if (name === "test_audit") {
-      return await handleTestAudit(
-        args as Parameters<typeof handleTestAudit>[0]
+    if (name === "get_audit_report") {
+      return await handleGetAuditReport(
+        args as Parameters<typeof handleGetAuditReport>[0]
+      );
+    }
+
+    if (name === "submit_audit_report") {
+      return await handleSubmitAuditReport(
+        args as Parameters<typeof handleSubmitAuditReport>[0]
       );
     }
 

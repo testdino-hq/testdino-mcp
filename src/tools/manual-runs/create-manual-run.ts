@@ -26,6 +26,7 @@ interface CreateManualRunArgs {
 
 export const createManualRunTool = {
   name: "create_manual_run",
+  annotations: { readOnlyHint: false, destructiveHint: false },
   description:
     "Create a new manual test run. Requires write permission. selectionMode controls which test cases are included: 'all' (default — every case in the project) or 'selected' (use testCaseIds and/or suiteIds to scope). releaseId attaches the run to a release. note accepts rich HTML. IMPORTANT: tags must be a JSON array of strings here — e.g. [\"smoke\",\"regression\"] — NOT the comma-separated form that list_manual_runs accepts as a filter.",
   inputSchema: {

@@ -34,6 +34,7 @@ interface GetTestCaseDetailsArgs {
 
 export const getTestCaseDetailsTool = {
   name: "get_testcase_details",
+  annotations: { readOnlyHint: true },
   description:
     "Get detailed information about a specific test case. You can identify the test case in two ways: 1) By testcase_id (can be used alone), or 2) By testcase_name combined with testrun_id or counter (required because test cases can have the same name across different test runs). Returns error message, code snippet, file location, test steps per attempt, console logs, and optional artifacts (screenshots, videos, traces). Use steps_filter='failed_only' to return only steps that errored, stripping passing setup/hook steps. Use this to debug why a test failed or understand how it executed. Example: 'Get test case details for \"Verify user can logout and login\" in testrun #43'.",
   inputSchema: {

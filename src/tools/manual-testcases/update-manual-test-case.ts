@@ -67,6 +67,7 @@ interface UpdateManualTestCaseArgs {
 
 export const updateManualTestCaseTool = {
   name: "update_manual_test_case",
+  annotations: { readOnlyHint: false, destructiveHint: true },
   description:
     "Update an existing manual test case. Use this to modify test case details, steps, status, priority, or any other fields. Provide only the fields you want to update in the updates object. " +
     "To add comments, pass `updates.comments` as an array of strings — each becomes a new comment (PAT owner is author). " +

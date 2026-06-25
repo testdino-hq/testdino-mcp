@@ -14,6 +14,7 @@ interface UpdateManualRunArgs {
 
 export const updateManualRunTool = {
   name: "update_manual_run",
+  annotations: { readOnlyHint: false, destructiveHint: true },
   description:
     'Modify an existing manual test run. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
   inputSchema: {

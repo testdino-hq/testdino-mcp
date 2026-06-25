@@ -13,6 +13,7 @@ interface GetSessionArgs {
 
 export const getSessionTool = {
   name: "get_session",
+  annotations: { readOnlyHint: true },
   description:
     "Get the full details of one exploratory session: name, mission, status, assignee, linked release, attachments, linked issues, findings. sessionId accepts either the internal _id or a counter-style ID like 'SES-12'.",
   inputSchema: {

@@ -24,6 +24,7 @@ interface ListSessionsArgs {
 
 export const listSessionsTool = {
   name: "list_sessions",
+  annotations: { readOnlyHint: true },
   description:
     "Browse exploratory sessions for a project. Filter by status (active|closed), state, sessionType, assigneeUserId, release (releaseId), tags, or free-text search on name. Pass releaseId='none' for sessions not attached to a release. Default page size 25 (max 200).",
   inputSchema: {

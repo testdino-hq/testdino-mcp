@@ -8,6 +8,7 @@ import { getApiKey } from "../lib/env.js";
 
 export const healthTool = {
   name: "health",
+  annotations: { readOnlyHint: true },
   description:
     "Check if your TestDino connection is working. Verifies your PAT, shows your account information, and lists available organizations and projects. Use this first to make sure everything is set up correctly and to get organization/project IDs for other tools.",
   inputSchema: {

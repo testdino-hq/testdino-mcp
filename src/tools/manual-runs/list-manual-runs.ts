@@ -23,6 +23,7 @@ interface ListManualRunsArgs {
 
 export const listManualRunsTool = {
   name: "list_manual_runs",
+  annotations: { readOnlyHint: true },
   description:
     "Browse manual test runs for a project. Filter by status (active|closed), state (new|in_progress|on_hold|done), environment, release (releaseId), tags (csv or single), or free-text search on name. Pass releaseId='none' to list runs not attached to any release. Default page size 25 (max 200).",
   inputSchema: {

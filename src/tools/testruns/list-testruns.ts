@@ -32,6 +32,7 @@ interface ListTestRunsParams {
 
 export const listTestRunsTool = {
   name: "list_testruns",
+  annotations: { readOnlyHint: true },
   description:
     "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
   inputSchema: {

@@ -62,6 +62,7 @@ interface ListManualTestCasesParams {
 
 export const listManualTestCasesTool = {
   name: "list_manual_test_cases",
+  annotations: { readOnlyHint: true },
   description:
     "Search and list manual test cases with filtering capabilities. Use this to find specific manual test cases for QA testing, auditing, or test case management. Supports filtering by project, time, suite, status, priority, severity, type, layer, behavior, automation status, and tags.",
   inputSchema: {

@@ -20,6 +20,7 @@ interface GetRunDetailsParams {
 
 export const getRunDetailsTool = {
   name: "get_run_details",
+  annotations: { readOnlyHint: true },
   description:
     "Get detailed information about test runs. Shows test statistics (passed, failed, skipped, flaky), all test suites and cases, git metadata, and error details. Supports batch operations (comma-separated IDs, max 20). Use this to analyze test execution health or debug specific failures.",
   inputSchema: {
