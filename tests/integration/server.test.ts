@@ -28,8 +28,10 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
-  testAuditTool,
-  handleTestAudit,
+  getAuditReportTool,
+  handleGetAuditReport,
+  submitAuditReportTool,
+  handleSubmitAuditReport,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -42,6 +44,34 @@ import {
   handleListManualTestSuites,
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
+  listReleasesTool,
+  handleListReleases,
+  getReleaseTool,
+  handleGetRelease,
+  createReleaseTool,
+  handleCreateRelease,
+  updateReleaseTool,
+  handleUpdateRelease,
+  listManualRunsTool,
+  handleListManualRuns,
+  getManualRunTool,
+  handleGetManualRun,
+  createManualRunTool,
+  handleCreateManualRun,
+  updateManualRunTool,
+  handleUpdateManualRun,
+  listRunTestCasesTool,
+  handleListRunTestCases,
+  updateRunTestCaseTool,
+  handleUpdateRunTestCase,
+  listSessionsTool,
+  handleListSessions,
+  getSessionTool,
+  handleGetSession,
+  createSessionTool,
+  handleCreateSession,
+  updateSessionTool,
+  handleUpdateSession,
 } from "../../src/tools/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,13 +87,28 @@ const ALL_TOOL_NAMES = [
   "list_testcase",
   "get_testcase_details",
   "debug_testcase",
-  "test_audit",
+  "get_audit_report",
+  "submit_audit_report",
   "list_manual_test_cases",
   "get_manual_test_case",
   "create_manual_test_case",
   "update_manual_test_case",
   "list_manual_test_suites",
   "create_manual_test_suite",
+  "list_releases",
+  "get_release",
+  "create_release",
+  "update_release",
+  "list_manual_runs",
+  "get_manual_run",
+  "create_manual_run",
+  "update_manual_run",
+  "list_run_test_cases",
+  "update_run_test_case",
+  "list_sessions",
+  "get_session",
+  "create_session",
+  "update_session",
 ];
 
 function createServer() {
@@ -74,13 +119,28 @@ function createServer() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
-    testAuditTool,
+    getAuditReportTool,
+    submitAuditReportTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
     updateManualTestCaseTool,
     listManualTestSuitesTool,
     createManualTestSuiteTool,
+    listReleasesTool,
+    getReleaseTool,
+    createReleaseTool,
+    updateReleaseTool,
+    listManualRunsTool,
+    getManualRunTool,
+    createManualRunTool,
+    updateManualRunTool,
+    listRunTestCasesTool,
+    updateRunTestCaseTool,
+    listSessionsTool,
+    getSessionTool,
+    createSessionTool,
+    updateSessionTool,
   ];
 
   const server = new Server(
@@ -148,9 +208,13 @@ function createServer() {
       return await handleDebugTestCase(
         args as Parameters<typeof handleDebugTestCase>[0]
       );
-    if (name === "test_audit")
-      return await handleTestAudit(
-        args as Parameters<typeof handleTestAudit>[0]
+    if (name === "get_audit_report")
+      return await handleGetAuditReport(
+        args as Parameters<typeof handleGetAuditReport>[0]
+      );
+    if (name === "submit_audit_report")
+      return await handleSubmitAuditReport(
+        args as Parameters<typeof handleSubmitAuditReport>[0]
       );
     if (name === "list_manual_test_cases")
       return await handleListManualTestCases(
@@ -175,6 +239,62 @@ function createServer() {
     if (name === "create_manual_test_suite")
       return await handleCreateManualTestSuite(
         args as Parameters<typeof handleCreateManualTestSuite>[0]
+      );
+    if (name === "list_releases")
+      return await handleListReleases(
+        args as Parameters<typeof handleListReleases>[0]
+      );
+    if (name === "get_release")
+      return await handleGetRelease(
+        args as Parameters<typeof handleGetRelease>[0]
+      );
+    if (name === "create_release")
+      return await handleCreateRelease(
+        args as Parameters<typeof handleCreateRelease>[0]
+      );
+    if (name === "update_release")
+      return await handleUpdateRelease(
+        args as Parameters<typeof handleUpdateRelease>[0]
+      );
+    if (name === "list_manual_runs")
+      return await handleListManualRuns(
+        args as Parameters<typeof handleListManualRuns>[0]
+      );
+    if (name === "get_manual_run")
+      return await handleGetManualRun(
+        args as Parameters<typeof handleGetManualRun>[0]
+      );
+    if (name === "create_manual_run")
+      return await handleCreateManualRun(
+        args as Parameters<typeof handleCreateManualRun>[0]
+      );
+    if (name === "update_manual_run")
+      return await handleUpdateManualRun(
+        args as Parameters<typeof handleUpdateManualRun>[0]
+      );
+    if (name === "list_run_test_cases")
+      return await handleListRunTestCases(
+        args as Parameters<typeof handleListRunTestCases>[0]
+      );
+    if (name === "update_run_test_case")
+      return await handleUpdateRunTestCase(
+        args as Parameters<typeof handleUpdateRunTestCase>[0]
+      );
+    if (name === "list_sessions")
+      return await handleListSessions(
+        args as Parameters<typeof handleListSessions>[0]
+      );
+    if (name === "get_session")
+      return await handleGetSession(
+        args as Parameters<typeof handleGetSession>[0]
+      );
+    if (name === "create_session")
+      return await handleCreateSession(
+        args as Parameters<typeof handleCreateSession>[0]
+      );
+    if (name === "update_session")
+      return await handleUpdateSession(
+        args as Parameters<typeof handleUpdateSession>[0]
       );
 
     throw new Error(`Unknown tool: ${name}`);
@@ -208,10 +328,10 @@ describe("MCP Server Integration", () => {
   });
 
   describe("tool listing", () => {
-    it("should expose all 13 tools", async () => {
+    it("should expose all prod-aligned tools", async () => {
       const result = await client.listTools();
       const toolNames = result.tools.map((t) => t.name);
-      expect(toolNames).toHaveLength(13);
+      expect(toolNames).toHaveLength(28);
       for (const name of ALL_TOOL_NAMES) {
         expect(toolNames).toContain(name);
       }
@@ -356,8 +476,10 @@ function buildMinimalArgs(toolName: string): Record<string, unknown> {
       return { ...base, testcase_id: "tc-1" };
     case "debug_testcase":
       return { ...base, testcase_name: "test" };
-    case "test_audit":
+    case "get_audit_report":
       return { ...base, action: "list" };
+    case "submit_audit_report":
+      return { ...base, score: 80, markdownReport: "# Audit\n\nDone." };
     case "list_manual_test_cases":
       return base;
     case "get_manual_test_case":
@@ -370,6 +492,39 @@ function buildMinimalArgs(toolName: string): Record<string, unknown> {
       return base;
     case "create_manual_test_suite":
       return { ...base, name: "Suite" };
+    case "list_releases":
+      return base;
+    case "get_release":
+      return { ...base, releaseId: "MS-1" };
+    case "create_release":
+      return { ...base, name: "Release" };
+    case "update_release":
+      return { ...base, releaseId: "MS-1", updates: { name: "Updated" } };
+    case "list_manual_runs":
+      return base;
+    case "get_manual_run":
+      return { ...base, runId: "RUN-1" };
+    case "create_manual_run":
+      return { ...base, name: "Run" };
+    case "update_manual_run":
+      return { ...base, runId: "RUN-1", updates: { name: "Updated" } };
+    case "list_run_test_cases":
+      return { ...base, runId: "RUN-1" };
+    case "update_run_test_case":
+      return {
+        ...base,
+        runId: "RUN-1",
+        rtcRef: "TC-1",
+        updates: { result: "passed" },
+      };
+    case "list_sessions":
+      return base;
+    case "get_session":
+      return { ...base, sessionId: "SES-1" };
+    case "create_session":
+      return { ...base, name: "Session" };
+    case "update_session":
+      return { ...base, sessionId: "SES-1", updates: { name: "Updated" } };
     default:
       return base;
   }

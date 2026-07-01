@@ -44,7 +44,6 @@ describe("handleListTestRuns", () => {
         page: 2,
         by_time_interval: "1d",
         by_author: "alice",
-        by_environment: "staging",
         get_all: true,
       }) as never
     );
@@ -55,7 +54,6 @@ describe("handleListTestRuns", () => {
     expect(url).toContain("page=2");
     expect(url).toContain("by_time_interval=1d");
     expect(url).toContain("by_author=alice");
-    expect(url).toContain("by_environment=staging");
     expect(url).toContain("get_all=true");
   });
 

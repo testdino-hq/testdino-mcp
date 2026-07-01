@@ -15,7 +15,7 @@ describe("handleListTestCases", () => {
 
   it("should throw when no test run identifier or filter is provided", async () => {
     await expect(handleListTestCases(createArgs() as never)).rejects.toThrow(
-      "At least one of the following must be provided: by_testrun_id, counter, or any test run filter"
+      "At least one of the following must be provided: by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit"
     );
   });
 
@@ -83,6 +83,7 @@ describe("handleListTestCases", () => {
         by_author: "alice",
         by_commit: "abc1234",
         page: 2,
+        offset: 20,
         get_all: true,
       }) as never
     );
@@ -107,6 +108,7 @@ describe("handleListTestCases", () => {
     expect(url).toContain("by_author=alice");
     expect(url).toContain("by_commit=abc1234");
     expect(url).toContain("page=2");
+    expect(url).toContain("offset=20");
     expect(url).toContain("get_all=true");
   });
 

@@ -5,6 +5,10 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import {
+  attachmentItemSchema,
+  linkedIssueItemSchema,
+} from "../../lib/item-schemas.js";
 
 interface CreateSessionArgs {
   projectId: string;
@@ -36,8 +40,14 @@ export const createSessionTool = {
         type: "string",
         description: "Free-text type, e.g. 'Exploratory'.",
       },
-      config: { type: "string" },
-      environment: { type: "string" },
+      config: {
+        type: "string",
+        description: "Configuration notes or target setup for the session.",
+      },
+      environment: {
+        type: "string",
+        description: "Environment label, e.g. 'Staging'.",
+      },
       releaseId: {
         type: "string",
         description: "Attach session to this release.",
@@ -61,12 +71,12 @@ export const createSessionTool = {
       },
       linkedIssues: {
         type: "array",
-        items: {},
+        items: linkedIssueItemSchema,
         description: "Array of linked-issue objects.",
       },
       attachments: {
         type: "array",
-        items: {},
+        items: attachmentItemSchema,
         description: "Array of attachment objects or URLs.",
       },
     },

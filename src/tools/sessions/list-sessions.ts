@@ -31,13 +31,20 @@ export const listSessionsTool = {
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
       search: { type: "string", description: "Match by session name." },
-      status: { type: "string", enum: ["active", "closed"] },
+      status: {
+        type: "string",
+        enum: ["active", "closed"],
+        description: "Filter by open/closed session lifecycle status.",
+      },
       state: {
         type: "string",
         description:
           "Workflow state. Either canonical ('under_review', 'done') or display ('Under review', 'Done') form — the server normalizes lowercase+underscored.",
       },
-      sessionType: { type: "string" },
+      sessionType: {
+        type: "string",
+        description: "Filter by session type label.",
+      },
       assigneeUserId: {
         type: "string",
         description:
@@ -48,10 +55,21 @@ export const listSessionsTool = {
         description: "'none' for unlinked sessions.",
       },
       tags: { type: "string", description: "Single tag or comma-separated." },
-      isClosed: { type: "boolean" },
-      sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
+      isClosed: {
+        type: "boolean",
+        description: "Filter by whether the session is closed.",
+      },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "updatedAt", "name"],
+        description: "Field to sort sessions by.",
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+        description: "Sort direction.",
+      },
+      page: { type: "number", description: "Page number for pagination." },
       limit: { type: "number", description: "Default 25 (max 200)." },
     },
     required: ["projectId"],

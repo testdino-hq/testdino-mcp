@@ -98,6 +98,7 @@ describe("handleGetTestCaseDetails", () => {
         steps_filter: "failed_only",
         limit: 25,
         page: 3,
+        offset: 50,
         sort_by: "duration",
         sort_order: "asc",
         get_all: true,
@@ -125,6 +126,7 @@ describe("handleGetTestCaseDetails", () => {
     expect(url).toContain("steps_filter=failed_only");
     expect(url).toContain("limit=25");
     expect(url).toContain("page=3");
+    expect(url).toContain("offset=50");
     expect(url).toContain("sort_by=duration");
     expect(url).toContain("sort_order=asc");
     expect(url).toContain("get_all=true");

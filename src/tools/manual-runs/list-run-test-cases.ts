@@ -51,9 +51,14 @@ export const listRunTestCasesTool = {
       sortBy: {
         type: "string",
         enum: ["createdAt", "updatedAt", "status", "caseKey"],
+        description: "Field to sort run test-case rows by.",
       },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+        description: "Sort direction.",
+      },
+      page: { type: "number", description: "Page number for pagination." },
       limit: { type: "number", description: "Default 25 (max 200)." },
     },
     required: ["projectId", "runId"],

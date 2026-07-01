@@ -125,8 +125,10 @@ export interface ClassicTestStep {
 }
 
 export interface GherkinTestStep {
-  event: "Given" | "When" | "And" | "Then" | "But";
-  stepDescription: string;
+  event?: "Given" | "When" | "And" | "Then" | "But";
+  stepDescription?: string;
+  keyword?: "Given" | "When" | "And" | "Then" | "But";
+  text?: string;
   attachments?: AttachmentInput[];
 }
 

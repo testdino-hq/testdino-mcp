@@ -43,10 +43,9 @@ export const endpoints = {
     by_branch?: string;
     by_time_interval?: string;
     by_author?: string;
-    by_commit?: string;
-    by_environment?: string;
     limit?: number;
     page?: number;
+    offset?: number;
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
@@ -97,6 +96,7 @@ export const endpoints = {
    * @param params.by_author - Optional: Filter by author
    * @param params.by_commit - Optional: Filter by commit hash
    * @param params.page - Optional: Page number
+   * @param params.offset - Optional: Skip N results
    * @param params.get_all - Optional: Get all results
    */
   listTestCases: (params?: {
@@ -120,6 +120,7 @@ export const endpoints = {
     by_author?: string;
     by_commit?: string;
     page?: number;
+    offset?: number;
     get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
@@ -160,6 +161,7 @@ export const endpoints = {
     steps_filter?: "failed_only";
     limit?: number;
     page?: number;
+    offset?: number;
     sort_by?: string;
     sort_order?: string;
     get_all?: boolean | string;

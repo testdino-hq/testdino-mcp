@@ -5,6 +5,11 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import {
+  attachmentItemSchema,
+  linkedIssueItemSchema,
+  linkItemSchema,
+} from "../../lib/item-schemas.js";
 
 interface CreateManualRunArgs {
   projectId: string;
@@ -17,7 +22,7 @@ interface CreateManualRunArgs {
   testCaseIds?: string[];
   suiteIds?: string[];
   includeUnsorted?: boolean;
-  forecast?: unknown;
+  forecast?: number;
   tags?: string[];
   linkedIssues?: unknown[];
   attachments?: unknown[];
@@ -49,10 +54,28 @@ export const createManualRunTool = {
         enum: ["all", "selected"],
         description: "Default 'all'.",
       },
-      testCaseIds: { type: "array", items: { type: "string" } },
-      suiteIds: { type: "array", items: { type: "string" } },
-      includeUnsorted: { type: "boolean" },
-      forecast: {},
+      testCaseIds: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Specific manual test case IDs to include when selectionMode is 'selected'.",
+      },
+      suiteIds: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Manual test suite IDs whose cases should be included when selectionMode is 'selected'.",
+      },
+      includeUnsorted: {
+        type: "boolean",
+        description:
+          "When selecting suites, also include cases that are not assigned to a suite.",
+      },
+      forecast: {
+        type: "number",
+        description:
+          "Numeric forecast/target for the run, matching the TestDino manual run model.",
+      },
       tags: {
         type: "array",
         items: { type: "string" },
@@ -61,18 +84,18 @@ export const createManualRunTool = {
       },
       linkedIssues: {
         type: "array",
-        items: {},
+        items: linkedIssueItemSchema,
         description:
           "Array of linked-issue objects (same shape list_manual_runs returns).",
       },
       attachments: {
         type: "array",
-        items: {},
+        items: attachmentItemSchema,
         description: "Array of attachment objects or URLs.",
       },
       links: {
         type: "array",
-        items: {},
+        items: linkItemSchema,
         description: "Array of link objects.",
       },
     },

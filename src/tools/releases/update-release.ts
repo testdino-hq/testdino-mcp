@@ -5,6 +5,7 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import { buildTargetItemSchema } from "../../lib/item-schemas.js";
 
 interface UpdateReleaseArgs {
   projectId: string;
@@ -15,7 +16,7 @@ interface UpdateReleaseArgs {
 export const updateReleaseTool = {
   name: "update_release",
   description:
-    "Modify an existing release. Send only the fields you want to change inside the `updates` object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues.",
+    "Modify an existing release. Send only the fields you want to change inside the `updates` object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
   inputSchema: {
     type: "object",
     properties: {
@@ -27,7 +28,16 @@ export const updateReleaseTool = {
       updates: {
         type: "object",
         description:
-          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues.",
+          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
+        properties: {
+          buildTarget: buildTargetItemSchema,
+          testers: {
+            type: "array",
+            items: { type: "string" },
+            description: "User _ids assigned as testers. Must be org members.",
+          },
+        },
+        additionalProperties: true,
       },
     },
     required: ["projectId", "releaseId", "updates"],

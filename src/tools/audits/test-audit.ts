@@ -18,8 +18,10 @@ import {
   normalizeAuditCategory,
   normalizeAuditSubCategory,
 } from "./audit-categories.js";
+import { findingItemSchema } from "../../lib/item-schemas.js";
 
 type TestAuditAction = "analyze" | "list" | "get";
+type GetAuditReportAction = "context" | "list" | "get";
 
 interface TestAuditArgs {
   token?: string;
@@ -40,6 +42,34 @@ interface TestAuditArgs {
   limit?: number;
   page?: number;
   // Local file write
+  writeMarkdown?: boolean;
+  outputPath?: string;
+}
+
+interface GetAuditReportArgs {
+  token?: string;
+  projectId: string;
+  action: GetAuditReportAction;
+  branch?: string;
+  reportId?: string;
+  limit?: number;
+  page?: number;
+  writeMarkdown?: boolean;
+  outputPath?: string;
+}
+
+interface SubmitAuditReportArgs {
+  token?: string;
+  projectId: string;
+  branch?: string;
+  scope?: string;
+  target?: Record<string, unknown>;
+  reportName?: string;
+  score: number;
+  findings?: Array<Record<string, unknown>>;
+  recommendations?: string[];
+  markdownReport?: string;
+  markdownReportPath?: string;
   writeMarkdown?: boolean;
   outputPath?: string;
 }
@@ -158,6 +188,118 @@ export const testAuditTool = {
       },
     },
     required: ["projectId", "action"],
+  },
+};
+
+export const getAuditReportTool = {
+  name: "get_audit_report",
+  description:
+    "Read-only TestDino Playwright audit reads. Three modes via action: action='context' fetches the server-curated audit prompt + branch signals to START an audit; action='list' browses previously submitted reports; action='get' retrieves one saved report by reportId. " +
+    "Only use the TestDino audit flow when the user explicitly names TestDino. When triggered, the first action must be get_audit_report(action='context', projectId, branch) before writing findings or a score.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      projectId: {
+        type: "string",
+        description: "Project ID (required).",
+      },
+      action: {
+        type: "string",
+        enum: ["context", "list", "get"],
+        description:
+          "Read mode: 'context' fetches audit prompt + branch signals, 'list' browses reports, 'get' retrieves one report by reportId.",
+      },
+      branch: {
+        type: "string",
+        description:
+          "Git branch. For action='context', the branch to audit when known. For action='list', optional filter.",
+      },
+      reportId: {
+        type: "string",
+        description: "Report ID. Required when action='get'.",
+      },
+      limit: {
+        type: "number",
+        description: "Page size for action='list'.",
+      },
+      page: {
+        type: "number",
+        description: "Page number for action='list'.",
+      },
+      writeMarkdown: {
+        type: "boolean",
+        description:
+          "When action='get', write the returned markdown report to a local file.",
+      },
+      outputPath: {
+        type: "string",
+        description:
+          "Relative file path for writing the report. Defaults to TEST-AUDIT.md.",
+      },
+    },
+    required: ["projectId", "action"],
+  },
+};
+
+export const submitAuditReportTool = {
+  name: "submit_audit_report",
+  description:
+    "Final step of the TestDino Playwright audit flow. Submit a completed audit report after get_audit_report(action='context') and local analysis. Requires score and markdownReport or markdownReportPath.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      projectId: { type: "string", description: "Project ID (required)." },
+      branch: { type: "string", description: "Git branch that was audited." },
+      scope: {
+        type: "string",
+        enum: ["testcase", "feature", "spec_file", "suite"],
+        description: "Audit scope. Defaults to 'suite'.",
+      },
+      target: {
+        type: "object",
+        description: "Structured target for scoped audits.",
+        additionalProperties: true,
+      },
+      reportName: {
+        type: "string",
+        description: "Short human-readable title for the saved report.",
+      },
+      score: {
+        type: "number",
+        minimum: 0,
+        maximum: 100,
+        description: "Final audit score, 0-100.",
+      },
+      findings: {
+        type: "array",
+        items: findingItemSchema,
+        description: `Structured findings. category should be one of: ${AUDIT_CATEGORY_LIST}.`,
+      },
+      recommendations: {
+        type: "array",
+        items: { type: "string" },
+        description: "Recommendation strings.",
+      },
+      markdownReport: {
+        type: "string",
+        description: "Completed markdown report content.",
+      },
+      markdownReportPath: {
+        type: "string",
+        description:
+          "Path to a local markdown report file. Preferred over markdownReport.",
+      },
+      writeMarkdown: {
+        type: "boolean",
+        description:
+          "When true and markdownReport is provided inline, also save a local copy.",
+      },
+      outputPath: {
+        type: "string",
+        description: "Relative local path for writeMarkdown.",
+      },
+    },
+    required: ["projectId", "score"],
   },
 };
 
@@ -389,15 +531,214 @@ function normalizeAuditErrorMessage(errorMessage: string): string {
   return errorMessage;
 }
 
-export async function handleTestAudit(args?: TestAuditArgs) {
+function requireAuditToken(args?: { token?: string }): string {
   const token = getApiKey(args);
-
   if (!token) {
     throw new Error(
       "Missing TESTDINO_PAT environment variable. " +
         "Please configure it in your .cursor/mcp.json file under the 'env' section."
     );
   }
+  return token;
+}
+
+function auditTextResponse(response: unknown) {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(response, null, 2),
+      },
+    ],
+  };
+}
+
+export async function handleGetAuditReport(args?: GetAuditReportArgs) {
+  const token = requireAuditToken(args);
+
+  if (!args?.projectId) {
+    throw new Error("projectId is required");
+  }
+  if (!args?.action) {
+    throw new Error("action is required");
+  }
+
+  const action = String(args.action) as GetAuditReportAction;
+  const validActions: GetAuditReportAction[] = ["context", "list", "get"];
+  if (!validActions.includes(action)) {
+    throw new Error(
+      `Invalid action '${args.action}'. Must be one of: ${validActions.join(", ")}`
+    );
+  }
+
+  const explicitBranch =
+    typeof args.branch === "string" && args.branch.trim()
+      ? args.branch.trim()
+      : undefined;
+  const inferredBranch = explicitBranch || detectBranch();
+
+  try {
+    let response: unknown;
+
+    if (action === "context") {
+      const contextUrl = endpoints.getAuditContext({
+        projectId: String(args.projectId),
+        ...(inferredBranch ? { branch: inferredBranch } : {}),
+      });
+      response = await apiRequestJson(contextUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } else if (action === "list") {
+      const listUrl = endpoints.listAuditReports({
+        projectId: String(args.projectId),
+        branch: explicitBranch,
+        limit: args.limit,
+        page: args.page,
+      });
+      response = await apiRequestJson(listUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } else {
+      if (!args.reportId) {
+        throw new Error("reportId is required when action='get'");
+      }
+      const getUrl = endpoints.getAuditReport({
+        projectId: String(args.projectId),
+        reportId: String(args.reportId),
+      });
+      response = await apiRequestJson(getUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = response as Record<string, unknown>;
+      const reportData = data?.data as Record<string, unknown> | undefined;
+      const markdown =
+        typeof reportData?.markdownReport === "string"
+          ? reportData.markdownReport
+          : "";
+
+      if (args.writeMarkdown && markdown) {
+        try {
+          const writeResult = await writeLocalReport(markdown, args.outputPath);
+          response = { ...data, localReportWrite: writeResult };
+        } catch (writeError) {
+          response = {
+            ...data,
+            localReportWrite: {
+              saved: false,
+              reason:
+                writeError instanceof Error
+                  ? writeError.message
+                  : String(writeError),
+            },
+          };
+        }
+      }
+    }
+
+    return auditTextResponse(response);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to get audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+    );
+  }
+}
+
+export async function handleSubmitAuditReport(args?: SubmitAuditReportArgs) {
+  const token = requireAuditToken(args);
+
+  if (!args?.projectId) {
+    throw new Error("projectId is required");
+  }
+  if (args.score == null) {
+    throw new Error("score is required");
+  }
+
+  let markdownReport = args.markdownReport;
+  if (!markdownReport && args.markdownReportPath) {
+    const filePath = await resolveMarkdownReportPath(args.markdownReportPath);
+    markdownReport = await readFile(filePath, "utf-8");
+  }
+
+  const normalizedMarkdownReport =
+    typeof markdownReport === "string"
+      ? normalizeMarkdownReport(markdownReport)
+      : "";
+  if (!normalizedMarkdownReport) {
+    throw new Error("markdownReport or markdownReportPath is required");
+  }
+
+  const explicitBranch =
+    typeof args.branch === "string" && args.branch.trim()
+      ? args.branch.trim()
+      : undefined;
+  const inferredBranch = explicitBranch || detectBranch();
+
+  try {
+    const submitUrl = endpoints.submitAuditReport({
+      projectId: String(args.projectId),
+    });
+    const hasExplicitTarget =
+      args.target &&
+      Object.values(args.target).some((v) => typeof v === "string" && v.trim());
+    const target = hasExplicitTarget ? args.target! : {};
+    const sanitizedFindings = sanitizeAuditFindings(args.findings || []);
+
+    let response: unknown = await apiRequestJson(submitUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: {
+        ...(inferredBranch ? { branch: inferredBranch } : {}),
+        scope: args.scope || "suite",
+        target,
+        reportName: args.reportName || undefined,
+        score: args.score,
+        findings: sanitizedFindings,
+        recommendations: args.recommendations || [],
+        markdownReport: normalizedMarkdownReport,
+      },
+    });
+
+    if (
+      args.writeMarkdown &&
+      normalizedMarkdownReport &&
+      !args.markdownReportPath
+    ) {
+      try {
+        const writeResult = await writeLocalReport(
+          normalizedMarkdownReport,
+          args.outputPath
+        );
+        response = {
+          ...(response as Record<string, unknown>),
+          localReportWrite: writeResult,
+        };
+      } catch (writeError) {
+        response = {
+          ...(response as Record<string, unknown>),
+          localReportWrite: {
+            saved: false,
+            reason:
+              writeError instanceof Error
+                ? writeError.message
+                : String(writeError),
+          },
+        };
+      }
+    }
+
+    return auditTextResponse(response);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to submit audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+    );
+  }
+}
+
+export async function handleTestAudit(args?: TestAuditArgs) {
+  const token = requireAuditToken(args);
 
   if (!args?.projectId) {
     throw new Error("projectId is required");

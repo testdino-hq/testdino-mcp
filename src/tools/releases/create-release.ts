@@ -5,6 +5,10 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
+import {
+  buildTargetItemSchema,
+  linkedIssueItemSchema,
+} from "../../lib/item-schemas.js";
 
 interface CreateReleaseArgs {
   projectId: string;
@@ -20,18 +24,25 @@ interface CreateReleaseArgs {
   startedAt?: string;
   completedAt?: string;
   linkedIssues?: unknown[];
+  branch?: string;
+  environment?: string;
+  buildTarget?: unknown;
+  testers?: string[];
 }
 
 export const createReleaseTool = {
   name: "create_release",
   description:
-    "Create a new release. Requires write permission (org_owner, org_admin, or org_member). Use parentReleaseId to nest under another release (max 3 levels deep). startDate/endDate are ISO date strings. isStarted/isCompleted are independent flags — startedAt/completedAt record when those transitions happened.",
+    "Create a new release. Requires write permission. Use parentReleaseId to nest under another release (max 3 levels deep). startDate/endDate are ISO date strings. isStarted/isCompleted are independent flags — startedAt/completedAt are recorded separately. branch/environment/buildTarget/testers describe what build the release ships and who tests it.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
       name: { type: "string", description: "Release name (required)." },
-      description: { type: "string" },
+      description: {
+        type: "string",
+        description: "Plain-text release description.",
+      },
       note: { type: "string", description: "Rich HTML note." },
       type: {
         type: "string",
@@ -44,15 +55,39 @@ export const createReleaseTool = {
       },
       startDate: { type: "string", description: "ISO date." },
       endDate: { type: "string", description: "ISO date." },
-      isStarted: { type: "boolean" },
-      isCompleted: { type: "boolean" },
+      isStarted: {
+        type: "boolean",
+        description: "Whether this release has started.",
+      },
+      isCompleted: {
+        type: "boolean",
+        description: "Whether this release is completed.",
+      },
       startedAt: { type: "string", description: "ISO datetime." },
       completedAt: { type: "string", description: "ISO datetime." },
       linkedIssues: {
         type: "array",
-        items: {},
+        items: linkedIssueItemSchema,
         description:
           "Array of linked-issue objects (same shape list_releases returns).",
+      },
+      branch: {
+        type: "string",
+        description: "Source branch this release ships from.",
+      },
+      environment: {
+        type: "string",
+        description: 'Environment label this release targets, e.g. "Staging".',
+      },
+      buildTarget: {
+        ...buildTargetItemSchema,
+        description:
+          'Build target: { platform: "web"|"ios"|"android"|"api", version, buildNumber, source, deployUrl }.',
+      },
+      testers: {
+        type: "array",
+        items: { type: "string" },
+        description: "User _ids assigned as testers. Must be org members.",
       },
     },
     required: ["projectId", "name"],

@@ -27,7 +27,7 @@ export const updateManualRunTool = {
       updates: {
         type: "object",
         description:
-          "Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode.",
+          'Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Pass status="closed" to close the run; this freezes it and is not reversible via MCP.',
       },
     },
     required: ["projectId", "runId", "updates"],

@@ -7,6 +7,12 @@ import { getApiKey } from "../../lib/env.js";
 
 interface GetTestCaseDetailsArgs {
   projectId: string;
+  testcaseid?: string;
+  by_title?: string;
+  by_fulltitle?: string;
+  by_testrun_id?: string;
+  by_testrun_ids?: string;
+  by_testsuite_id?: string;
   testcase_id?: string;
   testcase_name?: string;
   testcase_fulltitle?: string;
@@ -27,6 +33,7 @@ interface GetTestCaseDetailsArgs {
   steps_filter?: "failed_only";
   limit?: number;
   page?: number;
+  offset?: number;
   sort_by?: "startTime" | "duration";
   sort_order?: "asc" | "desc";
   get_all?: boolean;
@@ -46,29 +53,54 @@ export const getTestCaseDetailsTool = {
       testcase_id: {
         type: "string",
         description:
-          "Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.",
+          "Alias for testcaseid. Test case ID. Can be used alone to get test case details.",
+      },
+      testcaseid: {
+        type: "string",
+        description:
+          "Exact test case ID(s), comma-separated max 50. Can be used alone.",
       },
       testcase_name: {
         type: "string",
         description:
-          "Test case title (partial match, case-insensitive). Must be combined with testrun_id or counter when used alone. Example: 'Verify user can logout and login'.",
+          "Alias for by_title. Test case title (partial match, case-insensitive).",
+      },
+      by_title: {
+        type: "string",
+        description:
+          "Test case title (partial match, case-insensitive). Pair with by_testrun_id or counter to avoid broad cross-run searches.",
       },
       testcase_fulltitle: {
         type: "string",
         description:
-          "Full test case title including suite path (partial match, case-insensitive). Example: 'auth.spec.js > Login > Verify user can logout and login'.",
+          "Alias for by_fulltitle. Full test case title including suite path.",
+      },
+      by_fulltitle: {
+        type: "string",
+        description:
+          "Full test case title including suite path (partial match, case-insensitive).",
       },
       testrun_id: {
         type: "string",
-        description:
-          "Single test run ID to filter results. Example: 'test_run_6901b2abc6b187e63f536a6b'.",
+        description: "Alias for by_testrun_id.",
+      },
+      by_testrun_id: {
+        type: "string",
+        description: "Single test run ID to filter results.",
       },
       testrun_ids: {
         type: "string",
-        description:
-          "Multiple test run IDs (comma-separated, max 20). Example: 'test_run_abc,test_run_def'.",
+        description: "Alias for by_testrun_ids.",
+      },
+      by_testrun_ids: {
+        type: "string",
+        description: "Multiple test run IDs, comma-separated max 20.",
       },
       testsuite_id: {
+        type: "string",
+        description: "Alias for by_testsuite_id.",
+      },
+      by_testsuite_id: {
         type: "string",
         description: "Filter by test suite ID.",
       },
@@ -149,6 +181,10 @@ export const getTestCaseDetailsTool = {
         description: "Page number for pagination (default: 1).",
         default: 1,
       },
+      offset: {
+        type: "number",
+        description: "Skip N results for pagination. Alternative to page.",
+      },
       sort_by: {
         type: "string",
         enum: ["startTime", "duration"],
@@ -181,9 +217,11 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
   }
 
   // Validate: need at least one search parameter
-  const hasTestCaseId = !!args?.testcase_id;
+  const hasTestCaseId = !!(args?.testcaseid || args?.testcase_id);
   const hasSearchParam = !!(
+    args?.by_title ||
     args?.testcase_name ||
+    args?.by_fulltitle ||
     args?.testcase_fulltitle ||
     args?.by_error_message ||
     args?.by_code_snippet ||
@@ -192,7 +230,7 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
 
   if (!hasTestCaseId && !hasSearchParam) {
     throw new Error(
-      "At least one of the following must be provided: 'testcase_id', 'testcase_name', 'testcase_fulltitle', 'by_error_message', or 'by_code_snippet'."
+      "At least one of the following must be provided: 'testcaseid', 'by_title', 'by_fulltitle', 'by_error_message', 'by_code_snippet', or a supported alias."
     );
   }
 
@@ -202,23 +240,29 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
       projectId: String(args.projectId),
     };
 
-    if (args.testcase_id) {
-      queryParams.testcaseid = String(args.testcase_id);
+    if (args.testcaseid || args.testcase_id) {
+      queryParams.testcaseid = String(args.testcaseid || args.testcase_id);
     }
-    if (args.testcase_name) {
-      queryParams.by_title = String(args.testcase_name);
+    if (args.by_title || args.testcase_name) {
+      queryParams.by_title = String(args.by_title || args.testcase_name);
     }
-    if (args.testcase_fulltitle) {
-      queryParams.by_fulltitle = String(args.testcase_fulltitle);
+    if (args.by_fulltitle || args.testcase_fulltitle) {
+      queryParams.by_fulltitle = String(
+        args.by_fulltitle || args.testcase_fulltitle
+      );
     }
-    if (args.testrun_id) {
-      queryParams.by_testrun_id = String(args.testrun_id);
+    if (args.by_testrun_id || args.testrun_id) {
+      queryParams.by_testrun_id = String(args.by_testrun_id || args.testrun_id);
     }
-    if (args.testrun_ids) {
-      queryParams.by_testrun_ids = String(args.testrun_ids);
+    if (args.by_testrun_ids || args.testrun_ids) {
+      queryParams.by_testrun_ids = String(
+        args.by_testrun_ids || args.testrun_ids
+      );
     }
-    if (args.testsuite_id) {
-      queryParams.by_testsuite_id = String(args.testsuite_id);
+    if (args.by_testsuite_id || args.testsuite_id) {
+      queryParams.by_testsuite_id = String(
+        args.by_testsuite_id || args.testsuite_id
+      );
     }
     if (args.counter !== undefined) {
       queryParams.counter = String(args.counter);
@@ -261,6 +305,9 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
     }
     if (args.page !== undefined) {
       queryParams.page = String(args.page);
+    }
+    if (args.offset !== undefined) {
+      queryParams.offset = String(args.offset);
     }
     if (args.sort_by) {
       queryParams.sort_by = args.sort_by;

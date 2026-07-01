@@ -11,10 +11,9 @@ interface ListTestRunsArgs {
   by_branch?: string;
   by_time_interval?: string;
   by_author?: string;
-  by_commit?: string;
-  by_environment?: string;
   limit?: number;
   page?: number;
+  offset?: number;
   get_all?: boolean;
 }
 
@@ -23,17 +22,16 @@ interface ListTestRunsParams {
   by_branch?: string;
   by_time_interval?: string;
   by_author?: string;
-  by_commit?: string;
-  by_environment?: string;
   limit?: number;
   page?: number;
+  offset?: number;
   get_all?: string;
 }
 
 export const listTestRunsTool = {
   name: "list_testruns",
   description:
-    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, or environment (e.g., 'production', 'staging', 'development'). Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
+    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), or commit author. Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all test runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
   inputSchema: {
     type: "object",
     properties: {
@@ -56,15 +54,6 @@ export const listTestRunsTool = {
         description:
           "Filter by commit author name (case-insensitive, partial match).",
       },
-      by_commit: {
-        type: "string",
-        description: "Filter by git commit hash (full or partial).",
-      },
-      by_environment: {
-        type: "string",
-        description:
-          "Filter by environment. Example: 'production', 'staging', 'development'.",
-      },
       limit: {
         type: "number",
         description: "Number of results per page (default: 20, max: 1000).",
@@ -74,6 +63,10 @@ export const listTestRunsTool = {
         type: "number",
         description: "Page number (default: 1).",
         default: 1,
+      },
+      offset: {
+        type: "number",
+        description: "Skip N items (alternative to page).",
       },
       get_all: {
         type: "boolean",
@@ -114,17 +107,14 @@ export async function handleListTestRuns(args?: ListTestRunsArgs) {
     if (args?.by_author) {
       params.by_author = String(args.by_author);
     }
-    if (args?.by_commit) {
-      params.by_commit = String(args.by_commit);
-    }
-    if (args?.by_environment) {
-      params.by_environment = String(args.by_environment);
-    }
     if (args?.limit !== undefined) {
       params.limit = Number(args.limit);
     }
     if (args?.page !== undefined) {
       params.page = Number(args.page);
+    }
+    if (args?.offset !== undefined) {
+      params.offset = Number(args.offset);
     }
     if (args?.get_all !== undefined) {
       params.get_all = String(args.get_all);

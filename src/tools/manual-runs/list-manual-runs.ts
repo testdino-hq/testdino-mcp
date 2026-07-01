@@ -30,22 +30,40 @@ export const listManualRunsTool = {
     properties: {
       projectId: { type: "string", description: "Project ID (required)." },
       search: { type: "string", description: "Match by run name." },
-      status: { type: "string", enum: ["active", "closed"] },
+      status: {
+        type: "string",
+        enum: ["active", "closed"],
+        description: "Filter by open/closed run lifecycle status.",
+      },
       state: {
         type: "string",
         description:
           "Workflow state. Either canonical ('in_progress', 'on_hold', 'done') or display ('In Progress', 'On Hold') form — the server normalizes lowercase+underscored.",
       },
-      environment: { type: "string" },
+      environment: {
+        type: "string",
+        description: "Filter by environment label.",
+      },
       releaseId: {
         type: "string",
         description: "Filter to runs in this release. 'none' = unlinked.",
       },
       tags: { type: "string", description: "Single tag or comma-separated." },
-      isClosed: { type: "boolean" },
-      sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
+      isClosed: {
+        type: "boolean",
+        description: "Filter by whether the manual run is closed.",
+      },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "updatedAt", "name"],
+        description: "Field to sort manual runs by.",
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+        description: "Sort direction.",
+      },
+      page: { type: "number", description: "Page number for pagination." },
       limit: { type: "number", description: "Default 25 (max 200)." },
     },
     required: ["projectId"],

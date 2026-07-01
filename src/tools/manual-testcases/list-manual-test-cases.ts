@@ -11,35 +11,13 @@ interface ListManualTestCasesArgs {
   time?: "last 1 hour" | "Last 5 hours" | "Yesterday" | "last 7 days";
   search?: string;
   suiteId?: string;
-  status?: "active" | "draft" | "deprecated";
-  priority?: "high" | "medium" | "low" | "Not set";
-  severity?:
-    | "Blocker"
-    | "critical"
-    | "major"
-    | "Normal"
-    | "minor"
-    | "trivial"
-    | "Not set";
-  type?:
-    | "functional"
-    | "smoke"
-    | "regression"
-    | "security"
-    | "performance"
-    | "e2e"
-    | "Integration"
-    | "API"
-    | "Unit"
-    | "Accessability"
-    | "Compatibility"
-    | "Acceptance"
-    | "Exploratory"
-    | "Usability"
-    | "Other";
-  layer?: "e2e" | "api" | "unit" | "not set";
-  behavior?: "positive" | "negative" | "destructive" | "Not set";
-  automationStatus?: "Manual" | "Automated" | "To be automated";
+  status?: string;
+  priority?: string;
+  severity?: string;
+  type?: string;
+  layer?: string;
+  behavior?: string;
+  automationStatus?: string;
   tags?: string;
   limit?: number;
 }
@@ -88,62 +66,38 @@ export const listManualTestCasesTool = {
       },
       status: {
         type: "string",
-        description: "Filter by test case status.",
-        enum: ["active", "draft", "deprecated"],
+        description:
+          "Filter by status. Values come from Project Settings → Test Case Properties. Defaults: Active, Draft, Deprecated.",
       },
       priority: {
         type: "string",
-        description: "Filter by priority level.",
-        enum: ["high", "medium", "low", "Not set"],
+        description:
+          "Filter by priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.",
       },
       severity: {
         type: "string",
-        description: "Filter by severity level.",
-        enum: [
-          "Blocker",
-          "critical",
-          "major",
-          "Normal",
-          "minor",
-          "trivial",
-          "Not set",
-        ],
+        description:
+          "Filter by severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.",
       },
       type: {
         type: "string",
-        description: "Filter by test case type.",
-        enum: [
-          "functional",
-          "smoke",
-          "regression",
-          "security",
-          "performance",
-          "e2e",
-          "Integration",
-          "API",
-          "Unit",
-          "Accessability",
-          "Compatibility",
-          "Acceptance",
-          "Exploratory",
-          "Usability",
-          "Other",
-        ],
+        description:
+          "Filter by type. Values come from Project Settings → Test Case Properties. Defaults include Smoke, Regression, Functional, API, Unit, E2E, Other.",
       },
       layer: {
         type: "string",
-        description: "Filter by test layer.",
-        enum: ["e2e", "api", "unit", "not set"],
+        description:
+          "Filter by layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.",
       },
       behavior: {
         type: "string",
-        description: "Filter by test behavior type.",
-        enum: ["positive", "negative", "destructive", "Not set"],
+        description:
+          "Filter by behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.",
       },
       automationStatus: {
         type: "string",
-        description: "Filter by automation status.",
-        enum: ["Manual", "Automated", "To be automated"],
+        description:
+          "Filter by automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated, To Be Automated.",
       },
       tags: {
         type: "string",

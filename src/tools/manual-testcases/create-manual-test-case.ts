@@ -17,39 +17,17 @@ interface CreateManualTestCaseArgs {
   title: string;
   suiteName: string;
   description?: string;
-  status?: "Active" | "Draft" | "Deprecated";
+  status?: string;
   testStepsDeclarationType?: "Classic" | "Gherkin";
   preconditions?: string;
   postconditions?: string;
   steps?: TestStep[];
-  priority?: "high" | "medium" | "low" | "Not set";
-  severity?:
-    | "Blocker"
-    | "critical"
-    | "major"
-    | "Normal"
-    | "minor"
-    | "trivial"
-    | "Not set";
-  type?:
-    | "functional"
-    | "smoke"
-    | "regression"
-    | "security"
-    | "performance"
-    | "e2e"
-    | "Integration"
-    | "API"
-    | "Unit"
-    | "Accessability"
-    | "Compatibility"
-    | "Acceptance"
-    | "Exploratory"
-    | "Usability"
-    | "Other";
-  layer?: "e2e" | "api" | "unit" | "not set";
-  behavior?: "positive" | "negative" | "destructive" | "Not set";
-  automationStatus?: "Manual" | "Automated" | "To be automated";
+  priority?: string;
+  severity?: string;
+  type?: string;
+  layer?: string;
+  behavior?: string;
+  automationStatus?: string;
   tags?: string;
   flags?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB) - will be processed to FileData objects
@@ -105,8 +83,8 @@ export const createManualTestCaseTool = {
       },
       status: {
         type: "string",
-        description: "Test case status.",
-        enum: ["Active", "Draft", "Deprecated"],
+        description:
+          "Test case status. Values come from Project Settings → Test Case Properties. Defaults: Active, Draft, Deprecated.",
       },
       testStepsDeclarationType: {
         type: "string",
@@ -154,7 +132,6 @@ export const createManualTestCaseTool = {
                   items: { type: "string" },
                 },
               },
-              required: ["action", "expectedResult"],
             },
             {
               properties: {
@@ -167,6 +144,15 @@ export const createManualTestCaseTool = {
                   type: "string",
                   description: "The step description (Gherkin format).",
                 },
+                keyword: {
+                  type: "string",
+                  description: "Alias for event.",
+                  enum: ["Given", "When", "And", "Then", "But"],
+                },
+                text: {
+                  type: "string",
+                  description: "Alias for stepDescription.",
+                },
                 attachments: {
                   type: "array",
                   description:
@@ -174,64 +160,39 @@ export const createManualTestCaseTool = {
                   items: { type: "string" },
                 },
               },
-              required: ["event", "stepDescription"],
             },
           ],
         },
       },
       priority: {
         type: "string",
-        description: "Test case priority level.",
-        enum: ["high", "medium", "low", "Not set"],
+        description:
+          "Priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.",
       },
       severity: {
         type: "string",
-        description: "Test case severity level.",
-        enum: [
-          "Blocker",
-          "critical",
-          "major",
-          "Normal",
-          "minor",
-          "trivial",
-          "Not set",
-        ],
+        description:
+          "Severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.",
       },
       type: {
         type: "string",
-        description: "Test case type.",
-        enum: [
-          "functional",
-          "smoke",
-          "regression",
-          "security",
-          "performance",
-          "e2e",
-          "Integration",
-          "API",
-          "Unit",
-          "Accessability",
-          "Compatibility",
-          "Acceptance",
-          "Exploratory",
-          "Usability",
-          "Other",
-        ],
+        description:
+          "Type. Values come from Project Settings → Test Case Properties. Defaults include Smoke, Regression, Functional, API, Unit, E2E, Other.",
       },
       layer: {
         type: "string",
-        description: "Test layer.",
-        enum: ["e2e", "api", "unit", "not set"],
+        description:
+          "Layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.",
       },
       behavior: {
         type: "string",
-        description: "Test behavior type.",
-        enum: ["positive", "negative", "destructive", "Not set"],
+        description:
+          "Behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.",
       },
       automationStatus: {
         type: "string",
-        description: "Automation status of the test case.",
-        enum: ["Manual", "Automated", "To be automated"],
+        description:
+          "Automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated, To Be Automated.",
       },
       tags: {
         type: "string",

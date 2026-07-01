@@ -27,6 +27,7 @@ interface ListTestCasesArgs {
   by_author?: string;
   by_commit?: string;
   page?: number;
+  offset?: number;
   get_all?: boolean;
 }
 
@@ -51,6 +52,7 @@ interface ListTestCasesParams {
   by_author?: string;
   by_commit?: string;
   page?: number;
+  offset?: number;
   get_all?: string;
 }
 
@@ -140,7 +142,7 @@ export const listTestCasesTool = {
       limit: {
         type: "number",
         description:
-          "Number of results per page (default: 1000, max: 1000). Does not require testrun_id or counter. When used alone, first lists test runs, then returns test cases from those test runs.",
+          "Number of results per page (default: 1000, max: 1000). Must be combined with run context such as by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit.",
         default: 1000,
       },
       by_environment: {
@@ -161,13 +163,18 @@ export const listTestCasesTool = {
       page: {
         type: "number",
         description:
-          "Page number for pagination (default: 1). Does not require testrun_id or counter. When used alone, first lists test runs on the specified page, then returns test cases from those test runs.",
+          "Page number for pagination (default: 1). Must be combined with run context such as by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit.",
         default: 1,
+      },
+      offset: {
+        type: "number",
+        description:
+          "Skip N results for pagination. Alternative to page; must be combined with run context.",
       },
       get_all: {
         type: "boolean",
         description:
-          "Get all results up to 1000 (default: false). Does not require testrun_id or counter. When used alone, first lists all test runs, then returns test cases from those test runs.",
+          "Get all results up to 1000 (default: false). Must be combined with run context such as by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit.",
         default: false,
       },
     },
@@ -188,7 +195,7 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
 
   // Validate that at least one identifier is provided
   // Test run filters that don't require testrun_id or counter:
-  // by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all
+  // by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages
   const hasTestRunId = !!args?.by_testrun_id;
   const hasCounter = args?.counter !== undefined;
   const hasTestRunFilters = !!(
@@ -197,15 +204,12 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     args?.by_author ||
     args?.by_environment ||
     args?.by_time_interval ||
-    args?.by_pages !== undefined ||
-    args?.page !== undefined ||
-    args?.limit !== undefined ||
-    args?.get_all !== undefined
+    args?.by_pages !== undefined
   );
 
   if (!hasTestRunId && !hasCounter && !hasTestRunFilters) {
     throw new Error(
-      "At least one of the following must be provided: by_testrun_id, counter, or any test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)"
+      "At least one of the following must be provided: by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit"
     );
   }
 
@@ -270,6 +274,9 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.page !== undefined) {
       params.page = Number(args.page);
+    }
+    if (args?.offset !== undefined) {
+      params.offset = Number(args.offset);
     }
     if (args?.get_all !== undefined) {
       params.get_all = String(args.get_all);
