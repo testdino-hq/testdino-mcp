@@ -28,8 +28,10 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
-  testAuditTool,
-  handleTestAudit,
+  getAuditReportTool,
+  handleGetAuditReport,
+  submitAuditReportTool,
+  handleSubmitAuditReport,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -57,7 +59,8 @@ const ALL_TOOL_NAMES = [
   "list_testcase",
   "get_testcase_details",
   "debug_testcase",
-  "test_audit",
+  "get_audit_report",
+  "submit_audit_report",
   "list_manual_test_cases",
   "get_manual_test_case",
   "create_manual_test_case",
@@ -74,7 +77,8 @@ function createServer() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
-    testAuditTool,
+    getAuditReportTool,
+    submitAuditReportTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -148,9 +152,13 @@ function createServer() {
       return await handleDebugTestCase(
         args as Parameters<typeof handleDebugTestCase>[0]
       );
-    if (name === "test_audit")
-      return await handleTestAudit(
-        args as Parameters<typeof handleTestAudit>[0]
+    if (name === "get_audit_report")
+      return await handleGetAuditReport(
+        args as Parameters<typeof handleGetAuditReport>[0]
+      );
+    if (name === "submit_audit_report")
+      return await handleSubmitAuditReport(
+        args as Parameters<typeof handleSubmitAuditReport>[0]
       );
     if (name === "list_manual_test_cases")
       return await handleListManualTestCases(
@@ -208,10 +216,10 @@ describe("MCP Server Integration", () => {
   });
 
   describe("tool listing", () => {
-    it("should expose all 13 tools", async () => {
+    it("should expose all 14 tools", async () => {
       const result = await client.listTools();
       const toolNames = result.tools.map((t) => t.name);
-      expect(toolNames).toHaveLength(13);
+      expect(toolNames).toHaveLength(14);
       for (const name of ALL_TOOL_NAMES) {
         expect(toolNames).toContain(name);
       }
@@ -356,8 +364,15 @@ function buildMinimalArgs(toolName: string): Record<string, unknown> {
       return { ...base, testcase_id: "tc-1" };
     case "debug_testcase":
       return { ...base, testcase_name: "test" };
-    case "test_audit":
+    case "get_audit_report":
       return { ...base, action: "list" };
+    case "submit_audit_report":
+      return {
+        ...base,
+        orgId: "org_1",
+        score: 80,
+        markdownReport: "# Audit",
+      };
     case "list_manual_test_cases":
       return base;
     case "get_manual_test_case":
