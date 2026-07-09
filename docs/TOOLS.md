@@ -1549,11 +1549,11 @@ Error: Missing required parameter: testrun_id
 
 **Actions**:
 
-| `action`    | What it returns                                                                                                                   |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `'context'` | `{ prompt, branchSignals: { branch, totalRuns, recentRuns, topFailingTests, topFlakyTests, topSlowTests }, lastAudit }`            |
-| `'list'`    | Paginated list of previously submitted reports. Optional `branch` filter.                                                          |
-| `'get'`     | One saved report by `reportId`. Optional `writeMarkdown` + `outputPath` to save the markdown locally.                              |
+| `action`    | What it returns                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `'context'` | `{ prompt, branchSignals: { branch, totalRuns, recentRuns, topFailingTests, topFlakyTests, topSlowTests }, lastAudit }` |
+| `'list'`    | Paginated list of previously submitted reports. Optional `branch` filter.                                               |
+| `'get'`     | One saved report by `reportId`. Optional `writeMarkdown` + `outputPath` to save the markdown locally.                   |
 
 **Inputs**: `projectId` (required), `action` (required), `branch` (optional — auto-detected via git for `context`), `reportId` (required for `get`), `limit` / `page` (for `list`), `writeMarkdown` / `outputPath` (for `get`).
 
