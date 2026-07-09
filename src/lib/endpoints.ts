@@ -75,6 +75,24 @@ export const endpoints = {
   },
 
   /**
+   * Group ONE run's failing tests by shared error signature
+   * GET /api/mcp/:projectId/get-run-error-clusters
+   * @param params.projectId - Required: Project ID
+   * @param params.testrun_id - Required: The test run ID to cluster errors for
+   * @param params.status - Optional: 'all' | 'failed' | 'flaky' (default 'all')
+   */
+  getRunErrorClusters: (params: {
+    projectId: string;
+    testrun_id: string;
+    status?: "all" | "failed" | "flaky";
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/get-run-error-clusters${queryString}`;
+  },
+
+  /**
    * List test cases with comprehensive filtering options
    * GET /api/mcp/:projectId/list-testcase
    * @param params.projectId - Required: Project ID

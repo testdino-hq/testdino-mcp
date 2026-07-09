@@ -1543,6 +1543,34 @@ Error: Missing required parameter: testrun_id
 
 ---
 
+## get_run_error_clusters
+
+**Purpose**: Read-only. Groups ONE run's failing tests by shared error signature (a normalized error fingerprint), computed for that run alone. Answers "what are the distinct failures in this run?" and "which error affected the most tests?" — cheaper than paging every failed case.
+
+**Response shape (from the data-handler):**
+
+- `clusters[]` — one per signature. Each carries the signature, an error `category` (assertion / timeout / element_not_found / network / other), and the affected tests.
+- `unclustered[]` — tests with blank or unfingerprintable errors.
+- `categoryRollup` — per-category counts across the run.
+- `totals` — run-level `failed` / `flaky` counts.
+
+**Clustering rules**:
+
+- Failed/timed-out tests cluster on their **final-attempt** error.
+- Flaky tests cluster on the error they recovered from (**pre-recovery**).
+
+**Inputs**:
+
+- `projectId` — required.
+- `testrun_id` — required. Single test run ID.
+- `status` — optional. Enum: `all` | `failed` | `flaky`. Default `all`.
+
+**API Endpoint**: `GET /api/mcp/:projectId/get-run-error-clusters?testrun_id=…&status=…`.
+
+**Workflow**: `list_testruns()` → pick a `testrun_id` → `get_run_error_clusters(projectId, testrun_id)`.
+
+---
+
 ## test_audit
 
 **Purpose**: Run a single-pass **Playwright** test quality audit and submit it to TestDino. Triggered only when the user explicitly names TestDino.

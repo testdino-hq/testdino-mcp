@@ -14,6 +14,10 @@ export {
   getRunDetailsTool,
   handleGetRunDetails,
 } from "./testruns/get-run-details.js";
+export {
+  getRunErrorClustersTool,
+  handleGetRunErrorClusters,
+} from "./testruns/get-run-error-clusters.js";
 
 // Test cases tools
 export {

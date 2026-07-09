@@ -22,6 +22,8 @@ import {
   handleListTestRuns,
   getRunDetailsTool,
   handleGetRunDetails,
+  getRunErrorClustersTool,
+  handleGetRunErrorClusters,
   listTestCasesTool,
   handleListTestCases,
   getTestCaseDetailsTool,
@@ -83,7 +85,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.10",
+      version: "1.3.0",
     },
     {
       capabilities: {
@@ -100,6 +102,7 @@ async function main() {
     healthTool,
     listTestRunsTool,
     getRunDetailsTool,
+    getRunErrorClustersTool,
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
@@ -207,6 +210,12 @@ async function main() {
     if (name === "get_run_details") {
       return await handleGetRunDetails(
         args as Parameters<typeof handleGetRunDetails>[0]
+      );
+    }
+
+    if (name === "get_run_error_clusters") {
+      return await handleGetRunErrorClusters(
+        args as Parameters<typeof handleGetRunErrorClusters>[0]
       );
     }
 
