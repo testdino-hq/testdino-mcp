@@ -1578,13 +1578,6 @@ Error: Missing required parameter: testrun_id
 
 ## test_audit
 
-> **DEPRECATED — removed in v2.0.0.** Prefer `get_audit_report` (read) and `submit_audit_report` (write). This tool is retained as a thin alias for backward compatibility with existing AI-agent configs; the first invocation per process logs a deprecation notice to stderr. It delegates internally:
->
-> - `action='analyze'` without submission fields → `get_audit_report(action='context')`
-> - `action='analyze'` with `score` + markdown → `submit_audit_report(...)` (`orgId` now required — configs that omit it will 400)
-> - `action='list'` → `get_audit_report(action='list')`
-> - `action='get'` → `get_audit_report(action='get')`
-
 **Purpose**: Run a single-pass **Playwright** test quality audit and submit it to TestDino. Triggered only when the user explicitly names TestDino.
 
 > **Two scenarios — the AI agent picks based on what the user asks for.**

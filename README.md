@@ -79,7 +79,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 27 tools across six domains:
+The server provides 29 tools across six domains:
 
 **Test Execution & Results:**
 
@@ -89,41 +89,41 @@ The server provides 27 tools across six domains:
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
 6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
-7. **`get_audit_report`** - Read-only audit reads. `action='context'` fetches the server-curated prompt + `branchSignals` (top failing / flaky / slow tests) to START a test audit. `action='list'` browses past reports; `action='get'` retrieves one by `reportId` and can save `TEST-AUDIT.md` locally.
-8. **`submit_audit_report`** - Write. Submits a completed audit report (`score`, `markdownReport`, findings, recommendations, ...). Requires `orgId` — resolve via `health()` if not held. FINAL STEP of the audit flow.
-9. **`test_audit`** - DEPRECATED alias. Delegates to `get_audit_report` / `submit_audit_report` by `action`. Removed in `v2.0.0` — migrate configs to the two tools above.
+7. **`test_audit`** - Run a Playwright test quality audit. Fetch the server-curated prompt and branch signals, analyze the repo locally, submit the completed report, browse historical audit reports, and optionally save `TEST-AUDIT.md` locally.
+8. **`get_audit_report`** - Fetch the audit context (server-curated prompt + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
+9. **`submit_audit_report`** - Submit a completed audit report (score, findings, recommendations, markdown) to TestDino.
 
 **Test Case Management:**
 
-8. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
-9. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
-10. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
-11. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
-12. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
-13. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
+10. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
+11. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
+12. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
+13. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
+14. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
+15. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
 
 **Releases (a.k.a. Milestones):**
 
-14. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
-15. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
-16. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
-17. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
+16. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
+17. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
+18. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
+19. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
 
 **Manual Test Runs:**
 
-18. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
-19. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
-20. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
-21. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
-22. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
-23. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
+20. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
+21. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
+22. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
+23. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
+24. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
+25. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
 
 **Exploratory Sessions:**
 
-24. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
-25. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
-26. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
-27. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
+26. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
+27. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
+28. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
+29. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
 
 ### Installation Options
 
