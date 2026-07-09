@@ -8,9 +8,8 @@
  *   list    → browses previously submitted audit reports.
  *   get     → retrieves one saved report by reportId.
  *
- * Companion to `submit_audit_report` (write). Split off from the legacy
- * `test_audit` omnibus tool per the MCP safety model (read vs. write on
- * separate tools) — matches the streaming implementation shape.
+ * Companion to `submit_audit_report` (write). Read + write live on separate
+ * tools per the MCP safety model. Matches the streaming implementation.
  */
 
 import { endpoints } from "../../lib/endpoints.js";

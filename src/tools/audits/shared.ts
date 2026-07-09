@@ -1,9 +1,9 @@
 /**
  * Shared helpers for the audit tools.
  *
- * `test_audit` (deprecated alias), `get_audit_report`, and `submit_audit_report`
- * all reuse this module — filesystem plumbing, git branch detection, markdown
- * cleanup, findings sanitization, and error-message normalization.
+ * `get_audit_report` and `submit_audit_report` reuse this module: filesystem
+ * plumbing, git branch detection, markdown cleanup, findings sanitization,
+ * and error-message normalization.
  */
 
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
