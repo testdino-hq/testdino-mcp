@@ -28,8 +28,6 @@ import {
   handleGetTestCaseDetails,
   debugTestCaseTool,
   handleDebugTestCase,
-  testAuditTool,
-  handleTestAudit,
   getAuditReportTool,
   handleGetAuditReport,
   submitAuditReportTool,
@@ -107,11 +105,8 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
-    // Audit — get_audit_report + submit_audit_report replace the omnibus
-    // test_audit tool. test_audit stays registered as a deprecated alias.
     getAuditReportTool,
     submitAuditReportTool,
-    testAuditTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -245,12 +240,6 @@ async function main() {
     if (name === "submit_audit_report") {
       return await handleSubmitAuditReport(
         args as Parameters<typeof handleSubmitAuditReport>[0]
-      );
-    }
-
-    if (name === "test_audit") {
-      return await handleTestAudit(
-        args as Parameters<typeof handleTestAudit>[0]
       );
     }
 

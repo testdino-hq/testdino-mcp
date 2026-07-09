@@ -28,7 +28,6 @@ export {
   debugTestCaseTool,
   handleDebugTestCase,
 } from "./testcases/debug-testcase.js";
-export { testAuditTool, handleTestAudit } from "./audits/test-audit.js";
 export {
   getAuditReportTool,
   handleGetAuditReport,
