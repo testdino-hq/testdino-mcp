@@ -30,6 +30,10 @@ import {
   handleDebugTestCase,
   testAuditTool,
   handleTestAudit,
+  getAuditReportTool,
+  handleGetAuditReport,
+  submitAuditReportTool,
+  handleSubmitAuditReport,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -83,7 +87,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.10",
+      version: "1.1.0",
     },
     {
       capabilities: {
@@ -103,6 +107,10 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
+    // Audit — get_audit_report + submit_audit_report replace the omnibus
+    // test_audit tool. test_audit stays registered as a deprecated alias.
+    getAuditReportTool,
+    submitAuditReportTool,
     testAuditTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
@@ -225,6 +233,18 @@ async function main() {
     if (name === "debug_testcase") {
       return await handleDebugTestCase(
         args as Parameters<typeof handleDebugTestCase>[0]
+      );
+    }
+
+    if (name === "get_audit_report") {
+      return await handleGetAuditReport(
+        args as Parameters<typeof handleGetAuditReport>[0]
+      );
+    }
+
+    if (name === "submit_audit_report") {
+      return await handleSubmitAuditReport(
+        args as Parameters<typeof handleSubmitAuditReport>[0]
       );
     }
 

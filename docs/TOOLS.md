@@ -1543,7 +1543,47 @@ Error: Missing required parameter: testrun_id
 
 ---
 
+## get_audit_report
+
+**Purpose**: Read-only TestDino Playwright audit reads. Fetches the server-curated audit prompt + `branchSignals` (top failing / flaky / slow tests) to START an audit, browses past reports, or retrieves one by `reportId`. This is the **first step** of the audit flow — always call `action='context'` before writing any findings in chat.
+
+**Actions**:
+
+| `action`    | What it returns                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `'context'` | `{ prompt, branchSignals: { branch, totalRuns, recentRuns, topFailingTests, topFlakyTests, topSlowTests }, lastAudit }`            |
+| `'list'`    | Paginated list of previously submitted reports. Optional `branch` filter.                                                          |
+| `'get'`     | One saved report by `reportId`. Optional `writeMarkdown` + `outputPath` to save the markdown locally.                              |
+
+**Inputs**: `projectId` (required), `action` (required), `branch` (optional — auto-detected via git for `context`), `reportId` (required for `get`), `limit` / `page` (for `list`), `writeMarkdown` / `outputPath` (for `get`).
+
+**Trigger rule** (identical to the deprecated `test_audit`): only used when the user **explicitly names TestDino** (e.g. "TestDino audit", "run a TestDino audit"). Generic "audit this" requests do NOT trigger this tool.
+
+---
+
+## submit_audit_report
+
+**Purpose**: **Write.** Submits a completed TestDino Playwright audit report to the MCP-owned store. FINAL STEP of the audit flow — call after `get_audit_report(action='context')` and after analyzing the local Playwright code.
+
+**Inputs**:
+
+- `projectId`, `orgId`, `score` — required. `orgId` resolvable via `health()`.
+- `markdownReport` OR `markdownReportPath` — required. Prefer the path to avoid large tool calls.
+- `findings`, `recommendations`, `reportName`, `branch`, `scope`, `target` — optional but recommended.
+- `writeMarkdown` / `outputPath` — optionally save a local copy of the submitted markdown.
+
+**Returns**: Server response with `auditId`, `score`, and a deep link.
+
+---
+
 ## test_audit
+
+> **DEPRECATED — removed in v2.0.0.** Prefer `get_audit_report` (read) and `submit_audit_report` (write). This tool is retained as a thin alias for backward compatibility with existing AI-agent configs; the first invocation per process logs a deprecation notice to stderr. It delegates internally:
+>
+> - `action='analyze'` without submission fields → `get_audit_report(action='context')`
+> - `action='analyze'` with `score` + markdown → `submit_audit_report(...)` (`orgId` now required — configs that omit it will 400)
+> - `action='list'` → `get_audit_report(action='list')`
+> - `action='get'` → `get_audit_report(action='get')`
 
 **Purpose**: Run a single-pass **Playwright** test quality audit and submit it to TestDino. Triggered only when the user explicitly names TestDino.
 

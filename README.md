@@ -64,7 +64,9 @@ The server provides 27 powerful tools across five domains:
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
 6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
-7. **`test_audit`** - Run a single-pass test quality audit. Fetch the server-curated prompt and branch signals, analyze the repo locally, submit the completed report, browse historical audit reports, and optionally save `TEST-AUDIT.md` locally.
+7. **`get_audit_report`** - Read-only audit reads. `action='context'` fetches the server-curated prompt + `branchSignals` (top failing / flaky / slow tests) to START a test audit. `action='list'` browses past reports; `action='get'` retrieves one by `reportId` and can save `TEST-AUDIT.md` locally.
+8. **`submit_audit_report`** - Write. Submits a completed audit report (`score`, `markdownReport`, findings, recommendations, ...). Requires `orgId` — resolve via `health()` if not held. FINAL STEP of the audit flow.
+9. **`test_audit`** - DEPRECATED alias. Delegates to `get_audit_report` / `submit_audit_report` by `action`. Removed in `v2.0.0` — migrate configs to the two tools above.
 
 **Test Case Management:**
 
