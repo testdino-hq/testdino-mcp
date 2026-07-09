@@ -1,16 +1,7 @@
 /**
- * test_audit — DEPRECATED alias tool.
- *
- * Kept for backward compatibility with AI-agent configs that were told to call
- * `test_audit` before the read/write split. Delegates to `get_audit_report`
- * and `submit_audit_report` by action:
- *
- *   action='analyze' (no score+markdown)        → get_audit_report(action='context')
- *   action='analyze' (with score+markdown)      → submit_audit_report(...)
- *   action='list'                               → get_audit_report(action='list')
- *   action='get'                                → get_audit_report(action='get')
- *
- * Removed in v2.0.0. Prefer calling the two new tools directly.
+ * test_audit — end-to-end TestDino Playwright audit tool. Delegates to
+ * get_audit_report / submit_audit_report by action so all three tools share
+ * one code path.
  */
 
 import {
@@ -50,31 +41,14 @@ interface TestAuditArgs {
   outputPath?: string;
 }
 
-let deprecationNoticeFired = false;
-
-function fireDeprecationNoticeOnce(): void {
-  if (deprecationNoticeFired) {
-    return;
-  }
-  deprecationNoticeFired = true;
-  // stderr, not the tool response — MCP clients pipe stderr for humans.
-  // Do NOT use console.log: it corrupts the stdio protocol on stdout.
-  console.error(
-    "[testdino-mcp] DEPRECATION: `test_audit` will be removed in v2.0.0. " +
-      "Migrate to `get_audit_report` (read) and `submit_audit_report` (write). " +
-      "See docs/TOOLS.md."
-  );
-}
-
 export const testAuditTool = {
   name: "test_audit",
   description:
-    "DEPRECATED — use `get_audit_report` (read) and `submit_audit_report` (write) instead. " +
-    "Legacy TestDino Playwright audit alias, retained for backward compatibility. " +
-    "Delegates internally: action='analyze' without a submission → get_audit_report(action='context'); " +
-    "action='analyze' with score + markdown → submit_audit_report(...); " +
-    "action='list' → get_audit_report(action='list'); action='get' → get_audit_report(action='get'). " +
-    "This alias will be removed in v2.0.0.",
+    "Run a TestDino Playwright test quality audit end-to-end. " +
+    "action='analyze' without submission fields fetches the server-curated audit prompt + branch signals (top failing, flaky, and slow tests) so you can analyze the repo locally. " +
+    "action='analyze' with score + markdown submits the completed audit report. " +
+    "action='list' browses past reports; action='get' retrieves one by reportId. " +
+    "Trigger only when the user explicitly names TestDino (e.g. 'TestDino audit', 'run a TestDino audit'). Do NOT call for generic 'audit'/'code review' requests.",
   inputSchema: {
     type: "object",
     properties: {
@@ -86,7 +60,7 @@ export const testAuditTool = {
         type: "string",
         enum: ["analyze", "list", "get"],
         description:
-          "DEPRECATED alias for the read + write split. 'analyze' without submission fields → get_audit_report(context). 'analyze' with score + markdown → submit_audit_report. 'list' / 'get' → get_audit_report.",
+          "'analyze' without submission fields fetches the audit prompt + branch signals; 'analyze' with score + markdown submits the completed report; 'list' browses past reports; 'get' retrieves one report by reportId.",
       },
       orgId: {
         type: "string",
@@ -184,8 +158,6 @@ async function isSubmission(args: TestAuditArgs): Promise<boolean> {
 }
 
 export async function handleTestAudit(args?: TestAuditArgs) {
-  fireDeprecationNoticeOnce();
-
   if (!args?.projectId) {
     throw new Error("projectId is required");
   }
