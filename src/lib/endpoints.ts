@@ -323,6 +323,77 @@ export const endpoints = {
     return `${baseUrl}/api/mcp/${projectId}/audit-reports/${reportId}`;
   },
 
+  // ─── Integrations (Jira, Linear, Asana, monday.com, GitHub) ────────────────
+
+  /**
+   * Get integration connection status (optionally with create metadata)
+   * GET /api/mcp/integrations/:projectId/:provider/status?includeCreateOptions&<targetKV>
+   *
+   * `target` values are FLATTENED to query params. The stdio backend collects
+   * everything except `includeCreateOptions` and treats it as the target
+   * object (e.g. jiraProjectKey, boardId, teamId). Match the streaming shape.
+   */
+  getIntegrationStatus: (params: {
+    projectId: string;
+    provider: string;
+    includeCreateOptions?: boolean;
+    target?: Record<string, string | number | boolean | undefined | null>;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, provider, includeCreateOptions, target } = params;
+    const queryString = buildQueryString({
+      includeCreateOptions,
+      ...(target ?? {}),
+    });
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/status${queryString}`;
+  },
+
+  /**
+   * Start the provider OAuth/connect flow. Body carries orgId.
+   * POST /api/mcp/integrations/:projectId/:provider/connect
+   */
+  connectIntegration: (params: {
+    projectId: string;
+    provider: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, provider } = params;
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/connect`;
+  },
+
+  /**
+   * Create a provider issue/task linked to a TestDino entity.
+   * POST /api/mcp/integrations/:projectId/:provider/issues
+   */
+  createExternalIssue: (params: {
+    projectId: string;
+    provider: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, provider } = params;
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/issues`;
+  },
+
+  /**
+   * Fetch one provider issue by ID/key previously linked to TestDino.
+   * GET /api/mcp/integrations/:projectId/:provider/issues/:issueId?defaultApp=…
+   *
+   * Only ONE issueId per call (stdio backend divergence from streaming, which
+   * accepts an array). Pass Jira `defaultApp` as a query param for Atlassian
+   * multi-site accounts.
+   */
+  getExternalIssue: (params: {
+    projectId: string;
+    provider: string;
+    issueId: string;
+    defaultApp?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, provider, issueId, defaultApp } = params;
+    const queryString = buildQueryString({ defaultApp });
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/issues/${encodeURIComponent(issueId)}${queryString}`;
+  },
+
   // ─── Releases (UI label) / Milestones (data model) ─────────────────────────
 
   /**

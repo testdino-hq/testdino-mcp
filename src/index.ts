@@ -73,6 +73,15 @@ import {
   handleCreateSession,
   updateSessionTool,
   handleUpdateSession,
+  // Integrations
+  getIntegrationStatusTool,
+  handleGetIntegrationStatus,
+  connectIntegrationTool,
+  handleConnectIntegration,
+  createExternalIssueTool,
+  handleCreateExternalIssue,
+  getExternalIssueTool,
+  handleGetExternalIssue,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -83,7 +92,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.10",
+      version: "1.2.0",
     },
     {
       capabilities: {
@@ -127,6 +136,11 @@ async function main() {
     getSessionTool,
     createSessionTool,
     updateSessionTool,
+    // Integrations (Jira / Linear / Asana / monday.com / GitHub)
+    getIntegrationStatusTool,
+    connectIntegrationTool,
+    createExternalIssueTool,
+    getExternalIssueTool,
   ];
 
   /**
@@ -343,6 +357,28 @@ async function main() {
     if (name === "update_session") {
       return await handleUpdateSession(
         args as Parameters<typeof handleUpdateSession>[0]
+      );
+    }
+
+    // Integrations
+    if (name === "get_integration_status") {
+      return await handleGetIntegrationStatus(
+        args as Parameters<typeof handleGetIntegrationStatus>[0]
+      );
+    }
+    if (name === "connect_integration") {
+      return await handleConnectIntegration(
+        args as Parameters<typeof handleConnectIntegration>[0]
+      );
+    }
+    if (name === "create_external_issue") {
+      return await handleCreateExternalIssue(
+        args as Parameters<typeof handleCreateExternalIssue>[0]
+      );
+    }
+    if (name === "get_external_issue") {
+      return await handleGetExternalIssue(
+        args as Parameters<typeof handleGetExternalIssue>[0]
       );
     }
 

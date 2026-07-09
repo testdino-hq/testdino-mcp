@@ -99,6 +99,24 @@ export {
   handleUpdateRunTestCase,
 } from "./manual-runs/update-run-test-case.js";
 
+// Integrations tools (Jira, Linear, Asana, monday.com, GitHub)
+export {
+  getIntegrationStatusTool,
+  handleGetIntegrationStatus,
+} from "./integrations/get-integration-status.js";
+export {
+  connectIntegrationTool,
+  handleConnectIntegration,
+} from "./integrations/connect-integration.js";
+export {
+  createExternalIssueTool,
+  handleCreateExternalIssue,
+} from "./integrations/create-external-issue.js";
+export {
+  getExternalIssueTool,
+  handleGetExternalIssue,
+} from "./integrations/get-external-issue.js";
+
 // Exploratory sessions tools
 export {
   listSessionsTool,

@@ -73,13 +73,14 @@ All through simple conversational commands.
 - **▶️ Manual Test Runs**: Spin up runs scoped to specific suites or the whole project, attach them to a release, and update workflow state without leaving chat.
 - **✅ Per-case Assignment & Verdicts**: Inside a run, assign each test case to a tester (by User \_id or email) and set the result — `passed`, `failed`, `blocked`, `skipped`, `retest` — exactly as the UI does.
 - **🔭 Exploratory Sessions**: Create exploratory testing sessions with mission/charter, assign a tester, link to a release, and track state.
+- **🔌 External Integrations**: Connect Jira, Linear, Asana, monday.com, and GitHub. File issues/tasks linked to TestDino test runs, test cases, sessions, and releases from chat. Preview before filing, idempotent retries, Jira `linkBack` remote-links.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
 - **⚡ Easy Setup**: Install and configure in minutes with npx. No installation required!
 - **🔐 Secure**: PAT stored securely in your local configuration. One PAT provides access to all organizations and projects you have permissions for.
 
 ### Available Tools
 
-The server provides 27 tools across six domains:
+The server provides 31 tools across seven domains:
 
 **Test Execution & Results:**
 
@@ -122,6 +123,13 @@ The server provides 27 tools across six domains:
 25. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
 26. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
 27. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
+
+**Integrations (Jira, Linear, Asana, monday.com, GitHub):**
+
+28. **`get_integration_status`** - Check whether a provider is connected for a project. Pass `includeCreateOptions=true` + `target` to also get provider create-metadata (required fields, issue types, boards, teams).
+29. **`connect_integration`** - Start the provider OAuth/connect flow. Returns a browser-openable connect URL, or a short-circuit `already_connected` response. Do NOT auto-open the URL — surface it to the user.
+30. **`create_external_issue`** - File a provider issue/task linked to a TestDino entity (test run, test case, session, release, manual-run artifact). Supports `preview=true` for dry-run, `idempotencyKey` for safe retry, and `linkBack=true` for Jira remote links.
+31. **`get_external_issue`** - Fetch one provider issue by key/ID (Jira TD-17, Linear identifier, monday item ID). Pass `defaultApp` for Jira multi-site accounts.
 
 ### Installation Options
 

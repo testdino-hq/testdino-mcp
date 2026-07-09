@@ -3407,6 +3407,87 @@ update_session({
 
 ---
 
+## get_integration_status
+
+**Purpose**: Read-only. Check whether Jira, Linear, Asana, monday.com, or GitHub is connected for a TestDino project. Optionally return provider create-metadata (required fields, issue types, boards, teams) when `includeCreateOptions=true` + a `target` context is passed.
+
+**When to call**: Before `connect_integration` (short-circuits when already connected) and before `create_external_issue` (which fails fast on disconnected providers).
+
+**Inputs**:
+
+- `projectId` — required.
+- `provider` — required. Enum: `jira` | `linear` | `asana` | `monday` | `github`.
+- `includeCreateOptions` — optional. Boolean. When true and combined with a provider-appropriate `target`, the response includes create-metadata.
+- `target` — optional. Provider-specific keys, flattened to query params on the wire:
+  - Jira: `{ jiraProjectKey, issueType }` or `{ jiraProjectName, issueTypeName }` or raw `{ jiraProjectId, issueTypeId }`
+  - Linear: `{ teamId }`
+  - Asana: `{ workspaceId, projectId }`
+  - monday.com: `{ boardId }`
+
+**API Endpoint**: `GET /api/mcp/integrations/:projectId/:provider/status?includeCreateOptions&<targetKV>`
+
+---
+
+## connect_integration
+
+**Purpose**: Write. Start the OAuth/connect flow for a provider on a TestDino project. Returns either an `already_connected` short-circuit or a browser-openable connect URL for the user to click.
+
+**Client behavior**: DO NOT auto-open the returned URL — the AI client should surface it to the user in the tool response so they can open it themselves.
+
+**Inputs**:
+
+- `projectId` — required.
+- `provider` — required. Enum: `jira` | `linear` | `asana` | `monday` | `github`.
+- `orgId` — optional. Inferred from the PAT scope for single-org tokens; pass explicitly when the PAT spans multiple orgs.
+
+**API Endpoint**: `POST /api/mcp/integrations/:projectId/:provider/connect` — body `{ orgId? }`.
+
+---
+
+## create_external_issue
+
+**Purpose**: Write. File a provider issue/task/item (Jira ticket, Linear issue, monday.com item, Asana task, GitHub issue) linked to a TestDino entity — an automated or manual test run, test case, session, release, etc.
+
+**Pre-flight**: Always call `get_integration_status` first. A disconnected provider returns 409 with `nextTool: 'connect_integration'`.
+
+**Inputs**:
+
+- `projectId` — required.
+- `provider` — required. Enum: `jira` | `linear` | `asana` | `monday` | `github`.
+- `source` — required object:
+  - `type` — required. One of: `test_run`, `test_suite`, `test_case`, `manual_test_case`, `manual_test_suite`, `release`, `manual_run`, `manual_run_test_case`, `session`.
+  - `id` — required. TestDino entity ID, counter-style ID, or key.
+  - `runId` — optional. Parent run ID when source is a run-scoped test case.
+  - `testRunId` — optional. Alias for `runId` for automated test cases.
+  - `caseId` — optional. Underlying test case ID when `id` is a run-test-case row.
+- `summary` — optional. Non-GitHub providers auto-derive from the source when omitted.
+- `description` — optional. Auto-derived like `summary` for non-GitHub.
+- `target` — optional. Provider-specific field values; see `get_integration_status` for shape.
+- `linkBack` — optional. When true, TestDino stores the created issue key onto the source entity so it renders in the UI (full Jira support today; other providers return a partial success).
+- `idempotencyKey` — optional. Caller-supplied stable string for safe retries.
+- `preview` — optional. When true, resolve the source into a draft WITHOUT creating anything. Useful for user confirmation.
+
+**API Endpoint**: `POST /api/mcp/integrations/:projectId/:provider/issues`.
+
+---
+
+## get_external_issue
+
+**Purpose**: Read. Fetch one external issue by its provider key/ID (e.g. Jira `TD-17`, Linear identifier, monday.com item ID).
+
+**Note**: One issueId per call. Streaming MCP accepts an array; the stdio backend serves one.
+
+**Inputs**:
+
+- `projectId` — required.
+- `provider` — required. Enum: `jira` | `linear` | `asana` | `monday` | `github`.
+- `issueId` — required. Provider issue key or ID.
+- `defaultApp` — optional. Jira-only hint for multi-site Atlassian accounts.
+
+**API Endpoint**: `GET /api/mcp/integrations/:projectId/:provider/issues/:issueId?defaultApp=…`.
+
+---
+
 ## Adding New Tools
 
 When adding new tools to the MCP server:

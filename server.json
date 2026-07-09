@@ -6,12 +6,12 @@
     "url": "https://github.com/testdino-hq/testdino-mcp",
     "source": "github"
   },
-  "version": "1.0.10",
+  "version": "1.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "testdino-mcp",
-      "version": "1.0.10",
+      "version": "1.2.0",
       "transport": {
         "type": "stdio"
       },
