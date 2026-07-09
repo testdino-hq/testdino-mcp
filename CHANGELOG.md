@@ -2,7 +2,7 @@
 
 All notable changes to `testdino-mcp` are documented here.
 
-## 1.1.0 — 2026-07-09
+## 1.0.11 — 2026-07-09
 
 ### Added
 
@@ -33,7 +33,7 @@ All notable changes to `testdino-mcp` are documented here.
 - **`test_audit`** is now a deprecated alias that delegates to
   `get_audit_report` and `submit_audit_report` by `action`. The first
   invocation per process logs a deprecation notice to stderr (does NOT
-  pollute the tool response). Scheduled for removal in `v2.0.0`.
+  pollute the tool response). Scheduled for removal in `a future major release`.
 
 ### Behind the scenes
 
