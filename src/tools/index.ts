@@ -29,6 +29,14 @@ export {
   handleDebugTestCase,
 } from "./testcases/debug-testcase.js";
 export { testAuditTool, handleTestAudit } from "./audits/test-audit.js";
+export {
+  getAuditReportTool,
+  handleGetAuditReport,
+} from "./audits/get-audit-report.js";
+export {
+  submitAuditReportTool,
+  handleSubmitAuditReport,
+} from "./audits/submit-audit-report.js";
 
 // Manual test cases tools
 export {

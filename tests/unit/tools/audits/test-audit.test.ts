@@ -82,6 +82,7 @@ describe("handleTestAudit", () => {
     const result = await handleTestAudit(
       createArgs({
         action: "analyze",
+        orgId: "org_1",
         branch: "main",
         scope: "suite",
         target: { specPath: "tests/auth.spec.ts" },
@@ -205,6 +206,7 @@ describe("handleTestAudit", () => {
       await handleTestAudit(
         createArgs({
           action: "analyze",
+          orgId: "org_1",
           branch: "main",
           score: 91,
           findings: [],
@@ -233,6 +235,7 @@ describe("handleTestAudit", () => {
     await handleTestAudit(
       createArgs({
         action: "analyze",
+        orgId: "org_1",
         branch: "main",
         score: 84,
         findings: [
@@ -264,6 +267,7 @@ describe("handleTestAudit", () => {
     await handleTestAudit(
       createArgs({
         action: "analyze",
+        orgId: "org_1",
         branch: "main",
         scope: "feature",
         score: 80,
@@ -282,6 +286,7 @@ describe("handleTestAudit", () => {
       handleTestAudit(
         createArgs({
           action: "analyze",
+          orgId: "org_1",
           branch: "main",
           score: 90,
           findings: [
@@ -311,6 +316,7 @@ describe("handleTestAudit", () => {
       await handleTestAudit(
         createArgs({
           action: "analyze",
+          orgId: "org_1",
           branch: "main",
           score: 90,
           findings: [],
@@ -342,6 +348,7 @@ describe("handleTestAudit", () => {
       await handleTestAudit(
         createArgs({
           action: "analyze",
+          orgId: "org_1",
           branch: "main",
           score: 92,
           findings: [],
