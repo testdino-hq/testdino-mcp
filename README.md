@@ -21,6 +21,31 @@
 
 A Model Context Protocol (MCP) server that connects TestDino to AI agents. This server enables you to interact with your TestDino test data directly through natural language commands.
 
+[![npm version](https://img.shields.io/npm/v/testdino-mcp.svg)](https://www.npmjs.com/package/testdino-mcp)
+[![Node.js](https://img.shields.io/node/v/testdino-mcp.svg)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Docs](https://img.shields.io/badge/docs-testdino.com-blue.svg)](https://docs.testdino.com/testdino-mcp/overview/)
+
+## Quick Start
+
+Add this to your MCP client config (`~/.cursor/mcp.json` for Cursor), then restart the client:
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "npx",
+      "args": ["-y", "testdino-mcp"],
+      "env": {
+        "TESTDINO_PAT": "your-pat-here"
+      }
+    }
+  }
+}
+```
+
+Get your PAT from **TestDino → User Settings → Personal Access Tokens**, then ask your assistant: _"Check TestDino health."_ You should see your account, organizations, and projects. Full setup for Cursor and Claude Desktop is in [Integration](#integration).
+
 ## What is This?
 
 This MCP server bridges the gap between your TestDino test management platform and AI agents. Instead of manually navigating the TestDino dashboard, you can ask your AI assistant to:
@@ -38,7 +63,7 @@ All through simple conversational commands.
 ## Features
 
 - **🔍 Health Check**: Verify your connection and validate your TestDino PAT. Get account information and list all available organizations and projects.
-- **📊 Test Run Management**: List and retrieve detailed information about your test runs with powerful filtering options (branch, time, author, commit, environment).
+- **📊 Test Run Management**: List and retrieve detailed information about your test runs with filtering options (branch, time, author, commit, environment).
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, execution steps, and artifacts (screenshots, videos, traces).
 - **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts. Analyze patterns across multiple executions to identify root causes.
 - **🧭 Test Quality Audit**: Fetch a server-curated audit prompt plus branch signals, analyze your local test code, and store the completed report back in TestDino without uploading raw source files.
@@ -54,12 +79,12 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 27 powerful tools across five domains:
+The server provides 27 tools across six domains:
 
 **Test Execution & Results:**
 
 1. **`health`** - Verify your connection and validate your PAT. Shows account information, available organizations, and projects with access permissions.
-2. **`list_testruns`** - Browse test runs with powerful filters (branch, time interval, author, commit, environment). Supports pagination and batch operations.
+2. **`list_testruns`** - Browse test runs with filters (branch, time interval, author, commit, environment). Supports pagination and batch operations.
 3. **`get_run_details`** - Get comprehensive details about a specific test run including statistics, test suites, test cases, and metadata. Supports batch operations (comma-separated IDs, max 20).
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
@@ -118,7 +143,7 @@ npm install -g testdino-mcp
 ```
 
 - Install once, use in any project
-- Requires Node.js 18+ and npm
+- Requires Node.js 20+ and npm
 - Use command: `testdino-mcp`
 
 **Option 3: Project Installation**
@@ -196,6 +221,37 @@ Then use this configuration:
 ```
 
 The server uses the standard MCP protocol, so it will work with other MCP-compatible clients as well.
+
+### Claude Desktop
+
+Claude Desktop uses the same config shape, in a different file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "TestDino": {
+      "command": "npx",
+      "args": ["-y", "testdino-mcp"],
+      "env": {
+        "TESTDINO_PAT": "your-pat-here"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop, then ask _"Check TestDino health"_ to verify.
+
+### Local development
+
+By default the server talks to `https://api.testdino.com`. To point it at a local API while developing, set `TESTDINO_API_URL` (see [`.env.example`](./.env.example)):
+
+```bash
+TESTDINO_API_URL=http://localhost:3001
+```
 
 ## Usage
 
@@ -290,7 +346,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 ## Requirements
 
-- **Node.js**: Version 18.0.0 or higher
+- **Node.js**: Version 20.0.0 or higher
 - **NPM**: Latest version recommended (for package management)
 - **TestDino Account**: Valid account with Test Runs and/or Test Case Management access
 - **Personal Access Token (PAT)**: Required for authentication. Get it from TestDino Settings → Personal Access Tokens
@@ -299,7 +355,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 
 ### AI-Assisted Debugging with `debug_testcase`
 
-The `debug_testcase` tool is a powerful feature that helps you understand why tests are failing by analyzing historical execution data:
+The `debug_testcase` tool helps you understand why tests are failing by analyzing historical execution data:
 
 - **Historical Analysis**: Aggregates data from multiple test runs to identify patterns
 - **Failure Patterns**: Identifies common error categories, messages, and locations
