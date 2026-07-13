@@ -518,4 +518,68 @@ export const endpoints = {
     const baseUrl = getBaseUrl();
     return `${baseUrl}/api/mcp/sessions/${projectId}/${sessionId}`;
   },
+
+  // ─── Test Run Error Clusters ───────────────────────────────────────────────
+
+  /**
+   * Get error clusters for a test run grouped by error signature
+   * GET /api/mcp/:projectId/run-error-clusters?testrun_id=…&status=…
+   */
+  runErrorClusters: (params: {
+    projectId: string;
+    testrun_id: string;
+    status?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/run-error-clusters${queryString}`;
+  },
+
+  // ─── Integrations ──────────────────────────────────────────────────────────
+
+  /**
+   * Get integration connection status for a project
+   * GET /api/mcp/:projectId/integration-status?provider=…
+   */
+  getIntegrationStatus: (params: {
+    projectId: string;
+    provider?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/integration-status${queryString}`;
+  },
+
+  /**
+   * Get OAuth connect URL for an integration provider
+   * POST /api/mcp/:projectId/integration/connect-url
+   */
+  connectIntegration: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/${projectId}/integration/connect-url`;
+  },
+
+  /**
+   * Create an external issue in Jira / monday.com
+   * POST /api/mcp/:projectId/external-issue
+   */
+  createExternalIssue: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/${projectId}/external-issue`;
+  },
+
+  /**
+   * Get a previously created external issue by ID
+   * GET /api/mcp/:projectId/external-issue/:issueId
+   */
+  getExternalIssue: (params: {
+    projectId: string;
+    issueId: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, issueId } = params;
+    return `${baseUrl}/api/mcp/${projectId}/external-issue/${issueId}`;
+  },
 };

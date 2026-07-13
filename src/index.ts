@@ -75,6 +75,18 @@ import {
   handleCreateSession,
   updateSessionTool,
   handleUpdateSession,
+  // Error clusters
+  getRunErrorClustersTool,
+  handleGetRunErrorClusters,
+  // Integrations
+  getIntegrationStatusTool,
+  handleGetIntegrationStatus,
+  connectIntegrationTool,
+  handleConnectIntegration,
+  createExternalIssueTool,
+  handleCreateExternalIssue,
+  getExternalIssueTool,
+  handleGetExternalIssue,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -130,6 +142,13 @@ async function main() {
     getSessionTool,
     createSessionTool,
     updateSessionTool,
+    // Error clusters
+    getRunErrorClustersTool,
+    // Integrations
+    getIntegrationStatusTool,
+    connectIntegrationTool,
+    createExternalIssueTool,
+    getExternalIssueTool,
   ];
 
   /**
@@ -352,6 +371,35 @@ async function main() {
     if (name === "update_session") {
       return await handleUpdateSession(
         args as Parameters<typeof handleUpdateSession>[0]
+      );
+    }
+
+    // Error clusters
+    if (name === "get_run_error_clusters") {
+      return await handleGetRunErrorClusters(
+        args as Parameters<typeof handleGetRunErrorClusters>[0]
+      );
+    }
+
+    // Integrations
+    if (name === "get_integration_status") {
+      return await handleGetIntegrationStatus(
+        args as Parameters<typeof handleGetIntegrationStatus>[0]
+      );
+    }
+    if (name === "connect_integration") {
+      return await handleConnectIntegration(
+        args as Parameters<typeof handleConnectIntegration>[0]
+      );
+    }
+    if (name === "create_external_issue") {
+      return await handleCreateExternalIssue(
+        args as Parameters<typeof handleCreateExternalIssue>[0]
+      );
+    }
+    if (name === "get_external_issue") {
+      return await handleGetExternalIssue(
+        args as Parameters<typeof handleGetExternalIssue>[0]
       );
     }
 

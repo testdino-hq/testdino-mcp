@@ -14,6 +14,10 @@ export {
   getRunDetailsTool,
   handleGetRunDetails,
 } from "./testruns/get-run-details.js";
+export {
+  getRunErrorClustersTool,
+  handleGetRunErrorClusters,
+} from "./testruns/get-run-error-clusters.js";
 
 // Test cases tools
 export {
@@ -120,3 +124,21 @@ export {
   updateSessionTool,
   handleUpdateSession,
 } from "./sessions/update-session.js";
+
+// Integrations tools
+export {
+  getIntegrationStatusTool,
+  handleGetIntegrationStatus,
+} from "./integrations/get-integration-status.js";
+export {
+  connectIntegrationTool,
+  handleConnectIntegration,
+} from "./integrations/connect-integration.js";
+export {
+  createExternalIssueTool,
+  handleCreateExternalIssue,
+} from "./integrations/create-external-issue.js";
+export {
+  getExternalIssueTool,
+  handleGetExternalIssue,
+} from "./integrations/get-external-issue.js";
