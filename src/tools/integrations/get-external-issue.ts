@@ -5,13 +5,14 @@ import { getApiKey } from "../../lib/env.js";
 interface GetExternalIssueArgs {
   token?: string;
   projectId: string;
+  provider: "jira" | "linear" | "asana" | "monday" | "github";
   issueId: string;
 }
 
 export const getExternalIssueTool = {
   name: "get_external_issue",
   description:
-    "Fetches a previously created external issue (Jira / monday.com) by its TestDino issue ID. " +
+    "Fetches a previously created external issue (Jira, Linear, Asana, monday.com, GitHub) by its issue ID. " +
     "Returns current issue details including its status in the external provider. " +
     "Use this to check whether an issue filed via create_external_issue is still open or has been resolved.",
   inputSchema: {
@@ -21,13 +22,19 @@ export const getExternalIssueTool = {
         type: "string",
         description: "Project ID (Required). The TestDino project identifier.",
       },
+      provider: {
+        type: "string",
+        enum: ["jira", "linear", "asana", "monday", "github"],
+        description:
+          "Integration provider the issue lives in (Required). Use the same provider passed to create_external_issue.",
+      },
       issueId: {
         type: "string",
         description:
           "External issue ID (Required). The ID returned by create_external_issue.",
       },
     },
-    required: ["projectId", "issueId"],
+    required: ["projectId", "provider", "issueId"],
   },
 };
 
@@ -45,6 +52,10 @@ export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {
     throw new Error("projectId is required");
   }
 
+  if (!args?.provider) {
+    throw new Error("provider is required");
+  }
+
   if (!args?.issueId) {
     throw new Error("issueId is required");
   }
@@ -52,6 +63,7 @@ export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {
   try {
     const url = endpoints.getExternalIssue({
       projectId: String(args.projectId),
+      provider: String(args.provider),
       issueId: String(args.issueId),
     });
 

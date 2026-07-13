@@ -21,49 +21,50 @@ describe("handleGetIntegrationStatus", () => {
     );
   });
 
-  it("calls integration-status endpoint without provider filter when omitted", async () => {
-    mockFetchSuccess({ integrations: [] });
+  it("throws when provider is missing", async () => {
+    await expect(
+      handleGetIntegrationStatus(createArgs() as never)
+    ).rejects.toThrow("provider is required");
+  });
 
-    await handleGetIntegrationStatus(createArgs() as never);
+  it("calls the provider-in-path status endpoint", async () => {
+    mockFetchSuccess({ connected: true });
+
+    await handleGetIntegrationStatus(createArgs({ provider: "jira" }) as never);
 
     const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/integration-status");
-    expect(url).not.toContain("provider=");
+    expect(url).toContain("/api/mcp/integrations/test-project-id/jira/status");
     expect(getLastFetchOptions()?.method ?? "GET").toBe("GET");
   });
 
-  it("passes provider as query param when supplied", async () => {
-    mockFetchSuccess({ connected: true });
+  it("passes includeCreateOptions as a query param when supplied", async () => {
+    mockFetchSuccess({ connected: true, createOptions: {} });
 
     await handleGetIntegrationStatus(
-      createArgs({ provider: "jira" }) as never
+      createArgs({ provider: "monday", includeCreateOptions: true }) as never
     );
 
-    expect(getLastFetchUrl()).toContain("provider=jira");
-  });
-
-  it("passes monday provider correctly", async () => {
-    mockFetchSuccess({ connected: false });
-
-    await handleGetIntegrationStatus(
-      createArgs({ provider: "monday" }) as never
+    const url = getLastFetchUrl();
+    expect(url).toContain(
+      "/api/mcp/integrations/test-project-id/monday/status"
     );
-
-    expect(getLastFetchUrl()).toContain("provider=monday");
+    expect(url).toContain("includeCreateOptions=true");
   });
 
   it("sends Bearer auth and returns formatted MCP content", async () => {
-    const mockData = { integrations: [{ provider: "jira", connected: true }] };
+    const mockData = { provider: "jira", connected: true };
     mockFetchSuccess(mockData);
 
-    const result = await handleGetIntegrationStatus(createArgs() as never);
+    const result = await handleGetIntegrationStatus(
+      createArgs({ provider: "jira" }) as never
+    );
 
     expect(getLastFetchOptions()?.headers).toEqual(
       expect.objectContaining({ Authorization: "Bearer test-pat-token" })
     );
     expect(result.content[0].type).toBe("text");
     const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.integrations[0].provider).toBe("jira");
-    expect(parsed.integrations[0].connected).toBe(true);
+    expect(parsed.provider).toBe("jira");
+    expect(parsed.connected).toBe(true);
   });
 });

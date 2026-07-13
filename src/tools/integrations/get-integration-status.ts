@@ -5,15 +5,16 @@ import { getApiKey } from "../../lib/env.js";
 interface GetIntegrationStatusArgs {
   token?: string;
   projectId: string;
-  provider?: "jira" | "monday";
+  provider: "jira" | "linear" | "asana" | "monday" | "github";
+  includeCreateOptions?: boolean;
 }
 
 export const getIntegrationStatusTool = {
   name: "get_integration_status",
   description:
-    "Reports whether third-party integrations (Jira, monday.com) are connected for a project. " +
-    "Call this before create_external_issue or connect_integration to check which providers are already active. " +
-    "Omit provider to return status for all integrations; supply a provider to check one specifically.",
+    "Reports whether a third-party integration (Jira, Linear, Asana, monday.com, GitHub) is connected for a project. " +
+    "Call this before create_external_issue or connect_integration to check whether the provider is already active. " +
+    "Set includeCreateOptions to true to also fetch the fields available for issue creation (provider projects, issue types, required/optional/custom fields).",
   inputSchema: {
     type: "object",
     properties: {
@@ -23,12 +24,16 @@ export const getIntegrationStatusTool = {
       },
       provider: {
         type: "string",
-        enum: ["jira", "monday"],
+        enum: ["jira", "linear", "asana", "monday", "github"],
+        description: "Integration provider to check (Required).",
+      },
+      includeCreateOptions: {
+        type: "boolean",
         description:
-          "Integration provider to check. Omit to return status for all providers.",
+          "When true, the response also includes createOptions: provider projects, issue types, and required/optional/custom fields for create_external_issue.",
       },
     },
-    required: ["projectId"],
+    required: ["projectId", "provider"],
   },
 };
 
@@ -48,10 +53,17 @@ export async function handleGetIntegrationStatus(
     throw new Error("projectId is required");
   }
 
+  if (!args?.provider) {
+    throw new Error("provider is required");
+  }
+
   try {
     const url = endpoints.getIntegrationStatus({
       projectId: String(args.projectId),
-      ...(args.provider ? { provider: String(args.provider) } : {}),
+      provider: String(args.provider),
+      ...(args.includeCreateOptions !== undefined
+        ? { includeCreateOptions: args.includeCreateOptions }
+        : {}),
     });
 
     const response = await apiRequestJson<unknown>(url, {

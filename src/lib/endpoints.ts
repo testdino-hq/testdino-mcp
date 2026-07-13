@@ -523,7 +523,7 @@ export const endpoints = {
 
   /**
    * Get error clusters for a test run grouped by error signature
-   * GET /api/mcp/:projectId/run-error-clusters?testrun_id=…&status=…
+   * GET /api/mcp/:projectId/get-run-error-clusters?testrun_id=…&status=…
    */
   runErrorClusters: (params: {
     projectId: string;
@@ -533,53 +533,63 @@ export const endpoints = {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;
     const queryString = buildQueryString(queryParams);
-    return `${baseUrl}/api/mcp/${projectId}/run-error-clusters${queryString}`;
+    return `${baseUrl}/api/mcp/${projectId}/get-run-error-clusters${queryString}`;
   },
 
   // ─── Integrations ──────────────────────────────────────────────────────────
+  // Provider lives in the path on this surface:
+  // /api/mcp/integrations/:projectId/:provider/…
 
   /**
-   * Get integration connection status for a project
-   * GET /api/mcp/:projectId/integration-status?provider=…
+   * Get integration connection status for a project + provider
+   * GET /api/mcp/integrations/:projectId/:provider/status?includeCreateOptions=…
    */
   getIntegrationStatus: (params: {
     projectId: string;
-    provider?: string;
+    provider: string;
+    includeCreateOptions?: boolean;
   }): string => {
     const baseUrl = getBaseUrl();
-    const { projectId, ...queryParams } = params;
+    const { projectId, provider, ...queryParams } = params;
     const queryString = buildQueryString(queryParams);
-    return `${baseUrl}/api/mcp/${projectId}/integration-status${queryString}`;
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/status${queryString}`;
   },
 
   /**
    * Get OAuth connect URL for an integration provider
-   * POST /api/mcp/:projectId/integration/connect-url
+   * POST /api/mcp/integrations/:projectId/:provider/connect
    */
-  connectIntegration: (projectId: string): string => {
+  connectIntegration: (params: {
+    projectId: string;
+    provider: string;
+  }): string => {
     const baseUrl = getBaseUrl();
-    return `${baseUrl}/api/mcp/${projectId}/integration/connect-url`;
+    return `${baseUrl}/api/mcp/integrations/${params.projectId}/${params.provider}/connect`;
   },
 
   /**
-   * Create an external issue in Jira / monday.com
-   * POST /api/mcp/:projectId/external-issue
+   * Create an external issue in Jira / Linear / Asana / monday.com / GitHub
+   * POST /api/mcp/integrations/:projectId/:provider/issues
    */
-  createExternalIssue: (projectId: string): string => {
+  createExternalIssue: (params: {
+    projectId: string;
+    provider: string;
+  }): string => {
     const baseUrl = getBaseUrl();
-    return `${baseUrl}/api/mcp/${projectId}/external-issue`;
+    return `${baseUrl}/api/mcp/integrations/${params.projectId}/${params.provider}/issues`;
   },
 
   /**
    * Get a previously created external issue by ID
-   * GET /api/mcp/:projectId/external-issue/:issueId
+   * GET /api/mcp/integrations/:projectId/:provider/issues/:issueId
    */
   getExternalIssue: (params: {
     projectId: string;
+    provider: string;
     issueId: string;
   }): string => {
     const baseUrl = getBaseUrl();
-    const { projectId, issueId } = params;
-    return `${baseUrl}/api/mcp/${projectId}/external-issue/${issueId}`;
+    const { projectId, provider, issueId } = params;
+    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/issues/${issueId}`;
   },
 };

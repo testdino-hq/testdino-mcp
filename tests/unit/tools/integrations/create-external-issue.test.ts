@@ -10,8 +10,7 @@ import { handleCreateExternalIssue } from "../../../../src/tools/integrations/cr
 
 const baseIssueArgs = {
   provider: "jira",
-  idempotencyKey: "testrun-abc-login-test",
-  summary: "Login test failing on main",
+  source: { type: "manual_test_case", id: "tc_123" },
 };
 
 describe("handleCreateExternalIssue", () => {
@@ -35,71 +34,87 @@ describe("handleCreateExternalIssue", () => {
     ).rejects.toThrow("provider is required");
   });
 
-  it("throws when idempotencyKey is missing", async () => {
+  it("throws when source is missing", async () => {
     await expect(
       handleCreateExternalIssue(
-        createArgs({ ...baseIssueArgs, idempotencyKey: undefined }) as never
+        createArgs({ ...baseIssueArgs, source: undefined }) as never
       )
-    ).rejects.toThrow("idempotencyKey is required");
+    ).rejects.toThrow("source.type and source.id are required");
   });
 
-  it("throws when summary is missing", async () => {
+  it("throws when source.id is missing", async () => {
     await expect(
       handleCreateExternalIssue(
-        createArgs({ ...baseIssueArgs, summary: undefined }) as never
+        createArgs({
+          ...baseIssueArgs,
+          source: { type: "manual_test_case" },
+        }) as never
       )
-    ).rejects.toThrow("summary is required");
+    ).rejects.toThrow("source.type and source.id are required");
   });
 
-  it("POSTs to external-issue endpoint with required fields in body", async () => {
-    mockFetchSuccess({ issueId: "JIRA-123" });
+  it("POSTs to the provider-in-path issues endpoint with source in body", async () => {
+    mockFetchSuccess({ success: true, issue: { key: "JIRA-123" } });
 
     await handleCreateExternalIssue(createArgs(baseIssueArgs) as never);
 
     const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/external-issue");
+    expect(url).toContain("/api/mcp/integrations/test-project-id/jira/issues");
     expect(getLastFetchOptions()?.method).toBe("POST");
     const body = JSON.parse(getLastFetchOptions()?.body as string);
-    expect(body.provider).toBe("jira");
-    expect(body.idempotencyKey).toBe("testrun-abc-login-test");
-    expect(body.summary).toBe("Login test failing on main");
+    expect(body.source).toEqual({ type: "manual_test_case", id: "tc_123" });
+    // provider travels in the path, not the body
+    expect(body.provider).toBeUndefined();
   });
 
   it("includes optional fields when provided", async () => {
-    mockFetchSuccess({ issueId: "MONDAY-456" });
+    mockFetchSuccess({ success: true, issue: { id: "MONDAY-456" } });
 
     await handleCreateExternalIssue(
       createArgs({
         ...baseIssueArgs,
         provider: "monday",
+        summary: "Login test failing on main",
         description: "Detailed description",
-        source: "testrun-abc",
+        target: { boardId: "123" },
         linkBack: true,
-        providerFields: { boardId: "123" },
+        idempotencyKey: "testrun-abc-login-test",
+        preview: true,
       }) as never
     );
 
+    const url = getLastFetchUrl();
+    expect(url).toContain(
+      "/api/mcp/integrations/test-project-id/monday/issues"
+    );
     const body = JSON.parse(getLastFetchOptions()?.body as string);
+    expect(body.summary).toBe("Login test failing on main");
     expect(body.description).toBe("Detailed description");
-    expect(body.source).toBe("testrun-abc");
+    expect(body.target.boardId).toBe("123");
     expect(body.linkBack).toBe(true);
-    expect(body.providerFields.boardId).toBe("123");
+    expect(body.idempotencyKey).toBe("testrun-abc-login-test");
+    expect(body.preview).toBe(true);
   });
 
   it("omits optional fields when not provided", async () => {
-    mockFetchSuccess({ issueId: "JIRA-789" });
+    mockFetchSuccess({ success: true, issue: { key: "JIRA-789" } });
 
     await handleCreateExternalIssue(createArgs(baseIssueArgs) as never);
 
     const body = JSON.parse(getLastFetchOptions()?.body as string);
+    expect(body.summary).toBeUndefined();
     expect(body.description).toBeUndefined();
-    expect(body.source).toBeUndefined();
+    expect(body.target).toBeUndefined();
     expect(body.linkBack).toBeUndefined();
-    expect(body.providerFields).toBeUndefined();
+    expect(body.idempotencyKey).toBeUndefined();
+    expect(body.preview).toBeUndefined();
   });
 
   it("sends Bearer auth and returns formatted MCP content", async () => {
-    const mockData = { issueId: "JIRA-100", url: "https://jira.example.com/JIRA-100" };
+    const mockData = {
+      success: true,
+      issue: { key: "JIRA-100", url: "https://jira.example.com/JIRA-100" },
+    };
     mockFetchSuccess(mockData);
 
     const result = await handleCreateExternalIssue(
@@ -111,6 +126,6 @@ describe("handleCreateExternalIssue", () => {
     );
     expect(result.content[0].type).toBe("text");
     const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.issueId).toBe("JIRA-100");
+    expect(parsed.issue.key).toBe("JIRA-100");
   });
 });

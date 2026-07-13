@@ -5,15 +5,16 @@ import { getApiKey } from "../../lib/env.js";
 interface ConnectIntegrationArgs {
   token?: string;
   projectId: string;
-  provider: "jira" | "monday";
+  provider: "jira" | "linear" | "asana" | "monday" | "github";
+  orgId?: string;
 }
 
 export const connectIntegrationTool = {
   name: "connect_integration",
   description:
-    "Returns an OAuth connect URL for the requested integration provider (Jira or monday.com). " +
+    "Returns an OAuth connect URL for the requested integration provider (Jira, Linear, Asana, monday.com, GitHub). " +
     "Show the returned URL to the user — do NOT open it programmatically. The user must visit it in their browser to authorize the connection. " +
-    "Call get_integration_status first to check whether the provider is already connected.",
+    "Call get_integration_status first to check whether the provider is already connected; if it is, this returns status already_connected instead of a URL.",
   inputSchema: {
     type: "object",
     properties: {
@@ -23,8 +24,13 @@ export const connectIntegrationTool = {
       },
       provider: {
         type: "string",
-        enum: ["jira", "monday"],
+        enum: ["jira", "linear", "asana", "monday", "github"],
         description: "Integration provider to connect (Required).",
+      },
+      orgId: {
+        type: "string",
+        description:
+          "Organization ID. Optional — derived from your PAT scopes when omitted; pass it explicitly if your PAT spans multiple organizations.",
       },
     },
     required: ["projectId", "provider"],
@@ -50,12 +56,15 @@ export async function handleConnectIntegration(args?: ConnectIntegrationArgs) {
   }
 
   try {
-    const url = endpoints.connectIntegration(String(args.projectId));
+    const url = endpoints.connectIntegration({
+      projectId: String(args.projectId),
+      provider: String(args.provider),
+    });
 
     const response = await apiRequestJson<unknown>(url, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
-      body: { provider: String(args.provider) },
+      body: args.orgId !== undefined ? { orgId: String(args.orgId) } : {},
     });
 
     return {

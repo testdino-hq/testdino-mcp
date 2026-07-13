@@ -21,36 +21,32 @@ describe("handleGetExternalIssue", () => {
     );
   });
 
+  it("throws when provider is missing", async () => {
+    await expect(
+      handleGetExternalIssue(createArgs({ issueId: "JIRA-123" }) as never)
+    ).rejects.toThrow("provider is required");
+  });
+
   it("throws when issueId is missing", async () => {
     await expect(
       handleGetExternalIssue(
-        createArgs({ issueId: undefined }) as never
+        createArgs({ provider: "jira", issueId: undefined }) as never
       )
     ).rejects.toThrow("issueId is required");
   });
 
-  it("calls the correct endpoint with issueId in path", async () => {
+  it("calls the provider-in-path endpoint with issueId", async () => {
     mockFetchSuccess({ issueId: "JIRA-123", status: "open" });
 
     await handleGetExternalIssue(
-      createArgs({ issueId: "JIRA-123" }) as never
+      createArgs({ provider: "jira", issueId: "JIRA-123" }) as never
     );
 
     const url = getLastFetchUrl();
     expect(url).toContain(
-      "/api/mcp/test-project-id/external-issue/JIRA-123"
+      "/api/mcp/integrations/test-project-id/jira/issues/JIRA-123"
     );
     expect(getLastFetchOptions()?.method ?? "GET").toBe("GET");
-  });
-
-  it("encodes issueId correctly in the path", async () => {
-    mockFetchSuccess({ issueId: "ext_456" });
-
-    await handleGetExternalIssue(
-      createArgs({ issueId: "ext_456" }) as never
-    );
-
-    expect(getLastFetchUrl()).toContain("/external-issue/ext_456");
   });
 
   it("sends Bearer auth and returns formatted MCP content", async () => {
@@ -62,7 +58,7 @@ describe("handleGetExternalIssue", () => {
     mockFetchSuccess(mockData);
 
     const result = await handleGetExternalIssue(
-      createArgs({ issueId: "JIRA-456" }) as never
+      createArgs({ provider: "jira", issueId: "JIRA-456" }) as never
     );
 
     expect(getLastFetchOptions()?.headers).toEqual(

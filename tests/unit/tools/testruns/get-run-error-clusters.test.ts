@@ -23,9 +23,7 @@ describe("handleGetRunErrorClusters", () => {
 
   it("throws when testrun_id is missing", async () => {
     await expect(
-      handleGetRunErrorClusters(
-        createArgs({ testrun_id: undefined }) as never
-      )
+      handleGetRunErrorClusters(createArgs({ testrun_id: undefined }) as never)
     ).rejects.toThrow("testrun_id is required");
   });
 
@@ -37,7 +35,7 @@ describe("handleGetRunErrorClusters", () => {
     );
 
     const url = getLastFetchUrl();
-    expect(url).toContain("/api/mcp/test-project-id/run-error-clusters");
+    expect(url).toContain("/api/mcp/test-project-id/get-run-error-clusters");
     expect(url).toContain("testrun_id=run-abc");
     expect(getLastFetchOptions()?.method ?? "GET").toBe("GET");
   });
@@ -73,7 +71,9 @@ describe("handleGetRunErrorClusters", () => {
   });
 
   it("sends Bearer auth and returns formatted MCP content", async () => {
-    const mockData = { clusters: [{ error: "TypeError: Cannot read", count: 5, tests: [] }] };
+    const mockData = {
+      clusters: [{ error: "TypeError: Cannot read", count: 5, tests: [] }],
+    };
     mockFetchSuccess(mockData);
 
     const result = await handleGetRunErrorClusters(

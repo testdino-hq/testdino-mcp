@@ -23,37 +23,35 @@ describe("handleConnectIntegration", () => {
 
   it("throws when provider is missing", async () => {
     await expect(
-      handleConnectIntegration(
-        createArgs({ provider: undefined }) as never
-      )
+      handleConnectIntegration(createArgs({ provider: undefined }) as never)
     ).rejects.toThrow("provider is required");
   });
 
-  it("POSTs to the connect-url endpoint with provider in body", async () => {
+  it("POSTs to the provider-in-path connect endpoint", async () => {
     mockFetchSuccess({ connectUrl: "https://jira.example.com/oauth" });
 
+    await handleConnectIntegration(createArgs({ provider: "jira" }) as never);
+
+    const url = getLastFetchUrl();
+    expect(url).toContain("/api/mcp/integrations/test-project-id/jira/connect");
+    expect(getLastFetchOptions()?.method).toBe("POST");
+    const body = JSON.parse(getLastFetchOptions()?.body as string);
+    expect(body).toEqual({});
+  });
+
+  it("includes orgId in the body when supplied", async () => {
+    mockFetchSuccess({ connectUrl: "https://monday.example.com/oauth" });
+
     await handleConnectIntegration(
-      createArgs({ provider: "jira" }) as never
+      createArgs({ provider: "monday", orgId: "org_1" }) as never
     );
 
     const url = getLastFetchUrl();
     expect(url).toContain(
-      "/api/mcp/test-project-id/integration/connect-url"
+      "/api/mcp/integrations/test-project-id/monday/connect"
     );
-    expect(getLastFetchOptions()?.method).toBe("POST");
     const body = JSON.parse(getLastFetchOptions()?.body as string);
-    expect(body.provider).toBe("jira");
-  });
-
-  it("supports monday provider", async () => {
-    mockFetchSuccess({ connectUrl: "https://monday.example.com/oauth" });
-
-    await handleConnectIntegration(
-      createArgs({ provider: "monday" }) as never
-    );
-
-    const body = JSON.parse(getLastFetchOptions()?.body as string);
-    expect(body.provider).toBe("monday");
+    expect(body.orgId).toBe("org_1");
   });
 
   it("sends Bearer auth and returns MCP content with the connect URL", async () => {
