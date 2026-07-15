@@ -253,7 +253,7 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 | `by_browser_name` | string | `'chromium'`, `'firefox'`, `'webkit'` |
 | `by_tag` | string | Filter by test tag |
 | `by_total_runtime` | string | e.g. `'<60'`, `'>100'` (seconds) |
-| `by_artifacts` | boolean | Has a downloadable artifact (screenshot/video/trace) on ANY attempt — includes a flaky test's earlier failed-attempt trace |
+| `by_artifacts` | boolean | Has screenshots/videos |
 | `by_error_message` | string | Partial match on error message text |
 | `by_attempt_number` | number | Filter by retry attempt number |
 | `by_pages` | number | List by page number (no testrun_id/counter needed) |

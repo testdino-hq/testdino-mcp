@@ -109,7 +109,7 @@ export const listTestCasesTool = {
       by_artifacts: {
         type: "boolean",
         description:
-          "Filter by artifact presence. true keeps only cases with a downloadable artifact (screenshot, video, or trace) on ANY attempt — including a trace captured on an earlier failed attempt of a flaky test; false keeps only cases with none. Unavailable/failed-upload attachments do not count. (ID/Counter is required while using this parameter)",
+          "Filter test cases that have artifacts available (screenshots, videos, traces). Set to true to list only test cases with artifacts. (ID/Counter is required while using this parameter)",
         default: false,
       },
       by_error_message: {
