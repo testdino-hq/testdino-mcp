@@ -9,7 +9,7 @@ import { getApiKey } from "../lib/env.js";
 export const healthTool = {
   name: "health",
   description:
-    "Check if your TestDino connection is working. Verifies your PAT, shows your account information, and lists available organizations and projects. Use this first to make sure everything is set up correctly and to get organization/project IDs for other tools.",
+    "Check if your TestDino connection is working. Verifies your PAT, shows your account information, and lists available organizations and projects. Each organization also shows your role in it (owner/admin/member/billing/viewer) so you can tell the user what they can do there — treat it as informational, not a security guarantee. Use this first to make sure everything is set up correctly and to get organization/project IDs for other tools.",
   inputSchema: {
     type: "object",
     properties: {},
@@ -25,6 +25,11 @@ interface McpHealthOrgProject {
 interface McpHealthOrg {
   orgId?: string | null;
   orgName?: string | null;
+  // The caller's org-membership role (owner/admin/member/billing/viewer),
+  // enriched server-side. Optional: absent on servers that predate the role
+  // enrichment, so the renderer only shows it when present. Informational
+  // only — never a security guarantee.
+  role?: string | null;
   projects?: McpHealthOrgProject[] | { allProjects?: boolean };
 }
 
@@ -70,6 +75,10 @@ function formatMcpHealthBody(data: McpHealthBody): string {
   orgs.forEach((org, orgIndex) => {
     output += `**${orgIndex + 1}. ${org.orgName || "Unnamed organization"}**\n`;
     output += `   📋 Org ID: \`${org.orgId || "unknown"}\`\n`;
+    // Only rendered when the server supplies it (older servers omit role).
+    if (org.role) {
+      output += `   🛡️ Your role: ${org.role}\n`;
+    }
 
     if (Array.isArray(org.projects) && org.projects.length > 0) {
       output += `   📁 Projects (${org.projects.length}):\n\n`;

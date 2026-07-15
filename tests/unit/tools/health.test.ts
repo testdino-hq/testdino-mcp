@@ -144,6 +144,7 @@ describe("handleHealth", () => {
         {
           orgId: "org_1",
           orgName: "ABC-XYZ",
+          role: "member",
           projects: [{ projectId: "project_1", projectName: "TCM - TESTING" }],
         },
       ],
@@ -157,8 +158,31 @@ describe("handleHealth", () => {
     expect(result.content[0].text).toContain("Connection Successful");
     expect(result.content[0].text).toContain("ABC-XYZ");
     expect(result.content[0].text).toContain("project_1");
+    expect(result.content[0].text).toContain("Your role: member");
     expect(result.content[0].text).toContain("expires 2026-10-11");
     expect(result.content[0].text).not.toContain("Unexpected response");
+  });
+
+  it("omits the role line when the server does not supply role (pre-enrichment server)", async () => {
+    // The role field ships in npm before the gateway/user-svc enrichment
+    // reaches prod, so the renderer must stay clean when role is absent —
+    // no empty "Your role:" line.
+    mockFetchSuccess({
+      userId: "user_abc123",
+      patValid: true,
+      orgs: [
+        {
+          orgId: "org_1",
+          orgName: "No Role Org",
+          projects: { allProjects: true },
+        },
+      ],
+    });
+
+    const result = await handleHealth({ token: "test-pat-token" });
+
+    expect(result.content[0].text).toContain("No Role Org");
+    expect(result.content[0].text).not.toContain("Your role");
   });
 
   it("describes wildcard scopes in the MCP service shape", async () => {

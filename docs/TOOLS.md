@@ -116,42 +116,42 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 ```
 ✅ **TestDino Connection Successful!**
 
-👤 **Account**: Kriti Verma
-🔑 **PAT**: Test yess
+👤 **User ID**: `user_f7901523ac1557b42edf4c2e`
+🔑 **PAT**: valid (expires 2026-10-11)
 
 📊 **Access Summary**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Organizations: 2 | Projects: 5
+Organizations: 2 | Projects: 4
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**1. New pricing testing**
-   📋 Org ID: `org_694f7891040b0d665bb2e643`
+**1. ABC-XYZ**
+   📋 Org ID: `org_40ab55e13745281abac5a752`
+   🛡️ Your role: admin
    📁 Projects (3):
 
-   1.1 👁️ **testing**
-       • Project ID: `project_694f9ef4461b86957958db05`
-       • Access: Read (project_viewer)
-       • Modules: Test Runs ✓
-       • Modules: Test Case Management ✓
+   1.1 **DEMO TCM**
+       • Project ID: `project_73cb2baac1f2ded815b6c2cd`
+
+   1.2 **Bulk import in TCM**
+       • Project ID: `project_a88a171eb1e506f6cc349464`
 
    ─────────────────────────────────────
 
-**2. testdino**
-   📋 Org ID: `org_693127439c57308af3fb2836`
-   📁 Projects (2):
+**2. Sahil INC**
+   📋 Org ID: `org_d84a7dde78b1b94d2d6379c4`
+   🛡️ Your role: member
+   📁 Projects (1):
 
-   2.1 ✏️ **playwright-sample-tests**
-       • Project ID: `project_6931274a9c57308af3fb284b`
-       • Access: Write (owner)
-       • Modules: Test Runs ✓
-       • Modules: Test Case Management ✓
+   2.1 **Proj 1**
+       • Project ID: `project_ba0f2a17c9804b03432c5361`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello👋 Kriti!
 You can use organisation Id and project Id in other MCP tools.
 Happy Testing!😀
 ```
+
+`🛡️ Your role` is your org-membership role (owner / admin / member / billing / viewer). It is informational — showing what you can do in the org — not a security guarantee; the server enforces real permissions on every call. Servers that predate role enrichment simply omit the line.
 
 **Response (without PAT):**
 
