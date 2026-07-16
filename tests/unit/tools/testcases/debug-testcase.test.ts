@@ -50,8 +50,10 @@ describe("handleDebugTestCase", () => {
       createArgs({ testcase_name: "Verify user login" }) as never
     );
 
-    expect(result.content.length).toBe(2);
-    expect(result.content[1].text).toContain("Screenshot");
+    // TDV2-112: single valid-JSON block, guidance folded in — no loose prose.
+    expect(result.content.length).toBe(1);
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed._agent_guidance).toContain("Screenshot");
   });
 
   it("should forward params through full handler pipeline", async () => {

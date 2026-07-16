@@ -58,7 +58,7 @@ describe("handleGetTestCaseDetails", () => {
     expect(url).toContain("by_status=failed");
   });
 
-  it("should append screenshot hint when response contains screenshots", async () => {
+  it("folds the screenshot hint INTO a single valid-JSON block (TDV2-112)", async () => {
     const mockData = {
       id: "tc_123",
       screenshots: [{ url: "https://example.com/screenshot.png" }],
@@ -69,8 +69,13 @@ describe("handleGetTestCaseDetails", () => {
       createArgs({ testcase_id: "tc_123" }) as never
     );
 
-    expect(result.content.length).toBe(2);
-    expect(result.content[1].text).toContain("screenshot");
+    // Single content block — no loose diagnostic text after the JSON.
+    expect(result.content.length).toBe(1);
+    // The whole block must parse as standalone JSON.
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.id).toBe("tc_123");
+    // The guidance is folded in as a field, not appended as prose.
+    expect(parsed._agent_guidance).toContain("screenshot");
   });
 
   it("should forward all optional params to the API", async () => {

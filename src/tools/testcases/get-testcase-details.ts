@@ -283,23 +283,32 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
       },
     });
 
-    const responseText = JSON.stringify(response, null, 2);
-    const content: Array<{ type: string; text: string }> = [
-      { type: "text", text: responseText },
-    ];
+    // TDV2-112: keep the tool response a single VALID STANDALONE JSON block.
+    // The screenshot guidance was previously pushed as a SECOND text block after
+    // the JSON, so the raw response was JSON followed by loose prose. Fold the
+    // hint INTO the JSON payload instead (a `_agent_guidance` field) so the
+    // response parses cleanly on its own.
+    const probe = JSON.stringify(response, null, 2);
+    const hasImages =
+      probe.includes('"contentType": "image/') ||
+      probe.includes('"screenshots"');
+    const isPlainObject =
+      response !== null &&
+      typeof response === "object" &&
+      !Array.isArray(response);
 
-    // If response contains screenshot/image attachments, instruct the agent to view them
-    if (
-      responseText.includes('"contentType": "image/') ||
-      responseText.includes('"screenshots"')
-    ) {
-      content.push({
-        type: "text",
-        text: "This test case has screenshot images attached. You should fetch and view the screenshot URLs above (in the 'screenshots' or attachment 'path' fields) to visually inspect the application state at the time of failure — this is critical for accurate diagnosis.",
-      });
-    }
+    const payload =
+      hasImages && isPlainObject
+        ? {
+            ...(response as Record<string, unknown>),
+            _agent_guidance:
+              "This test case has screenshot images attached. Fetch and view the screenshot URLs (in the 'screenshots' or attachment 'path' fields) to visually inspect the application state at the time of failure — this is critical for accurate diagnosis.",
+          }
+        : response;
 
-    return { content };
+    return {
+      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to retrieve test case details: ${errorMessage}`);

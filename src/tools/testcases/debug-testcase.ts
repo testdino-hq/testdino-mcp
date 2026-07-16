@@ -65,24 +65,31 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
       },
     });
 
-    // Return the API response (includes historical data and debugging_prompt)
-    const responseText = JSON.stringify(response, null, 2);
-    const content: Array<{ type: string; text: string }> = [
-      { type: "text", text: responseText },
-    ];
+    // TDV2-112: keep the tool response a single VALID STANDALONE JSON block.
+    // The screenshot guidance was previously pushed as a SECOND text block after
+    // the JSON payload; fold it INTO the JSON (a `_agent_guidance` field) instead
+    // so the raw response parses cleanly on its own.
+    const probe = JSON.stringify(response, null, 2);
+    const hasImages =
+      probe.includes('"contentType": "image/') ||
+      probe.includes('"name": "screenshot"');
+    const isPlainObject =
+      response !== null &&
+      typeof response === "object" &&
+      !Array.isArray(response);
 
-    // If response contains screenshot/image attachments, instruct the agent to view them
-    if (
-      responseText.includes('"contentType": "image/') ||
-      responseText.includes('"name": "screenshot"')
-    ) {
-      content.push({
-        type: "text",
-        text: "Screenshot images are available in the historical test data above. You should fetch and view the screenshot URLs in the attempts' attachments to visually inspect the application state at the time of each failure — this is critical for accurate root cause analysis.",
-      });
-    }
+    const payload =
+      hasImages && isPlainObject
+        ? {
+            ...(response as Record<string, unknown>),
+            _agent_guidance:
+              "Screenshot images are available in the historical test data. Fetch and view the screenshot URLs in the attempts' attachments to visually inspect the application state at the time of each failure — this is critical for accurate root cause analysis.",
+          }
+        : response;
 
-    return { content };
+    return {
+      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to debug test case: ${errorMessage}`);

@@ -97,7 +97,6 @@ export const endpoints = {
    * @param params.by_author - Optional: Filter by author
    * @param params.by_commit - Optional: Filter by commit hash
    * @param params.page - Optional: Page number
-   * @param params.get_all - Optional: Get all results
    */
   listTestCases: (params?: {
     projectId?: string;
@@ -120,7 +119,6 @@ export const endpoints = {
     by_author?: string;
     by_commit?: string;
     page?: number;
-    get_all?: string | boolean;
   }): string => {
     const baseUrl = getBaseUrl();
     const projectId = params?.projectId || "";

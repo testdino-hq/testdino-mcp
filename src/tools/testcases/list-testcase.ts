@@ -27,7 +27,6 @@ interface ListTestCasesArgs {
   by_author?: string;
   by_commit?: string;
   page?: number;
-  get_all?: boolean;
 }
 
 interface ListTestCasesParams {
@@ -51,13 +50,12 @@ interface ListTestCasesParams {
   by_author?: string;
   by_commit?: string;
   page?: number;
-  get_all?: string;
 }
 
 export const listTestCasesTool = {
   name: "list_testcase",
   description:
-    "List test cases with comprehensive filtering options. You can filter by test run (ID or counter), status, spec file, error category, browser, tags, runtime, artifacts, error messages, attempt number, branch, time interval, environment, author, or commit hash. When using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all), the tool first lists test runs matching those criteria, then returns test cases from those filtered test runs. Use this to find specific test cases across your test runs.",
+    "List test cases with comprehensive filtering options. Provide a run scope: by_testrun_id or counter for specific runs, OR a cross-run filter (by_branch, by_time_interval, by_author, by_commit, by_environment, by_pages) which resolves the matching runs internally — you do NOT need to call list_testruns first. Without a run scope the tool returns an empty result with a warning explaining what to provide. Combine per-case filters (status, tags, runtime, artifacts, attempt number) with any run scope. page/limit paginate WITHIN the resolved run(s); limit is snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes).",
   inputSchema: {
     type: "object",
     properties: {
@@ -68,12 +66,12 @@ export const listTestCasesTool = {
       by_testrun_id: {
         type: "string",
         description:
-          "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all).",
+          "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages).",
       },
       counter: {
         type: "number",
         description:
-          "Test run counter number. Alternative to by_testrun_id. Not required when using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all). Example: 43.",
+          "Test run counter number. Alternative to by_testrun_id. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). Example: 43.",
       },
       by_status: {
         type: "string",
@@ -140,8 +138,7 @@ export const listTestCasesTool = {
       limit: {
         type: "number",
         description:
-          "Number of results per page (default: 1000, max: 1000). Does not require testrun_id or counter. When used alone, first lists test runs, then returns test cases from those test runs.",
-        default: 1000,
+          "Test cases per page within the resolved run(s). Snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes) — other values are adjusted, not rejected. Requires a run scope (by_testrun_id, counter, or a cross-run filter); it does not resolve runs on its own.",
       },
       by_environment: {
         type: "string",
@@ -161,14 +158,8 @@ export const listTestCasesTool = {
       page: {
         type: "number",
         description:
-          "Page number for pagination (default: 1). Does not require testrun_id or counter. When used alone, first lists test runs on the specified page, then returns test cases from those test runs.",
+          "1-indexed page number for pagination within the resolved run(s) (default: 1). Requires a run scope (by_testrun_id, counter, or a cross-run filter). To page across runs, use by_pages.",
         default: 1,
-      },
-      get_all: {
-        type: "boolean",
-        description:
-          "Get all results up to 1000 (default: false). Does not require testrun_id or counter. When used alone, first lists all test runs, then returns test cases from those test runs.",
-        default: false,
       },
     },
     required: ["projectId"],
@@ -186,9 +177,11 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     );
   }
 
-  // Validate that at least one identifier is provided
-  // Test run filters that don't require testrun_id or counter:
-  // by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all
+  // Validate that a run scope is provided. Cross-run filters resolve the runs
+  // internally; page/limit are pagination WITHIN a run scope (data-handler
+  // /cases needs a runId), NOT run resolvers — so they do not qualify on their
+  // own. This mirrors the gateway contract: without a run scope the request
+  // yields an empty result.
   const hasTestRunId = !!args?.by_testrun_id;
   const hasCounter = args?.counter !== undefined;
   const hasTestRunFilters = !!(
@@ -197,15 +190,12 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     args?.by_author ||
     args?.by_environment ||
     args?.by_time_interval ||
-    args?.by_pages !== undefined ||
-    args?.page !== undefined ||
-    args?.limit !== undefined ||
-    args?.get_all !== undefined
+    args?.by_pages !== undefined
   );
 
   if (!hasTestRunId && !hasCounter && !hasTestRunFilters) {
     throw new Error(
-      "At least one of the following must be provided: by_testrun_id, counter, or any test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)"
+      "A run scope is required: provide by_testrun_id, counter, or a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). page/limit paginate within a run scope — they do not select runs on their own."
     );
   }
 
@@ -270,9 +260,6 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.page !== undefined) {
       params.page = Number(args.page);
-    }
-    if (args?.get_all !== undefined) {
-      params.get_all = String(args.get_all);
     }
 
     const listTestCasesUrl = endpoints.listTestCases(params);

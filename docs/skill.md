@@ -236,13 +236,13 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 
 **Purpose**: List and filter test cases across one or many test runs.
 
-**Required parameters**: `projectId` + at least one test run identifier or test run filter.
+**Required parameters**: `projectId` + a run scope (a run identifier or a cross-run filter). Without a run scope the tool returns an empty result with a warning. `page`/`limit` are pagination within the scope, NOT run selectors.
 
 **Test run identification** (use one approach):
 | Approach | Parameters |
 |----------|-----------|
 | Direct run lookup | `by_testrun_id` (single ID or comma-separated, max 20) OR `counter` |
-| Indirect (tool resolves runs) | `by_branch`, `by_commit`, `by_author`, `by_environment`, `by_time_interval` |
+| Indirect (tool resolves runs) | `by_branch`, `by_commit`, `by_author`, `by_environment`, `by_time_interval`, `by_pages` |
 
 **Test case filters** (combine freely):
 | Parameter | Type | Description |
@@ -256,10 +256,9 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 | `by_artifacts` | boolean | Has screenshots/videos |
 | `by_error_message` | string | Partial match on error message text |
 | `by_attempt_number` | number | Filter by retry attempt number |
-| `by_pages` | number | List by page number (no testrun_id/counter needed) |
-| `limit` | number | Results per page |
-| `page` | number | Page number |
-| `get_all` | boolean | All results |
+| `by_pages` | number | Test-run page for cross-run lookup (no testrun_id/counter needed) |
+| `limit` | number | Test cases per page — snapped to nearest of 10/25/50/100. Needs a run scope |
+| `page` | number | Page number within the resolved run(s). Needs a run scope |
 
 **Key insight**: When you use `by_branch`, `by_commit`, etc., the tool internally finds matching test runs first and then returns their test cases. You don't need to call `list_testruns` first.
 

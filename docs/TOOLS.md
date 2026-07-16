@@ -472,25 +472,22 @@ This tool provides powerful filtering capabilities to find specific test cases. 
 - **Test run identification**: By test run ID or counter
 - **Test case properties**: Status, spec file, browser, tags, runtime, artifacts, error messages, attempt number
 - **Test run context**: Branch, time interval, environment, author, commit hash
-- **Pagination**: By page number (doesn't require test run ID)
+- **Pagination**: `page`/`limit` within the resolved run(s)
 
-**Important**: You can identify which test runs to search in two ways:
+**Important**: A run scope is required. You can provide it in two ways:
 
 1. **Direct Test Run Identification**: Use `by_testrun_id` OR `counter` to specify specific test runs
-2. **Test Run Filters**: Use any of the following filters to first list matching test runs, then return test cases from those runs:
+2. **Cross-run Filters**: Use any of the following to first list matching test runs, then return test cases from those runs:
    - `by_branch` - Filter by git branch name
    - `by_commit` - Filter by git commit hash
    - `by_author` - Filter by commit author
    - `by_environment` - Filter by environment (production, staging, development, etc.)
    - `by_time_interval` - Filter by time period
-   - `by_pages` - List by page number
-   - `page` - Page number for pagination
-   - `limit` - Results per page
-   - `get_all` - Get all results
+   - `by_pages` - Test-run page for cross-run lookup
 
-When using test run filters (option 2), the tool first finds test runs matching those criteria, then returns all test cases from those filtered test runs. This allows you to find test cases across multiple test runs without needing to know specific test run IDs.
+Without a run scope the tool returns an empty result with a warning explaining what to provide. `page` and `limit` are **pagination within the resolved run(s)** — they do not select runs on their own, so calling with only `page`/`limit` is rejected.
 
-All other parameters are optional filters that can be combined to narrow down results.
+All other parameters are optional per-case filters that can be combined to narrow down results.
 
 ### Parameters
 
@@ -510,12 +507,11 @@ All other parameters are optional filters that can be combined to narrow down re
 | `by_pages`          | number  | No       | List test cases by page number. Does not require testrun_id or counter. Returns test cases from all test runs on the specified page.                                                                                               |
 | `by_branch`         | string  | No       | Filter by git branch name. Does not require testrun_id or counter. First lists test runs on the specified branch, then returns test cases from those test runs. Example: 'main', 'develop'.                                        |
 | `by_time_interval`  | string  | No       | Filter by time interval. Returns test cases from test runs in the specified time period. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or '2024-01-01,2024-01-31' (date range). |
-| `limit`             | number  | No       | Number of results per page (default: 1000, max: 1000).                                                                                                                                                                             |
+| `limit`             | number  | No       | Test cases per page within the resolved run(s). Snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes). Requires a run scope.                                                                               |
 | `by_environment`    | string  | No       | Filter by environment. Returns test cases from test runs in the specified environment. Example: 'production', 'staging', 'development'.                                                                                            |
 | `by_author`         | string  | No       | Filter by commit author name (case-insensitive, partial match). Returns test cases from test runs by the specified author.                                                                                                         |
 | `by_commit`         | string  | No       | Filter by git commit hash (full or partial). Returns test cases from test runs with the specified commit.                                                                                                                          |
-| `page`              | number  | No       | Page number for pagination (default: 1).                                                                                                                                                                                           |
-| `get_all`           | boolean | No       | Get all results up to 1000 (default: false).                                                                                                                                                                                       |
+| `page`              | number  | No       | 1-indexed page number for pagination within the resolved run(s) (default: 1). Requires a run scope. To page across runs, use `by_pages`.                                                                                           |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
