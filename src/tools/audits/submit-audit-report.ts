@@ -45,6 +45,7 @@ export const submitAuditReportTool = {
     "FINAL STEP of the TestDino Playwright audit flow — submits a completed audit report. Requires write permission. " +
     "Call this only AFTER get_audit_report(action='context') and after you have analyzed the local Playwright code and produced findings. " +
     "score (0-100) and either markdownReport or markdownReportPath are required. Include findings, recommendations, reportName, branch, scope, and target as available. " +
+    "Every finding MUST include title, summary, and severity (low|medium|high|critical) — incomplete findings are rejected, not stored. target, if sent, accepts only { value, path }. " +
     "orgId is required — resolve it via health() if you do not already have it. " +
     "Use the same branch/scope/target you passed to get_audit_report(action='context') so the report attaches to the right audit context.",
   inputSchema: {
@@ -73,8 +74,18 @@ export const submitAuditReportTool = {
       target: {
         type: "object",
         description:
-          "Structured audit target (e.g. spec path, feature area). Pass this when the audit was scoped to a specific slice.",
-        additionalProperties: true,
+          "Optional scoped-audit target. Only { value, path } (non-empty strings) are stored — the dashboard reads these; any other key is rejected.",
+        properties: {
+          value: {
+            type: "string",
+            description: "Human-readable target, e.g. a feature area.",
+          },
+          path: {
+            type: "string",
+            description: "File or spec path the audit was scoped to.",
+          },
+        },
+        additionalProperties: false,
       },
       reportName: {
         type: "string",
@@ -89,7 +100,7 @@ export const submitAuditReportTool = {
       },
       findings: {
         type: "array",
-        description: `Array of findings. Each should have: title, category, severity (critical/high/medium/low), summary, recommendation, and evidence (file, lineStart, lineEnd, observation). category must be one of: ${AUDIT_CATEGORY_LIST}. Optional: subCategory.`,
+        description: `Array of findings. Each finding REQUIRES title, summary, and severity (critical/high/medium/low) — a finding missing any of these is rejected, not stored. category must be one of: ${AUDIT_CATEGORY_LIST}. Optional: subCategory, recommendation, and evidence (file, lineStart, lineEnd, observation).`,
         items: { type: "object", additionalProperties: true },
       },
       recommendations: {

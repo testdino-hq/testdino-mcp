@@ -8,21 +8,22 @@ Severity levels: `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
 
 ## Summary
 
-| ID      | Severity  | Status | Description                                                                                     |
-| ------- | --------- | ------ | ----------------------------------------------------------------------------------------------- |
-| ISS-001 | CRITICAL  | FOUND  | PAT precedence inverted — env var overrides explicit args.token                                 |
-| ISS-002 | CRITICAL  | FOUND  | readFileSync for skill.md crashes server if file missing                                        |
-| ISS-003 | CRITICAL  | FOUND  | Zero test coverage — entire test suite absent                                                   |
-| ISS-004 | IMPORTANT | FOUND  | Raw API error body leaked into tool output, no size cap                                         |
-| ISS-005 | IMPORTANT | FOUND  | list_testcase: args.projectId accessed without null guard                                       |
-| ISS-006 | IMPORTANT | FOUND  | get_testcase_details: unsafe cast bypasses endpoint type system                                 |
-| ISS-007 | IMPORTANT | FOUND  | health tool returns soft error on missing PAT, inconsistent with all other tools                |
-| ISS-008 | IMPORTANT | FOUND  | get_testcase_details: by_status alone satisfies validation, enabling unscoped queries           |
-| ISS-009 | MEDIUM    | FOUND  | processSubStepImages silently swallows file read errors                                         |
-| ISS-010 | MEDIUM    | FOUND  | debug_testcase: error message deviates from convention                                          |
-| ISS-011 | MEDIUM    | FOUND  | list_manual_test_cases: default limit hardcoded in handler, duplicating schema                  |
-| ISS-012 | MEDIUM    | FOUND  | listManualTestCases/listManualTestSuites endpoint produces undefined in URL when params omitted |
-| ISS-013 | MEDIUM    | FOUND  | Enum "Accessability" misspelled across 3 tool files                                             |
+| ID      | Severity  | Status | Description                                                                                                      |
+| ------- | --------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| ISS-001 | CRITICAL  | FOUND  | PAT precedence inverted — env var overrides explicit args.token                                                  |
+| ISS-002 | CRITICAL  | FOUND  | readFileSync for skill.md crashes server if file missing                                                         |
+| ISS-003 | CRITICAL  | FOUND  | Zero test coverage — entire test suite absent                                                                    |
+| ISS-004 | IMPORTANT | FOUND  | Raw API error body leaked into tool output, no size cap                                                          |
+| ISS-005 | IMPORTANT | FOUND  | list_testcase: args.projectId accessed without null guard                                                        |
+| ISS-006 | IMPORTANT | FOUND  | get_testcase_details: unsafe cast bypasses endpoint type system                                                  |
+| ISS-007 | IMPORTANT | FOUND  | health tool returns soft error on missing PAT, inconsistent with all other tools                                 |
+| ISS-008 | IMPORTANT | FOUND  | get_testcase_details: by_status alone satisfies validation, enabling unscoped queries                            |
+| ISS-009 | MEDIUM    | FOUND  | processSubStepImages silently swallows file read errors                                                          |
+| ISS-010 | MEDIUM    | FOUND  | debug_testcase: error message deviates from convention                                                           |
+| ISS-011 | MEDIUM    | FOUND  | list_manual_test_cases: default limit hardcoded in handler, duplicating schema                                   |
+| ISS-012 | MEDIUM    | FOUND  | listManualTestCases/listManualTestSuites endpoint produces undefined in URL when params omitted                  |
+| ISS-013 | MEDIUM    | FOUND  | Enum "Accessability" misspelled across 3 tool files                                                              |
+| ISS-014 | HIGH      | FIXED  | list_testruns: by_status/search/by_test_case_tags/sort missing from schema — filters silently dropped (TDV2-105) |
 
 ---
 
@@ -269,3 +270,18 @@ if (!args?.projectId) {
 
 **Files:** 3 tool files (see above)
 **Tests:** N/A — depends on API behavior
+
+---
+
+## ISS-014: list_testruns Missing Filter Params — Silently Dropped by Agents (HIGH)
+
+**Status:** FIXED (2026-07-17)
+
+**Symptoms:** Jira TDV2-105 reported "filters are ignored and unfiltered data is returned" for list_testruns via STDIO MCP. Live check 2026-07-17 against staging: the gateway applies status/search/tags/sort correctly, but this package's tool schema never declared them, so agents' filter args were dropped client-side and the unfiltered baseline came back — indistinguishable from "filters ignored".
+
+**Root cause:** `src/tools/testruns/list-testruns.ts` inputSchema + handler and `src/lib/endpoints.ts` listTestRuns signature only carried branch/time/author/commit/environment/pagination. The server (gateway stdio route → translateListRunsQuery) already accepts `by_status`, `by_test_case_tags`, `search`, and `sort`.
+
+**Fix:** Declared all four params (enums mirroring the gateway: by_status passed/failed/interrupted/incomplete/running; sort counter_desc/counter_asc/duration_asc/duration_desc), forwarded them in the handler, extended the endpoint builder signature, and updated docs. Also corrected `by_author` description: claimed "case-insensitive, partial match" but proven live to be exact match ("sahip"/"SAHIP" → 0 results, "sahip9211" → 18).
+
+**Files:** `src/tools/testruns/list-testruns.ts`, `src/lib/endpoints.ts`, `docs/TOOLS.md`, `docs/skill.md`
+**Tests:** `tests/unit/tools/testruns/list-testruns.test.ts` — "forwards status, tags, search, and sort filters" (regression for the dropped-param path)

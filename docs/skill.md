@@ -193,9 +193,13 @@ Call health()
 |-----------|------|-------------|
 | `by_branch` | string | Filter by git branch name |
 | `by_time_interval` | string | `'1d'`, `'3d'`, `'weekly'`, `'monthly'`, or `'YYYY-MM-DD,YYYY-MM-DD'` |
-| `by_author` | string | Filter by commit author |
+| `by_author` | string | Filter by commit author (exact match) |
 | `by_commit` | string | Filter by commit hash |
 | `by_environment` | string | Filter by CI/deployment environment |
+| `by_status` | string | Run status: `'passed'`, `'failed'`, `'interrupted'`, `'incomplete'`, `'running'` |
+| `by_test_case_tags` | string | Comma-separated test case tags in the run (exact match, keep the `@` prefix: `'@critical'`) |
+| `search` | string | Search commit messages, or exact run counter when numeric |
+| `sort` | string | `'counter_desc'` (default), `'counter_asc'`, `'duration_asc'`, `'duration_desc'` |
 | `limit` | number | Results per page (default: 20) |
 | `page` | number | Page number (default: 1) |
 | `get_all` | boolean | Return all results — use sparingly |

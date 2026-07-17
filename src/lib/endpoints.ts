@@ -45,6 +45,10 @@ export const endpoints = {
     by_author?: string;
     by_commit?: string;
     by_environment?: string;
+    by_status?: string;
+    by_test_case_tags?: string;
+    search?: string;
+    sort?: string;
     limit?: number;
     page?: number;
     get_all?: string | boolean;

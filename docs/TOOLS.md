@@ -212,17 +212,21 @@ Perfect for answering questions like "What tests ran on the develop branch?" or 
 
 ### Parameters
 
-| Parameter          | Type    | Required | Default | Description                                                                                                                                                     |
-| ------------------ | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                         |
-| `by_branch`        | string  | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
-| `by_time_interval` | string  | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
-| `by_author`        | string  | No       | -       | Filter by commit author name (case-insensitive, partial match)                                                                                                  |
-| `by_commit`        | string  | No       | -       | Filter by git commit hash (full or partial)                                                                                                                     |
-| `by_environment`   | string  | No       | -       | Filter by environment. Example: 'production', 'staging','development' - filters by metadata.git.environment                                                     |
-| `limit`            | number  | No       | 20      | Number of results per page (max: 1000)                                                                                                                          |
-| `page`             | number  | No       | 1       | Page number for pagination                                                                                                                                      |
-| `get_all`          | boolean | No       | false   | Get all results up to 1000 (default: false)                                                                                                                     |
+| Parameter           | Type    | Required | Default | Description                                                                                                                                                     |
+| ------------------- | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`         | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                         |
+| `by_branch`         | string  | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
+| `by_time_interval`  | string  | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
+| `by_author`         | string  | No       | -       | Filter by commit author name (exact match)                                                                                                                      |
+| `by_commit`         | string  | No       | -       | Filter by git commit hash (full or partial)                                                                                                                     |
+| `by_environment`    | string  | No       | -       | Filter by environment. Example: 'production', 'staging','development' - filters by metadata.git.environment                                                     |
+| `by_status`         | string  | No       | -       | Filter by run status: 'passed', 'failed', 'interrupted', 'incomplete', or 'running'                                                                             |
+| `by_test_case_tags` | string  | No       | -       | Comma-separated test case tags contained in the run (exact match, include the '@' prefix if the tag has one, e.g. '@critical')                                  |
+| `search`            | string  | No       | -       | Search run commit messages, or match an exact run counter when the value is numeric                                                                             |
+| `sort`              | string  | No       | -       | Sort order: 'counter_desc' (newest first, default), 'counter_asc', 'duration_asc', or 'duration_desc'                                                           |
+| `limit`             | number  | No       | 20      | Number of results per page (max: 1000)                                                                                                                          |
+| `page`              | number  | No       | 1       | Page number for pagination                                                                                                                                      |
+| `get_all`           | boolean | No       | false   | Get all results up to 1000 (default: false)                                                                                                                     |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
