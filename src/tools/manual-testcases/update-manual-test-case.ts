@@ -86,11 +86,12 @@ export const updateManualTestCaseTool = {
       updates: {
         type: "object",
         description:
-          "Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, flags, attachments, customFields, etc.",
+          "Object containing the fields to update. Can include: title (or name), description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, flags, attachments, customFields, etc.",
         properties: {
           name: {
             type: "string",
-            description: "Updated test case name/title.",
+            description:
+              "Updated test case title (or name). `title` is the rename-safe primary field; `name` is accepted as an alias.",
           },
           description: {
             type: "string",

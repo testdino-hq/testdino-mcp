@@ -23,23 +23,28 @@ describe("handleGetExternalIssue", () => {
 
   it("throws when provider is missing", async () => {
     await expect(
-      handleGetExternalIssue(createArgs({ issueId: "JIRA-123" }) as never)
+      handleGetExternalIssue(createArgs({ issueIds: ["JIRA-123"] }) as never)
     ).rejects.toThrow("provider is required");
   });
 
-  it("throws when issueId is missing", async () => {
+  it("throws when issueIds is missing or empty", async () => {
     await expect(
       handleGetExternalIssue(
-        createArgs({ provider: "jira", issueId: undefined }) as never
+        createArgs({ provider: "jira", issueIds: undefined }) as never
       )
-    ).rejects.toThrow("issueId is required");
+    ).rejects.toThrow("issueIds is required");
+    await expect(
+      handleGetExternalIssue(
+        createArgs({ provider: "jira", issueIds: [] }) as never
+      )
+    ).rejects.toThrow("issueIds is required");
   });
 
-  it("calls the provider-in-path endpoint with issueId", async () => {
+  it("calls the provider-in-path endpoint with a single issueId", async () => {
     mockFetchSuccess({ issueId: "JIRA-123", status: "open" });
 
     await handleGetExternalIssue(
-      createArgs({ provider: "jira", issueId: "JIRA-123" }) as never
+      createArgs({ provider: "jira", issueIds: ["JIRA-123"] }) as never
     );
 
     const url = getLastFetchUrl();
@@ -49,7 +54,7 @@ describe("handleGetExternalIssue", () => {
     expect(getLastFetchOptions()?.method ?? "GET").toBe("GET");
   });
 
-  it("sends Bearer auth and returns formatted MCP content", async () => {
+  it("preserves the single-issue response shape for one ID", async () => {
     const mockData = {
       issueId: "JIRA-456",
       provider: "jira",
@@ -58,7 +63,7 @@ describe("handleGetExternalIssue", () => {
     mockFetchSuccess(mockData);
 
     const result = await handleGetExternalIssue(
-      createArgs({ provider: "jira", issueId: "JIRA-456" }) as never
+      createArgs({ provider: "jira", issueIds: ["JIRA-456"] }) as never
     );
 
     expect(getLastFetchOptions()?.headers).toEqual(
@@ -68,5 +73,22 @@ describe("handleGetExternalIssue", () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.provider).toBe("jira");
     expect(parsed.status).toBe("in_progress");
+  });
+
+  it("aggregates multiple IDs under an `issues` array", async () => {
+    mockFetchSuccess({ status: "open" });
+
+    const result = await handleGetExternalIssue(
+      createArgs({
+        provider: "jira",
+        issueIds: ["JIRA-1", "JIRA-2"],
+      }) as never
+    );
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(Array.isArray(parsed.issues)).toBe(true);
+    expect(parsed.issues).toHaveLength(2);
+    expect(parsed.issues[0].issueId).toBe("JIRA-1");
+    expect(parsed.issues[1].issueId).toBe("JIRA-2");
   });
 });

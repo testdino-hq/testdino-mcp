@@ -45,7 +45,6 @@ describe("handleListTestRuns", () => {
         by_time_interval: "1d",
         by_author: "alice",
         by_environment: "staging",
-        get_all: true,
       }) as never
     );
 
@@ -56,7 +55,6 @@ describe("handleListTestRuns", () => {
     expect(url).toContain("by_time_interval=1d");
     expect(url).toContain("by_author=alice");
     expect(url).toContain("by_environment=staging");
-    expect(url).toContain("get_all=true");
   });
 
   // TDV2-105: by_status/search/by_test_case_tags/sort existed on the server but

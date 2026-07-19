@@ -6,15 +6,22 @@ interface GetExternalIssueArgs {
   token?: string;
   projectId: string;
   provider: "jira" | "linear" | "asana" | "monday" | "github";
-  issueId: string;
+  // Mirrors the streaming MCP tool: accepts one OR many issue IDs. The stdio
+  // backend serves a single issue per request (path param), so the handler
+  // fetches each ID and aggregates — the AI-facing contract stays the array
+  // shape the streaming tool exposes.
+  issueIds: string[];
+  // Provider-specific read context (e.g. Jira `{ defaultApp }` to read from a
+  // specific Atlassian site). Flattened into the query string.
+  target?: Record<string, string | number | boolean>;
 }
 
 export const getExternalIssueTool = {
   name: "get_external_issue",
   description:
-    "Fetches a previously created external issue (Jira, Linear, Asana, monday.com, GitHub) by its issue ID. " +
-    "Returns current issue details including its status in the external provider. " +
-    "Use this to check whether an issue filed via create_external_issue is still open or has been resolved.",
+    "Fetches previously created external issues (Jira, Linear, Asana, monday.com, GitHub) by their issue IDs or keys. " +
+    "Returns current issue details including status in the external provider. " +
+    "Use this to check whether issues filed via create_external_issue are still open or have been resolved.",
   inputSchema: {
     type: "object",
     properties: {
@@ -28,13 +35,21 @@ export const getExternalIssueTool = {
         description:
           "Integration provider the issue lives in (Required). Use the same provider passed to create_external_issue.",
       },
-      issueId: {
-        type: "string",
+      issueIds: {
+        type: "array",
+        items: { type: "string", minLength: 1 },
+        minItems: 1,
         description:
-          "External issue ID (Required). The ID returned by create_external_issue.",
+          "External issue IDs or keys (Required). Array of one or more IDs previously linked to TestDino (e.g. Jira keys like 'TD-17' or Linear identifiers).",
+      },
+      target: {
+        type: "object",
+        additionalProperties: true,
+        description:
+          "Provider-specific read context (optional). For Jira, pass { defaultApp } to read from a specific Atlassian site/resource.",
       },
     },
-    required: ["projectId", "provider", "issueId"],
+    required: ["projectId", "provider", "issueIds"],
   },
 };
 
@@ -56,23 +71,45 @@ export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {
     throw new Error("provider is required");
   }
 
-  if (!args?.issueId) {
-    throw new Error("issueId is required");
+  if (!Array.isArray(args?.issueIds) || args.issueIds.length === 0) {
+    throw new Error("issueIds is required (a non-empty array of issue IDs)");
   }
 
   try {
-    const url = endpoints.getExternalIssue({
-      projectId: String(args.projectId),
-      provider: String(args.provider),
-      issueId: String(args.issueId),
-    });
+    // Fetch each issue against the single-issue backend and aggregate. A failed
+    // ID surfaces as an error entry rather than aborting the whole call, so one
+    // stale/unknown ID does not hide the issues that resolved fine.
+    const results = await Promise.all(
+      args.issueIds.map(async (rawId) => {
+        const issueId = String(rawId);
+        const url = endpoints.getExternalIssue({
+          projectId: String(args.projectId),
+          provider: String(args.provider),
+          issueId,
+          target: args.target,
+        });
+        try {
+          const issue = await apiRequestJson<unknown>(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          return { issueId, issue };
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          return { issueId, error: message };
+        }
+      })
+    );
 
-    const response = await apiRequestJson<unknown>(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // Preserve the single-issue response shape when exactly one ID is requested,
+    // so simple lookups read the same as before; return the array otherwise.
+    const payload =
+      results.length === 1 && results[0].error === undefined
+        ? results[0].issue
+        : { issues: results };
 
     return {
-      content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

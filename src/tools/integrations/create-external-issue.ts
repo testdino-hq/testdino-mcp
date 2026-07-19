@@ -5,6 +5,9 @@ import { getApiKey } from "../../lib/env.js";
 interface ExternalIssueSource {
   type: string;
   id: string;
+  runId?: string;
+  testRunId?: string;
+  caseId?: string;
 }
 
 interface CreateExternalIssueArgs {
@@ -63,7 +66,22 @@ export const createExternalIssueTool = {
           },
           id: {
             type: "string",
-            description: "Source entity ID within TestDino.",
+            description:
+              "Source entity ID, counter-style ID, or key within TestDino.",
+          },
+          runId: {
+            type: "string",
+            description:
+              "Parent automated/manual run ID when the source is a run-scoped test case.",
+          },
+          testRunId: {
+            type: "string",
+            description: "Alias for runId for automated test cases.",
+          },
+          caseId: {
+            type: "string",
+            description:
+              "Underlying test case ID when id is a run-test-case row/reference.",
           },
         },
         required: ["type", "id"],
@@ -90,6 +108,7 @@ export const createExternalIssueTool = {
       },
       idempotencyKey: {
         type: "string",
+        minLength: 1,
         description:
           "Unique key to prevent duplicate issues on retry. Use a stable identifier such as the source entity ID.",
       },
@@ -135,12 +154,21 @@ export async function handleCreateExternalIssue(
       provider: String(args.provider),
     });
 
-    const body: Record<string, unknown> = {
-      source: {
-        type: String(args.source.type),
-        id: String(args.source.id),
-      },
+    const source: Record<string, string> = {
+      type: String(args.source.type),
+      id: String(args.source.id),
     };
+    if (args.source.runId !== undefined) {
+      source.runId = String(args.source.runId);
+    }
+    if (args.source.testRunId !== undefined) {
+      source.testRunId = String(args.source.testRunId);
+    }
+    if (args.source.caseId !== undefined) {
+      source.caseId = String(args.source.caseId);
+    }
+
+    const body: Record<string, unknown> = { source };
 
     if (args.summary !== undefined) {
       body.summary = String(args.summary);

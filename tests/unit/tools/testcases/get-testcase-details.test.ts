@@ -46,16 +46,16 @@ describe("handleGetTestCaseDetails", () => {
     expect(url).toContain("by_title=Login");
   });
 
-  it("should accept by_status as a search parameter", async () => {
+  it("should accept by_fulltitle as a search parameter", async () => {
     mockFetchSuccess({ results: [] });
 
     const result = await handleGetTestCaseDetails(
-      createArgs({ by_status: "failed" }) as never
+      createArgs({ by_fulltitle: "auth.spec.js > Login test" }) as never
     );
 
     expect(result).toHaveProperty("content");
     const url = getLastFetchUrl();
-    expect(url).toContain("by_status=failed");
+    expect(url).toContain("by_fulltitle=auth.spec.js");
   });
 
   it("folds the screenshot hint INTO a single valid-JSON block (TDV2-112)", async () => {
@@ -85,27 +85,12 @@ describe("handleGetTestCaseDetails", () => {
       createArgs({
         testcase_id: "tc_999",
         testcase_name: "Checkout test",
-        testcase_fulltitle: "e2e > Checkout test",
+        by_fulltitle: "e2e > Checkout test",
         testrun_id: "run_100",
-        testrun_ids: "run_100,run_101",
-        testsuite_id: "suite_50",
-        counter: 7,
-        by_status: "flaky",
-        by_error_message: "Timeout 15000ms exceeded",
-        by_code_snippet: "await page.click",
+        by_testrun_ids: "run_100,run_101",
         include_history: true,
         history_limit: 20,
-        include_artifacts: true,
-        include_screenshots: true,
-        include_traces: true,
-        include_videos: true,
-        include_attachments: true,
         steps_filter: "failed_only",
-        limit: 25,
-        page: 3,
-        sort_by: "duration",
-        sort_order: "asc",
-        get_all: true,
       }) as never
     );
 
@@ -115,24 +100,26 @@ describe("handleGetTestCaseDetails", () => {
     expect(url).toContain("by_fulltitle=e2e+%3E+Checkout+test");
     expect(url).toContain("by_testrun_id=run_100");
     expect(url).toContain("by_testrun_ids=run_100%2Crun_101");
-    expect(url).toContain("by_testsuite_id=suite_50");
-    expect(url).toContain("counter=7");
-    expect(url).toContain("by_status=flaky");
-    expect(url).toContain("by_error_message=Timeout+15000ms+exceeded");
-    expect(url).toContain("by_code_snippet=await+page.click");
     expect(url).toContain("include_history=true");
     expect(url).toContain("history_limit=20");
-    expect(url).toContain("include_artifacts=true");
-    expect(url).toContain("include_screenshots=true");
-    expect(url).toContain("include_traces=true");
-    expect(url).toContain("include_videos=true");
-    expect(url).toContain("include_attachments=true");
     expect(url).toContain("steps_filter=failed_only");
-    expect(url).toContain("limit=25");
-    expect(url).toContain("page=3");
-    expect(url).toContain("sort_by=duration");
-    expect(url).toContain("sort_order=asc");
-    expect(url).toContain("get_all=true");
+  });
+
+  it("forwards deprecated aliases under their original query names", async () => {
+    mockFetchSuccess({ results: [] });
+
+    await handleGetTestCaseDetails(
+      createArgs({
+        testcaseid: "tc_legacy",
+        by_title: "Legacy test",
+        by_testrun_id: "run_legacy",
+      }) as never
+    );
+
+    const url = getLastFetchUrl();
+    expect(url).toContain("testcaseid=tc_legacy");
+    expect(url).toContain("by_title=Legacy+test");
+    expect(url).toContain("by_testrun_id=run_legacy");
   });
 
   it("should forward params through full handler pipeline", async () => {

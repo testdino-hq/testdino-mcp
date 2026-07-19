@@ -11,6 +11,7 @@ import { getApiKey } from "../../lib/env.js";
 interface DebugTestCaseArgs {
   projectId: string;
   testcase_name: string;
+  suite_file_path?: string;
 }
 
 export const debugTestCaseTool = {
@@ -28,6 +29,11 @@ export const debugTestCaseTool = {
         type: "string",
         description:
           "Test case name/title to debug (Required). Example: 'Verify user can logout and login'.",
+      },
+      suite_file_path: {
+        type: "string",
+        description:
+          "Optional spec file path to disambiguate when several tests share the same title. Example: 'tests/checkout.spec.ts'.",
       },
     },
     required: ["projectId", "testcase_name"],
@@ -57,6 +63,9 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
     const debugUrl = endpoints.debugTestCase({
       projectId: String(args.projectId),
       testcase_name: String(args.testcase_name),
+      ...(args.suite_file_path
+        ? { suite_file_path: String(args.suite_file_path) }
+        : {}),
     });
 
     const response = await apiRequestJson<unknown>(debugUrl, {

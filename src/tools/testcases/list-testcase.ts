@@ -9,15 +9,22 @@ import { getApiKey } from "../../lib/env.js";
 interface ListTestCasesArgs {
   projectId: string;
   by_testrun_id?: string;
-  counter?: number;
-  by_status?: "passed" | "failed" | "skipped" | "flaky";
-  by_spec_file_name?: string;
-  by_error_category?: string;
-  by_browser_name?: string;
+  counter?: string | number;
+  by_status?:
+    | "passed"
+    | "failed"
+    | "flaky"
+    | "skipped"
+    | "interrupted"
+    | "incomplete"
+    | "running";
+  by_testsuite_id?: string;
+  by_shard?: number;
+  search?: string;
+  sort?: "name_asc" | "name_desc" | "duration_asc" | "duration_desc";
   by_tag?: string;
   by_total_runtime?: string;
   by_artifacts?: boolean;
-  by_error_message?: string;
   by_attempt_number?: number;
   by_pages?: number;
   by_branch?: string;
@@ -32,15 +39,15 @@ interface ListTestCasesArgs {
 interface ListTestCasesParams {
   projectId: string;
   by_testrun_id?: string;
-  counter?: number;
+  counter?: string | number;
   by_status?: string;
-  by_spec_file_name?: string;
-  by_error_category?: string;
-  by_browser_name?: string;
+  by_testsuite_id?: string;
+  by_shard?: number;
+  search?: string;
+  sort?: string;
   by_tag?: string;
   by_total_runtime?: string;
   by_artifacts?: string;
-  by_error_message?: string;
   by_attempt_number?: number;
   by_pages?: number;
   by_branch?: string;
@@ -69,30 +76,41 @@ export const listTestCasesTool = {
           "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages).",
       },
       counter: {
-        type: "number",
+        type: ["number", "string"],
         description:
           "Test run counter number. Alternative to by_testrun_id. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). Example: 43.",
       },
       by_status: {
         type: "string",
         description:
-          "Filter by status: 'passed', 'failed', 'skipped', or 'flaky'.(ID/Counter is required while using this parameter)",
-        enum: ["passed", "failed", "skipped", "flaky"],
+          "Filter by status: 'passed', 'failed', 'flaky', 'skipped', 'interrupted', 'incomplete', or 'running'. (ID/Counter is required while using this parameter)",
+        enum: [
+          "passed",
+          "failed",
+          "flaky",
+          "skipped",
+          "interrupted",
+          "incomplete",
+          "running",
+        ],
       },
-      by_spec_file_name: {
+      by_testsuite_id: {
         type: "string",
-        description:
-          "Filter by spec file name. Example: 'login.spec.js' or 'user-profile.spec.ts'. (ID/Counter is required while using this parameter)",
+        description: "Filter by suite ID.",
       },
-      by_error_category: {
-        type: "string",
+      by_shard: {
+        type: "number",
         description:
-          "Filter by error category. Example: 'timeout_issues', 'element_not_found', 'assertion_failures', 'network_issues'. (ID/Counter is required while using this parameter)",
+          "1-based shard index — scope results to a single shard of a sharded run.",
       },
-      by_browser_name: {
+      search: {
         type: "string",
-        description:
-          "Filter by browser name. Example: 'chromium', 'firefox', 'webkit'. (ID/Counter is required while using this parameter)",
+        description: "Search test title or title path.",
+      },
+      sort: {
+        type: "string",
+        enum: ["name_asc", "name_desc", "duration_asc", "duration_desc"],
+        description: "Case list sort order.",
       },
       by_tag: {
         type: "string",
@@ -102,7 +120,7 @@ export const listTestCasesTool = {
       by_total_runtime: {
         type: "string",
         description:
-          "Filter by total runtime. Use '<60' for less than 60 seconds, '>100' for more than 100 seconds. Example: '<60', '>100', '<30'. (ID/Counter is required while using this parameter)",
+          "Per-test duration filter. Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for seconds. Examples: '>10', '<1000ms', '>5s'. (ID/Counter or a run scope is required while using this parameter)",
       },
       by_artifacts: {
         type: "boolean",
@@ -110,15 +128,10 @@ export const listTestCasesTool = {
           "Filter test cases that have artifacts available (screenshots, videos, traces). Set to true to list only test cases with artifacts. (ID/Counter is required while using this parameter)",
         default: false,
       },
-      by_error_message: {
-        type: "string",
-        description:
-          "Filter by error message (partial match, case-insensitive). Example: 'Test timeout of 60000ms exceeded'. (ID/Counter is required while using this parameter)",
-      },
       by_attempt_number: {
         type: "number",
         description:
-          "Filter by attempt number. Example: 1 for first attempt, 2 for second attempt. (ID/Counter is required while using this parameter)",
+          "Exact retry count filter. 0 = initial/no-retry (attempt_count=1), 1 = one retry (attempt_count=2). (ID/Counter is required while using this parameter)",
       },
       by_pages: {
         type: "number",
@@ -208,19 +221,24 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
       params.by_testrun_id = String(args.by_testrun_id);
     }
     if (args?.counter !== undefined) {
-      params.counter = Number(args.counter);
+      // Forward as-is: number for a single run, comma-separated string for a
+      // batch. Number() would turn "43,44" into NaN and drop the batch.
+      params.counter = args.counter;
     }
     if (args?.by_status) {
       params.by_status = String(args.by_status);
     }
-    if (args?.by_spec_file_name) {
-      params.by_spec_file_name = String(args.by_spec_file_name);
+    if (args?.by_testsuite_id) {
+      params.by_testsuite_id = String(args.by_testsuite_id);
     }
-    if (args?.by_error_category) {
-      params.by_error_category = String(args.by_error_category);
+    if (args?.by_shard !== undefined) {
+      params.by_shard = Number(args.by_shard);
     }
-    if (args?.by_browser_name) {
-      params.by_browser_name = String(args.by_browser_name);
+    if (args?.search) {
+      params.search = String(args.search);
+    }
+    if (args?.sort) {
+      params.sort = String(args.sort);
     }
     if (args?.by_tag) {
       params.by_tag = String(args.by_tag);
@@ -230,9 +248,6 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.by_artifacts !== undefined) {
       params.by_artifacts = String(args.by_artifacts);
-    }
-    if (args?.by_error_message) {
-      params.by_error_message = String(args.by_error_message);
     }
     if (args?.by_attempt_number !== undefined) {
       params.by_attempt_number = Number(args.by_attempt_number);

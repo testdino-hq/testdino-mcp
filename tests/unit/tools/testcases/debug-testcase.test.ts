@@ -56,6 +56,22 @@ describe("handleDebugTestCase", () => {
     expect(parsed._agent_guidance).toContain("Screenshot");
   });
 
+  it("should forward suite_file_path into the request URL", async () => {
+    mockFetchSuccess({ historicalData: [] });
+
+    await handleDebugTestCase(
+      createArgs({
+        testcase_name: "Verify user login",
+        suite_file_path: "tests/checkout.spec.ts",
+      }) as never
+    );
+
+    const url = getLastFetchUrl();
+    expect(url).toContain(
+      `suite_file_path=${encodeURIComponent("tests/checkout.spec.ts")}`
+    );
+  });
+
   it("should forward params through full handler pipeline", async () => {
     const mockData = {
       historicalData: [

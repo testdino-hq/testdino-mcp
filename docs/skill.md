@@ -78,7 +78,7 @@
 
 ### Pagination defaults
 
-- Most list tools default to `limit=20` or `limit=50`. Use `get_all=true` sparingly — only when you genuinely need every record.
+- Most list tools default to `limit=20` or `limit=50`. Page through results rather than pulling everything at once.
 - Prefer filters over fetching everything.
 
 ### Canonical values for state / type / result
@@ -202,7 +202,6 @@ Call health()
 | `sort` | string | `'counter_desc'` (default), `'counter_asc'`, `'duration_asc'`, `'duration_desc'` |
 | `limit` | number | Results per page (default: 20) |
 | `page` | number | Page number (default: 1) |
-| `get_all` | boolean | Return all results — use sparingly |
 
 **Response includes**: test run IDs, counters, passed/failed/skipped/flaky counts, branch, author, commit, environment, duration, timestamps.
 
@@ -224,7 +223,7 @@ Call health()
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `testrun_id` | string | Single ID, or comma-separated IDs (max 20): `'id1,id2,id3'` |
-| `counter` | number | Test run counter number |
+| `counter` | number \| string | A number for a single run (e.g. `47`), or a comma-separated string for a batch (max 20): `'47,48,49'` |
 
 **Response includes**: full summary, test statistics by status, error category breakdown, test suites, and all test cases in the run.
 
@@ -251,15 +250,15 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 **Test case filters** (combine freely):
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `by_status` | string | `'passed'`, `'failed'`, `'skipped'`, `'flaky'` |
-| `by_spec_file_name` | string | Filter by spec file name |
-| `by_error_category` | string | `'timeout_issues'`, `'element_not_found'`, `'assertion_failures'`, `'network_issues'` |
-| `by_browser_name` | string | `'chromium'`, `'firefox'`, `'webkit'` |
+| `by_status` | string | `'passed'`, `'failed'`, `'flaky'`, `'skipped'`, `'interrupted'`, `'incomplete'`, `'running'` |
+| `search` | string | Search test title or title path |
+| `by_testsuite_id` | string | Filter by suite ID |
+| `by_shard` | number | 1-based shard index |
 | `by_tag` | string | Filter by test tag |
-| `by_total_runtime` | string | e.g. `'<60'`, `'>100'` (seconds) |
+| `sort` | string | `'name_asc'`, `'name_desc'`, `'duration_asc'`, `'duration_desc'` |
+| `by_total_runtime` | string | Per-test duration. Numbers are SECONDS by default; suffix `ms` for milliseconds or `s` for seconds. Examples: `'>10'`, `'<1000ms'`, `'>5s'` |
 | `by_artifacts` | boolean | Has screenshots/videos |
-| `by_error_message` | string | Partial match on error message text |
-| `by_attempt_number` | number | Filter by retry attempt number |
+| `by_attempt_number` | number | Exact retry count. `0` = initial/no-retry (attempt_count=1), `1` = one retry (attempt_count=2) |
 | `by_pages` | number | Test-run page for cross-run lookup (no testrun_id/counter needed) |
 | `limit` | number | Test cases per page — snapped to nearest of 10/25/50/100. Needs a run scope |
 | `page` | number | Page number within the resolved run(s). Needs a run scope |
@@ -278,48 +277,32 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `testcase_id` | string | Exact test case ID — most precise, no other context needed |
-| `testcase_name` | string | Partial, case-insensitive title match. Combine with `testrun_id` or `counter` to scope to a specific run |
-| `testcase_fulltitle` | string | Full path including suite, e.g. `'auth.spec.js > Login > Verify user can logout'` |
-| `by_error_message` | string | Search across all test cases whose error message matches |
-| `by_code_snippet` | string | Search across error code snippets |
-| `by_status` | string | `'passed'`, `'failed'`, `'skipped'`, `'flaky'` |
+| `testcase_name` | string | Partial, case-insensitive title match. Combine with `testrun_id` to scope to a specific run |
+| `by_fulltitle` | string | Full title including suite path (partial, case-insensitive), e.g. `'auth.spec.js > Login > Verify user can logout'` |
 
 **Scoping parameters**:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `testrun_id` | string | Scope to a single test run |
-| `testrun_ids` | string | Scope to multiple runs (comma-separated, max 20) |
-| `testsuite_id` | string | Scope to a test suite |
-| `counter` | number | Alternative to `testrun_id` |
+| `by_testrun_ids` | string | Scope to multiple runs (comma-separated, max 20) |
 
-**Artifact parameters** (default `false`):
-| Parameter | Description |
+**Deprecated aliases** (retained for backward compatibility — prefer the primary names above):
+| Parameter | Use instead |
 |-----------|-------------|
-| `include_artifacts` | All artifacts (shortcut for all below) |
-| `include_screenshots` | Screenshot URLs per attempt |
-| `include_traces` | Playwright trace links per attempt |
-| `include_videos` | Video recording URLs per attempt |
-| `include_attachments` | Attachment metadata per attempt |
+| `testcaseid` | `testcase_id` |
+| `by_title` | `testcase_name` |
+| `by_testrun_id` | `testrun_id` |
 
 **History and filtering**:
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `include_history` | boolean | Include previous executions of the same test (default: `false`) |
-| `history_limit` | number | How many history entries (default: 10) |
+| `include_history` | boolean | Include previous executions of the same test when searching by name (default: `false`) |
+| `history_limit` | number | How many history entries (default: 10, max: 100) |
 | `steps_filter` | string | `'failed_only'` — strips passing setup/hook steps, returns only erroring steps |
-
-**Pagination and sorting**:
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `limit` | number | Max results (default: 1 for ID lookup, 50 for search, max: 1000) |
-| `page` | number | Page number (default: 1) |
-| `sort_by` | string | `'startTime'` or `'duration'` |
-| `sort_order` | string | `'asc'` or `'desc'` |
-| `get_all` | boolean | Return all matching up to 1000 |
 
 **Critical rules**:
 
-- `testcase_name` alone without a run context returns ALL executions of that test across runs. Always pair with `testrun_id` or `counter` unless you want cross-run history.
+- `testcase_name` alone without a run context returns ALL executions of that test across runs. Always pair with `testrun_id` unless you want cross-run history.
 - Use `steps_filter='failed_only'` when debugging to cut noise — only failed steps are returned.
 - Use `include_history=true` + `history_limit` to track a test's pass/fail pattern over time.
 
@@ -330,6 +313,11 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 **Purpose**: AI-assisted root cause analysis using historical failure data.
 
 **Required parameters**: `projectId`, `testcase_name`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `suite_file_path` | string | Spec file path to disambiguate when several tests share the same title, e.g. `'tests/checkout.spec.ts'` |
 
 **What it returns**:
 
@@ -343,7 +331,7 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 1. Read the `debugging_prompt` field — treat it as domain-specific instructions for your analysis.
 2. Examine the historical failure data to identify patterns.
 3. Look for: consistent error messages, browser-specific failures, time-of-day patterns, correlations with specific branches or commits.
-4. Optionally follow up with `get_testcase_details()` (with `include_screenshots=true` or `include_traces=true`) for a specific failing execution.
+4. Optionally follow up with `get_testcase_details()` (with `steps_filter="failed_only"`) for a specific failing execution — the response includes error details, steps, and artifacts (screenshots, videos, traces).
 
 **When to call**:
 
@@ -544,7 +532,7 @@ get_audit_report(action="context", branch="main")
 **`updates` object fields** (all optional — only include what you're changing):
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | string | Updated title |
+| `title` (alias `name`) | string | Updated title. `title` is the rename-safe primary field; `name` is accepted as an alias |
 | `description` | string | Updated description |
 | `status` | string | `'Active'`, `'Draft'`, `'Deprecated'` |
 | `testStepsDeclarationType` | string | `'Classic'` or `'Gherkin'` |
@@ -655,6 +643,10 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `isStarted`, `isCompleted` | boolean | Independent state flags |
 | `startedAt`, `completedAt` | string | ISO datetime markers |
 | `linkedIssues` | array | Array of linked-issue objects |
+| `branch` | string | Source branch this release ships from |
+| `environment` | string | Environment label, e.g. `"Staging"` |
+| `buildTarget` | object | Build target: `platform` (enum: `web`, `ios`, `android`, `api`), `version`, `buildNumber`, `source`, `deployUrl` |
+| `testers` | array | User \_ids assigned as testers (must be org members) |
 
 ---
 
@@ -664,7 +656,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `releaseId`, `updates` (object)
 
-`updates` object accepts the same fields as create. Type passed in display form (`"Major"`) is normalized to canonical (`"major"`) before save.
+`updates` object accepts the same fields as create — including `branch`, `environment`, `buildTarget`, `testers`, and `parentReleaseId`. Type passed in display form (`"Major"`) is normalized to canonical (`"major"`) before save.
 
 ---
 
@@ -766,12 +758,22 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Works for untested "virtual" cases too.** In an `'all'`-mode run, cases with no record yet still show "Untested" in the UI — passing the caseKey or test case \_id auto-creates the run-test-case row on first edit. Same path the UI takes on first click.
 
-**`updates` object fields**:
+**`updates` object fields** — quick verdict and detailed modes are **mutually exclusive** (mixing an assignee with detailed fields is rejected server-side):
+
+_Quick verdict fields:_
 | Field | Type | Description |
 |-------|------|-------------|
 | `assigneeUserId` | string | User \_id OR email. Pass `null` to unassign |
 | `result` (or `status`) | string | Display (`"Passed"`, `"Blocked"`) or canonical (`"passed"`, `"blocked"`) form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
 | `elapsed` | number | Seconds spent on the case |
+
+_Detailed-mode fields:_
+| Field | Type | Description |
+|-------|------|-------------|
+| `comment` | string | HTML comment |
+| `linkedIssues` | array | Linked-issue objects |
+| `attachments` | array | Attachment objects |
+| `stepResults` | array | Per-step results, e.g. `[{ order, status, comment }]` |
 
 **For multiple cases**: call this tool in parallel — one call per case. Don't try to batch in `updates`.
 
@@ -870,7 +872,8 @@ Step-level attachments are added by including `attachments` on a top-level step 
 3. Identify pattern from history (flaky? consistent? regression?)
 4. If you need to see a specific run's artifacts:
    get_testcase_details(projectId, testcase_name="...", testrun_id=<latestFailRun>,
-     steps_filter="failed_only", include_screenshots=true, include_traces=true)
+     steps_filter="failed_only")
+   → The response includes error details, steps, and artifacts (screenshots, videos, traces)
 5. Provide root cause analysis and suggested fix
 ```
 
@@ -925,9 +928,9 @@ Step-level attachments are added by including `attachments` on a top-level step 
 list_testcase(projectId,
   by_testrun_id="run1,run2,run3",   ← up to 20 comma-separated IDs
   by_status="failed",
-  by_browser_name="webkit"
+  by_tag="@webkit"
 )
-→ Find tests failing specifically in webkit across multiple runs
+→ Find tagged tests failing across multiple runs
 ```
 
 ### Spin Up a Release + Run for a Sprint
@@ -1018,22 +1021,22 @@ list_testcase(projectId, by_branch="main", by_status="failed", by_time_interval=
 get_run_details(projectId, counter=47)
 ```
 
-### "Find tests failing with timeout errors"
+### "Find failing tests across a branch this week"
 
 ```
-list_testcase(projectId, by_error_category="timeout_issues", by_status="failed", by_time_interval="weekly")
+list_testcase(projectId, by_branch="main", by_status="failed", by_time_interval="weekly")
 ```
 
-### "Get details of test case [name] from run #47"
+### "Get details of test case [name] from a run"
 
 ```
-get_testcase_details(projectId, testcase_name="[name]", counter=47, steps_filter="failed_only")
+get_testcase_details(projectId, testcase_name="[name]", testrun_id="<run id>", steps_filter="failed_only")
 ```
 
-### "Search for tests with 'element not found' in error message"
+### "Find a test by its full suite title"
 
 ```
-get_testcase_details(projectId, by_error_message="element not found", by_status="failed")
+get_testcase_details(projectId, by_fulltitle="auth.spec.js > Login > Verify user can logout", testrun_id="<run id>")
 ```
 
 ### "Create a test case for the login feature"
@@ -1130,55 +1133,54 @@ Project-configurable, but the canonical stored forms include:
 
 Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`, `'minor'`, `'patch'`. Display form (`"Iteration"`) is normalized to canonical (`"iteration"`).
 
-### Error Categories (for `by_error_category`)
+### Error Categories
+
+Surfaced in `get_run_details` error-category breakdowns:
 
 - `'timeout_issues'`
 - `'element_not_found'`
 - `'assertion_failures'`
 - `'network_issues'`
 
-### Browser Names
+### Runtime Filter Format (for `by_total_runtime`)
 
-- `'chromium'`
-- `'firefox'`
-- `'webkit'`
+Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for seconds.
 
-### Runtime Filter Format
-
-- `'<60'` — tests that ran in under 60 seconds
-- `'>100'` — tests that ran over 100 seconds
+- `'>10'` — tests that ran over 10 seconds
+- `'<1000ms'` — tests that ran under 1000 milliseconds
+- `'>5s'` — tests that ran over 5 seconds
 
 ### Required Parameters Summary
 
-| Tool                       | Required                                                                                                                         |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `health`                   | —                                                                                                                                |
-| `list_testruns`            | `projectId`                                                                                                                      |
-| `get_run_details`          | `projectId` + (`testrun_id` OR `counter`)                                                                                        |
-| `list_testcase`            | `projectId` + (run ID or run filter)                                                                                             |
-| `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name`, `testcase_fulltitle`, `by_error_message`, `by_code_snippet`, `by_status`) |
-| `debug_testcase`           | `projectId`, `testcase_name`                                                                                                     |
-| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                                                           |
-| `list_manual_test_cases`   | `projectId`                                                                                                                      |
-| `get_manual_test_case`     | `projectId`, `caseId`                                                                                                            |
-| `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                                                                |
-| `update_manual_test_case`  | `projectId`, `caseId`, `updates` (object)                                                                                        |
-| `list_manual_test_suites`  | `projectId`                                                                                                                      |
-| `create_manual_test_suite` | `projectId`, `name`                                                                                                              |
-| `list_releases`            | `projectId`                                                                                                                      |
-| `get_release`              | `projectId`, `releaseId`                                                                                                         |
-| `create_release`           | `projectId`, `name`                                                                                                              |
-| `update_release`           | `projectId`, `releaseId`, `updates` (object)                                                                                     |
-| `list_manual_runs`         | `projectId`                                                                                                                      |
-| `get_manual_run`           | `projectId`, `runId`                                                                                                             |
-| `create_manual_run`        | `projectId`, `name`                                                                                                              |
-| `update_manual_run`        | `projectId`, `runId`, `updates` (object)                                                                                         |
-| `list_run_test_cases`      | `projectId`, `runId`                                                                                                             |
-| `update_run_test_case`     | `projectId`, `runId`, `rtcRef`, `updates` (object)                                                                               |
-| `list_sessions`            | `projectId`                                                                                                                      |
-| `get_session`              | `projectId`, `sessionId`                                                                                                         |
-| `create_session`           | `projectId`, `name`                                                                                                              |
-| `update_session`           | `projectId`, `sessionId`, `updates` (object)                                                                                     |
+| Tool                       | Required                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `health`                   | —                                                                                        |
+| `list_testruns`            | `projectId`                                                                              |
+| `get_run_details`          | `projectId` + (`testrun_id` OR `counter`)                                                |
+| `list_testcase`            | `projectId` + (run ID or run filter)                                                     |
+| `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
+| `debug_testcase`           | `projectId`, `testcase_name`                                                             |
+| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
+| `list_manual_test_cases`   | `projectId`                                                                              |
+| `get_manual_test_case`     | `projectId`, `caseId`                                                                    |
+| `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                        |
+| `update_manual_test_case`  | `projectId`, `caseId`, `updates` (object)                                                |
+| `list_manual_test_suites`  | `projectId`                                                                              |
+| `create_manual_test_suite` | `projectId`, `name`                                                                      |
+| `list_releases`            | `projectId`                                                                              |
+| `get_release`              | `projectId`, `releaseId`                                                                 |
+| `create_release`           | `projectId`, `name`                                                                      |
+| `update_release`           | `projectId`, `releaseId`, `updates` (object)                                             |
+| `list_manual_runs`         | `projectId`                                                                              |
+| `get_manual_run`           | `projectId`, `runId`                                                                     |
+| `create_manual_run`        | `projectId`, `name`                                                                      |
+| `update_manual_run`        | `projectId`, `runId`, `updates` (object)                                                 |
+| `list_run_test_cases`      | `projectId`, `runId`                                                                     |
+| `update_run_test_case`     | `projectId`, `runId`, `rtcRef`, `updates` (object)                                       |
+| `list_sessions`            | `projectId`                                                                              |
+| `get_session`              | `projectId`, `sessionId`                                                                 |
+| `create_session`           | `projectId`, `name`                                                                      |
+| `update_session`           | `projectId`, `sessionId`, `updates` (object)                                             |
 
 ---
 
@@ -1200,8 +1202,8 @@ Project-configurable, canonical lowercase form. Common: `'iteration'`, `'major'`
 ### Common Mistakes to Avoid
 
 1. **Calling any tool before `health()`** — you won't have a `projectId`.
-2. **Using `testcase_name` alone in `get_testcase_details`** without a run context — returns all historical executions, which can be large. Always pair with `testrun_id` or `counter` unless you want cross-run results.
-3. **Using `get_all=true` for large datasets** — prefer filters. Only use `get_all` when the user genuinely needs everything.
+2. **Using `testcase_name` alone in `get_testcase_details`** without a run context — returns all historical executions, which can be large. Always pair with `testrun_id` unless you want cross-run results.
+3. **Pulling large datasets without filters** — prefer filters and page through results instead of fetching everything at once.
 4. **Passing `steps` without specifying `testStepsDeclarationType`** — Classic format is the default. If using Gherkin steps, explicitly set `testStepsDeclarationType: "Gherkin"`.
 5. **Creating test cases without checking suite names** — always call `list_manual_test_suites()` first; `suiteName` must be an exact match.
 6. **Ignoring the `debugging_prompt` in `debug_testcase` response** — this field contains pre-formatted analysis instructions from the API. Always read and apply it when analyzing failures.

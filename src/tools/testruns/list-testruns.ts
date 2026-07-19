@@ -19,7 +19,6 @@ interface ListTestRunsArgs {
   sort?: "counter_desc" | "counter_asc" | "duration_asc" | "duration_desc";
   limit?: number;
   page?: number;
-  get_all?: boolean;
 }
 
 interface ListTestRunsParams {
@@ -35,13 +34,12 @@ interface ListTestRunsParams {
   sort?: string;
   limit?: number;
   page?: number;
-  get_all?: string;
 }
 
 export const listTestRunsTool = {
   name: "list_testruns",
   description:
-    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), run status ('passed', 'failed', 'interrupted', 'incomplete', 'running'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, environment (e.g., 'production', 'staging', 'development'), or test case tags. Search commit messages (or an exact run counter when numeric) with 'search', and order results with 'sort'. Supports efficient pagination using page/limit or offset/limit, or use get_all=true to fetch all results (up to 1000). Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all failed runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
+    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), run status ('passed', 'failed', 'interrupted', 'incomplete', 'running'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, environment (e.g., 'production', 'staging', 'development'), or test case tags. Search commit messages (or an exact run counter when numeric) with 'search', and order results with 'sort'. Supports efficient pagination using page/limit or offset/limit. Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all failed runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
   inputSchema: {
     type: "object",
     properties: {
@@ -104,11 +102,6 @@ export const listTestRunsTool = {
         description: "Page number (default: 1).",
         default: 1,
       },
-      get_all: {
-        type: "boolean",
-        description: "Get all results up to 1000 (default: false).",
-        default: false,
-      },
     },
     required: ["projectId"],
   },
@@ -166,9 +159,6 @@ export async function handleListTestRuns(args?: ListTestRunsArgs) {
     }
     if (args?.page !== undefined) {
       params.page = Number(args.page);
-    }
-    if (args?.get_all !== undefined) {
-      params.get_all = String(args.get_all);
     }
 
     const listTestRunsUrl = endpoints.listTestRuns(params);

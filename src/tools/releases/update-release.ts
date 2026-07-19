@@ -15,7 +15,7 @@ interface UpdateReleaseArgs {
 export const updateReleaseTool = {
   name: "update_release",
   description:
-    "Modify an existing release. Send only the fields you want to change inside the `updates` object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues.",
+    "Modify an existing release. Send only the fields you want to change inside the `updates` object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
   inputSchema: {
     type: "object",
     properties: {
@@ -27,7 +27,7 @@ export const updateReleaseTool = {
       updates: {
         type: "object",
         description:
-          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues.",
+          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
       },
     },
     required: ["projectId", "releaseId", "updates"],

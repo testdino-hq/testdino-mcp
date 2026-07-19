@@ -7,6 +7,7 @@ interface GetIntegrationStatusArgs {
   projectId: string;
   provider: "jira" | "linear" | "asana" | "monday" | "github";
   includeCreateOptions?: boolean;
+  target?: Record<string, string | number | boolean>;
 }
 
 export const getIntegrationStatusTool = {
@@ -31,6 +32,12 @@ export const getIntegrationStatusTool = {
         type: "boolean",
         description:
           "When true, the response also includes createOptions: provider projects, issue types, and required/optional/custom fields for create_external_issue.",
+      },
+      target: {
+        type: "object",
+        additionalProperties: true,
+        description:
+          "Provider-specific target/field values (optional) used to resolve createOptions against a specific target instead of the provider default. Examples: Jira { jiraProjectKey, issueType }, Linear { teamId }, Asana { workspaceId, projectId }, monday { boardId }.",
       },
     },
     required: ["projectId", "provider"],
@@ -64,6 +71,7 @@ export async function handleGetIntegrationStatus(
       ...(args.includeCreateOptions !== undefined
         ? { includeCreateOptions: args.includeCreateOptions }
         : {}),
+      ...(args.target ? { target: args.target } : {}),
     });
 
     const response = await apiRequestJson<unknown>(url, {
