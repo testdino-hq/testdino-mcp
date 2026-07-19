@@ -99,7 +99,7 @@ const __dirname = dirname(__filename);
 // exposes the SAME resource URI (`testdino://skills/guide`) and the SAME
 // zero-arg prompt (`testdino_guide`). Both serve docs/skill.md verbatim.
 const SKILLS_GUIDE_URI = "testdino://skills/guide";
-// Backward-compatible alias for the pre-1.1.0 URI, still accepted on read.
+// Backward-compatible alias for the legacy URI, still accepted on read.
 const LEGACY_SKILLS_URI = "testdino://docs/skill.md";
 const SKILLS_PROMPT_NAME = "testdino_guide";
 const SKILLS_DESCRIPTION =
@@ -116,7 +116,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.1.0",
+      version: "2.0.0",
     },
     {
       capabilities: {
