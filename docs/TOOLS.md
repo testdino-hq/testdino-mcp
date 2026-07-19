@@ -1557,8 +1557,8 @@ Error: Missing required parameter: testrun_id
 
 ### Technical Details
 
-- **Project API Endpoint**: `https://api.testdino.com/api/projects`
-- **Run Details API Endpoint**: `https://api.testdino.com/api/test-runs/details?run_id={runId}`
+- **Project API Endpoint**: `https://mcp.testdino.com/api/projects`
+- **Run Details API Endpoint**: `https://mcp.testdino.com/api/test-runs/details?run_id={runId}`
 - **Method**: GET for both endpoints
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON with formatted markdown summary

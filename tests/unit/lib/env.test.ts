@@ -9,7 +9,7 @@ describe("env", () => {
 
   describe("getApiUrl", () => {
     it("should default to the production API URL", () => {
-      expect(getApiUrl()).toBe("https://api.testdino.com");
+      expect(getApiUrl()).toBe("https://mcp.testdino.com");
     });
 
     it("should prefer TESTDINO_API_URL when configured", () => {

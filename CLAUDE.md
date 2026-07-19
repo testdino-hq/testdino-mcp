@@ -12,7 +12,7 @@ Read this file fully before doing anything. Follow it without deviation.
 - **Language**: TypeScript (strict mode, ES modules)
 - **Runtime**: Node.js >= 20
 - **Published to**: npm (`testdino-mcp`)
-- **API**: Talks to `https://api.testdino.com` using Bearer token auth (PAT)
+- **API**: Talks to `https://mcp.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
 
 ---
