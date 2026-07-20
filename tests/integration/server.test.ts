@@ -7,6 +7,8 @@ import {
   ErrorCode,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
   McpError,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -51,6 +53,11 @@ const __dirname = dirname(__filename);
 const skillPath = join(__dirname, "..", "..", "docs", "skill.md");
 const hasSkillDoc = existsSync(skillPath);
 
+// Kept in lock-step with src/index.ts (and the streaming MCP server).
+const SKILLS_GUIDE_URI = "testdino://skills/guide";
+const LEGACY_SKILLS_URI = "testdino://docs/skill.md";
+const SKILLS_PROMPT_NAME = "testdino_guide";
+
 // All tool names as registered in server
 const ALL_TOOL_NAMES = [
   "health",
@@ -89,7 +96,7 @@ function createServer() {
 
   const server = new Server(
     { name: "@testdino/mcp", version: "1.0.10" },
-    { capabilities: { tools: {}, resources: {} } }
+    { capabilities: { tools: {}, resources: {}, prompts: {} } }
   );
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools }));
@@ -97,9 +104,9 @@ function createServer() {
   server.setRequestHandler(ListResourcesRequestSchema, () => ({
     resources: [
       {
-        uri: "testdino://docs/skill.md",
-        name: "TestDino MCP Skills Guide",
-        description: "AI agent guide for using TestDino MCP tools",
+        uri: SKILLS_GUIDE_URI,
+        name: "testdino_skills_guide",
+        description: "TestDino AI agent skills guide",
         mimeType: "text/markdown",
       },
     ],
@@ -107,9 +114,8 @@ function createServer() {
 
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
-    const skillResourceUri = "testdino://docs/skill.md";
 
-    if (uri === skillResourceUri) {
+    if (uri === SKILLS_GUIDE_URI || uri === LEGACY_SKILLS_URI) {
       let content: string;
 
       try {
@@ -117,7 +123,7 @@ function createServer() {
       } catch {
         throw new McpError(
           ErrorCode.InternalError,
-          `Resource unavailable: ${skillResourceUri}`
+          `Resource unavailable: ${SKILLS_GUIDE_URI}`
         );
       }
 
@@ -126,6 +132,23 @@ function createServer() {
       };
     }
     throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`);
+  });
+
+  server.setRequestHandler(ListPromptsRequestSchema, () => ({
+    prompts: [
+      { name: SKILLS_PROMPT_NAME, description: "TestDino skills guide" },
+    ],
+  }));
+
+  server.setRequestHandler(GetPromptRequestSchema, (request) => {
+    const { name } = request.params;
+    if (name === SKILLS_PROMPT_NAME) {
+      const content = readFileSync(skillPath, "utf-8");
+      return {
+        messages: [{ role: "user", content: { type: "text", text: content } }],
+      };
+    }
+    throw new McpError(ErrorCode.InvalidParams, `Prompt ${name} not found`);
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -298,11 +321,34 @@ describe("MCP Server Integration", () => {
   });
 
   describe("resource listing", () => {
-    it("should expose the skill.md resource", async () => {
+    it("should expose the skills guide resource at testdino://skills/guide", async () => {
       const result = await client.listResources();
       expect(result.resources).toHaveLength(1);
-      expect(result.resources[0].uri).toBe("testdino://docs/skill.md");
+      expect(result.resources[0].uri).toBe(SKILLS_GUIDE_URI);
       expect(result.resources[0].mimeType).toBe("text/markdown");
+    });
+  });
+
+  describe("prompt listing + reading", () => {
+    it("should expose the testdino_guide prompt", async () => {
+      const result = await client.listPrompts();
+      const names = result.prompts.map((p) => p.name);
+      expect(names).toContain(SKILLS_PROMPT_NAME);
+    });
+
+    it("should return the skills guide as a prompt message", async () => {
+      if (!hasSkillDoc) return;
+      const result = await client.getPrompt({ name: SKILLS_PROMPT_NAME });
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].role).toBe("user");
+      const content = result.messages[0].content as { text: string };
+      expect(content.text).toContain("TestDino");
+    });
+
+    it("should throw for an unknown prompt name", async () => {
+      await client.getPrompt({ name: "nope" }).catch((error) => {
+        expect((error as McpError).code).toBe(ErrorCode.InvalidParams);
+      });
     });
   });
 
@@ -311,22 +357,28 @@ describe("MCP Server Integration", () => {
       if (!hasSkillDoc) {
         await client
           .readResource({
-            uri: "testdino://docs/skill.md",
+            uri: SKILLS_GUIDE_URI,
           })
           .catch((error) => {
             expect((error as McpError).code).toBe(ErrorCode.InternalError);
             expect((error as Error).message).toContain(
-              "Resource unavailable: testdino://docs/skill.md"
+              `Resource unavailable: ${SKILLS_GUIDE_URI}`
             );
           });
         return;
       }
 
       const result = await client.readResource({
-        uri: "testdino://docs/skill.md",
+        uri: SKILLS_GUIDE_URI,
       });
       expect(result.contents).toHaveLength(1);
       expect(result.contents[0].text).toContain("TestDino");
+      expect(result.contents[0].mimeType).toBe("text/markdown");
+    });
+
+    it("should still serve the legacy resource URI", async () => {
+      if (!hasSkillDoc) return;
+      const result = await client.readResource({ uri: LEGACY_SKILLS_URI });
       expect(result.contents[0].mimeType).toBe("text/markdown");
     });
 

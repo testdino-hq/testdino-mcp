@@ -13,10 +13,19 @@ describe("handleListTestCases", () => {
     restoreFetch();
   });
 
-  it("should throw when no test run identifier or filter is provided", async () => {
+  it("should throw when no run scope is provided", async () => {
     await expect(handleListTestCases(createArgs() as never)).rejects.toThrow(
-      "At least one of the following must be provided: by_testrun_id, counter, or any test run filter"
+      "A run scope is required"
     );
+  });
+
+  it("should throw when only page/limit are given (they do not select runs)", async () => {
+    // Regression (TDV2-107): page/limit alone used to be treated as a valid
+    // standalone trigger, which the gateway then answered with an empty result.
+    // They paginate WITHIN a run scope, so on their own they must be rejected.
+    await expect(
+      handleListTestCases(createArgs({ page: 2, limit: 25 }) as never)
+    ).rejects.toThrow("A run scope is required");
   });
 
   it("should include query params in the URL", async () => {
@@ -67,13 +76,13 @@ describe("handleListTestCases", () => {
         by_testrun_id: "run_abc",
         counter: 10,
         by_status: "failed",
-        by_spec_file_name: "login.spec.ts",
-        by_error_category: "timeout_issues",
-        by_browser_name: "chromium",
+        by_testsuite_id: "suite_42",
+        by_shard: 2,
+        search: "login flow",
+        sort: "name_asc",
         by_tag: "smoke,regression",
-        by_total_runtime: "<60",
+        by_total_runtime: ">5s",
         by_artifacts: true,
-        by_error_message: "Timeout exceeded",
         by_attempt_number: 2,
         by_pages: 3,
         by_branch: "develop",
@@ -83,7 +92,6 @@ describe("handleListTestCases", () => {
         by_author: "alice",
         by_commit: "abc1234",
         page: 2,
-        get_all: true,
       }) as never
     );
 
@@ -91,13 +99,13 @@ describe("handleListTestCases", () => {
     expect(url).toContain("by_testrun_id=run_abc");
     expect(url).toContain("counter=10");
     expect(url).toContain("by_status=failed");
-    expect(url).toContain("by_spec_file_name=login.spec.ts");
-    expect(url).toContain("by_error_category=timeout_issues");
-    expect(url).toContain("by_browser_name=chromium");
+    expect(url).toContain("by_testsuite_id=suite_42");
+    expect(url).toContain("by_shard=2");
+    expect(url).toContain("search=login+flow");
+    expect(url).toContain("sort=name_asc");
     expect(url).toContain("by_tag=smoke%2Cregression");
-    expect(url).toContain("by_total_runtime=%3C60");
+    expect(url).toContain("by_total_runtime=%3E5s");
     expect(url).toContain("by_artifacts=true");
-    expect(url).toContain("by_error_message=Timeout+exceeded");
     expect(url).toContain("by_attempt_number=2");
     expect(url).toContain("by_pages=3");
     expect(url).toContain("by_branch=develop");
@@ -107,7 +115,6 @@ describe("handleListTestCases", () => {
     expect(url).toContain("by_author=alice");
     expect(url).toContain("by_commit=abc1234");
     expect(url).toContain("page=2");
-    expect(url).toContain("get_all=true");
   });
 
   it("should forward params through full handler pipeline", async () => {

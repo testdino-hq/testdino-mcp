@@ -9,13 +9,13 @@ import { getApiKey } from "../../lib/env.js";
 interface GetRunDetailsArgs {
   projectId: string;
   testrun_id?: string;
-  counter?: number;
+  counter?: string | number;
 }
 
 interface GetRunDetailsParams {
   projectId: string;
   testrun_id?: string;
-  counter?: number;
+  counter?: string | number;
 }
 
 export const getRunDetailsTool = {
@@ -35,8 +35,9 @@ export const getRunDetailsTool = {
           "Test run ID(s). Single ID or comma-separated for batch (max 20). Example: 'test_run_123' or 'run1,run2,run3'.",
       },
       counter: {
-        type: "number",
-        description: "Filter by test run counter (sequential number).",
+        type: ["number", "string"],
+        description:
+          "Run counter. A number for a single run (e.g. 47), or a comma-separated string ('47,48,49', max 20) for a batch.",
       },
     },
     required: ["projectId"],
@@ -69,7 +70,10 @@ export async function handleGetRunDetails(args?: GetRunDetailsArgs) {
     }
 
     if (args.counter !== undefined) {
-      params.counter = Number(args.counter);
+      // Forward as-is: a number stays a number (single run), a string stays a
+      // string (comma-separated batch). Do NOT coerce with Number() — that would
+      // turn "47,48" into NaN and drop the batch.
+      params.counter = args.counter;
     }
 
     const runDetailsUrl = endpoints.getRunDetails(params);

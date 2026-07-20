@@ -1,6 +1,6 @@
 export function getApiUrl(): string {
   const configuredUrl = process.env.TESTDINO_API_URL?.trim();
-  return configuredUrl || "https://api.testdino.com";
+  return configuredUrl || "https://mcp.testdino.com";
 }
 
 export function getApiKey(args?: unknown): string | undefined {

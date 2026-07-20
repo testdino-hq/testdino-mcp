@@ -9,15 +9,22 @@ import { getApiKey } from "../../lib/env.js";
 interface ListTestCasesArgs {
   projectId: string;
   by_testrun_id?: string;
-  counter?: number;
-  by_status?: "passed" | "failed" | "skipped" | "flaky";
-  by_spec_file_name?: string;
-  by_error_category?: string;
-  by_browser_name?: string;
+  counter?: string | number;
+  by_status?:
+    | "passed"
+    | "failed"
+    | "flaky"
+    | "skipped"
+    | "interrupted"
+    | "incomplete"
+    | "running";
+  by_testsuite_id?: string;
+  by_shard?: number;
+  search?: string;
+  sort?: "name_asc" | "name_desc" | "duration_asc" | "duration_desc";
   by_tag?: string;
   by_total_runtime?: string;
   by_artifacts?: boolean;
-  by_error_message?: string;
   by_attempt_number?: number;
   by_pages?: number;
   by_branch?: string;
@@ -27,21 +34,20 @@ interface ListTestCasesArgs {
   by_author?: string;
   by_commit?: string;
   page?: number;
-  get_all?: boolean;
 }
 
 interface ListTestCasesParams {
   projectId: string;
   by_testrun_id?: string;
-  counter?: number;
+  counter?: string | number;
   by_status?: string;
-  by_spec_file_name?: string;
-  by_error_category?: string;
-  by_browser_name?: string;
+  by_testsuite_id?: string;
+  by_shard?: number;
+  search?: string;
+  sort?: string;
   by_tag?: string;
   by_total_runtime?: string;
   by_artifacts?: string;
-  by_error_message?: string;
   by_attempt_number?: number;
   by_pages?: number;
   by_branch?: string;
@@ -51,13 +57,12 @@ interface ListTestCasesParams {
   by_author?: string;
   by_commit?: string;
   page?: number;
-  get_all?: string;
 }
 
 export const listTestCasesTool = {
   name: "list_testcase",
   description:
-    "List test cases with comprehensive filtering options. You can filter by test run (ID or counter), status, spec file, error category, browser, tags, runtime, artifacts, error messages, attempt number, branch, time interval, environment, author, or commit hash. When using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all), the tool first lists test runs matching those criteria, then returns test cases from those filtered test runs. Use this to find specific test cases across your test runs.",
+    "List test cases with comprehensive filtering options. Provide a run scope: by_testrun_id or counter for specific runs, OR a cross-run filter (by_branch, by_time_interval, by_author, by_commit, by_environment, by_pages) which resolves the matching runs internally — you do NOT need to call list_testruns first. Without a run scope the tool returns an empty result with a warning explaining what to provide. Combine per-case filters (status, tags, runtime, artifacts, attempt number) with any run scope. page/limit paginate WITHIN the resolved run(s); limit is snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes).",
   inputSchema: {
     type: "object",
     properties: {
@@ -68,33 +73,44 @@ export const listTestCasesTool = {
       by_testrun_id: {
         type: "string",
         description:
-          "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all).",
+          "Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages).",
       },
       counter: {
-        type: "number",
+        type: ["number", "string"],
         description:
-          "Test run counter number. Alternative to by_testrun_id. Not required when using test run filters (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all). Example: 43.",
+          "Test run counter number. Alternative to by_testrun_id. Not required when using a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). Example: 43.",
       },
       by_status: {
         type: "string",
         description:
-          "Filter by status: 'passed', 'failed', 'skipped', or 'flaky'.(ID/Counter is required while using this parameter)",
-        enum: ["passed", "failed", "skipped", "flaky"],
+          "Filter by status: 'passed', 'failed', 'flaky', 'skipped', 'interrupted', 'incomplete', or 'running'. (ID/Counter is required while using this parameter)",
+        enum: [
+          "passed",
+          "failed",
+          "flaky",
+          "skipped",
+          "interrupted",
+          "incomplete",
+          "running",
+        ],
       },
-      by_spec_file_name: {
+      by_testsuite_id: {
         type: "string",
-        description:
-          "Filter by spec file name. Example: 'login.spec.js' or 'user-profile.spec.ts'. (ID/Counter is required while using this parameter)",
+        description: "Filter by suite ID.",
       },
-      by_error_category: {
-        type: "string",
+      by_shard: {
+        type: "number",
         description:
-          "Filter by error category. Example: 'timeout_issues', 'element_not_found', 'assertion_failures', 'network_issues'. (ID/Counter is required while using this parameter)",
+          "1-based shard index — scope results to a single shard of a sharded run.",
       },
-      by_browser_name: {
+      search: {
         type: "string",
-        description:
-          "Filter by browser name. Example: 'chromium', 'firefox', 'webkit'. (ID/Counter is required while using this parameter)",
+        description: "Search test title or title path.",
+      },
+      sort: {
+        type: "string",
+        enum: ["name_asc", "name_desc", "duration_asc", "duration_desc"],
+        description: "Case list sort order.",
       },
       by_tag: {
         type: "string",
@@ -104,7 +120,7 @@ export const listTestCasesTool = {
       by_total_runtime: {
         type: "string",
         description:
-          "Filter by total runtime. Use '<60' for less than 60 seconds, '>100' for more than 100 seconds. Example: '<60', '>100', '<30'. (ID/Counter is required while using this parameter)",
+          "Per-test duration filter. Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for seconds. Examples: '>10', '<1000ms', '>5s'. (ID/Counter or a run scope is required while using this parameter)",
       },
       by_artifacts: {
         type: "boolean",
@@ -112,15 +128,10 @@ export const listTestCasesTool = {
           "Filter test cases that have artifacts available (screenshots, videos, traces). Set to true to list only test cases with artifacts. (ID/Counter is required while using this parameter)",
         default: false,
       },
-      by_error_message: {
-        type: "string",
-        description:
-          "Filter by error message (partial match, case-insensitive). Example: 'Test timeout of 60000ms exceeded'. (ID/Counter is required while using this parameter)",
-      },
       by_attempt_number: {
         type: "number",
         description:
-          "Filter by attempt number. Example: 1 for first attempt, 2 for second attempt. (ID/Counter is required while using this parameter)",
+          "Exact retry count filter. 0 = initial/no-retry (attempt_count=1), 1 = one retry (attempt_count=2). (ID/Counter is required while using this parameter)",
       },
       by_pages: {
         type: "number",
@@ -140,8 +151,7 @@ export const listTestCasesTool = {
       limit: {
         type: "number",
         description:
-          "Number of results per page (default: 1000, max: 1000). Does not require testrun_id or counter. When used alone, first lists test runs, then returns test cases from those test runs.",
-        default: 1000,
+          "Test cases per page within the resolved run(s). Snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes) — other values are adjusted, not rejected. Requires a run scope (by_testrun_id, counter, or a cross-run filter); it does not resolve runs on its own.",
       },
       by_environment: {
         type: "string",
@@ -161,14 +171,8 @@ export const listTestCasesTool = {
       page: {
         type: "number",
         description:
-          "Page number for pagination (default: 1). Does not require testrun_id or counter. When used alone, first lists test runs on the specified page, then returns test cases from those test runs.",
+          "1-indexed page number for pagination within the resolved run(s) (default: 1). Requires a run scope (by_testrun_id, counter, or a cross-run filter). To page across runs, use by_pages.",
         default: 1,
-      },
-      get_all: {
-        type: "boolean",
-        description:
-          "Get all results up to 1000 (default: false). Does not require testrun_id or counter. When used alone, first lists all test runs, then returns test cases from those test runs.",
-        default: false,
       },
     },
     required: ["projectId"],
@@ -186,9 +190,11 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     );
   }
 
-  // Validate that at least one identifier is provided
-  // Test run filters that don't require testrun_id or counter:
-  // by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all
+  // Validate that a run scope is provided. Cross-run filters resolve the runs
+  // internally; page/limit are pagination WITHIN a run scope (data-handler
+  // /cases needs a runId), NOT run resolvers — so they do not qualify on their
+  // own. This mirrors the gateway contract: without a run scope the request
+  // yields an empty result.
   const hasTestRunId = !!args?.by_testrun_id;
   const hasCounter = args?.counter !== undefined;
   const hasTestRunFilters = !!(
@@ -197,15 +203,12 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     args?.by_author ||
     args?.by_environment ||
     args?.by_time_interval ||
-    args?.by_pages !== undefined ||
-    args?.page !== undefined ||
-    args?.limit !== undefined ||
-    args?.get_all !== undefined
+    args?.by_pages !== undefined
   );
 
   if (!hasTestRunId && !hasCounter && !hasTestRunFilters) {
     throw new Error(
-      "At least one of the following must be provided: by_testrun_id, counter, or any test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)"
+      "A run scope is required: provide by_testrun_id, counter, or a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). page/limit paginate within a run scope — they do not select runs on their own."
     );
   }
 
@@ -218,19 +221,24 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
       params.by_testrun_id = String(args.by_testrun_id);
     }
     if (args?.counter !== undefined) {
-      params.counter = Number(args.counter);
+      // Forward as-is: number for a single run, comma-separated string for a
+      // batch. Number() would turn "43,44" into NaN and drop the batch.
+      params.counter = args.counter;
     }
     if (args?.by_status) {
       params.by_status = String(args.by_status);
     }
-    if (args?.by_spec_file_name) {
-      params.by_spec_file_name = String(args.by_spec_file_name);
+    if (args?.by_testsuite_id) {
+      params.by_testsuite_id = String(args.by_testsuite_id);
     }
-    if (args?.by_error_category) {
-      params.by_error_category = String(args.by_error_category);
+    if (args?.by_shard !== undefined) {
+      params.by_shard = Number(args.by_shard);
     }
-    if (args?.by_browser_name) {
-      params.by_browser_name = String(args.by_browser_name);
+    if (args?.search) {
+      params.search = String(args.search);
+    }
+    if (args?.sort) {
+      params.sort = String(args.sort);
     }
     if (args?.by_tag) {
       params.by_tag = String(args.by_tag);
@@ -240,9 +248,6 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.by_artifacts !== undefined) {
       params.by_artifacts = String(args.by_artifacts);
-    }
-    if (args?.by_error_message) {
-      params.by_error_message = String(args.by_error_message);
     }
     if (args?.by_attempt_number !== undefined) {
       params.by_attempt_number = Number(args.by_attempt_number);
@@ -270,9 +275,6 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.page !== undefined) {
       params.page = Number(args.page);
-    }
-    if (args?.get_all !== undefined) {
-      params.get_all = String(args.get_all);
     }
 
     const listTestCasesUrl = endpoints.listTestCases(params);

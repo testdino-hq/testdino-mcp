@@ -131,6 +131,86 @@ describe("handleHealth", () => {
     expect(result.content[0].text).toContain("No Organizations Found");
   });
 
+  it("formats the MCP service flat shape (orgs, no user envelope)", async () => {
+    // Regression: the MCP microservice hello returns {userId, orgs, ...} with
+    // no data/user/pat envelope; the old guard rejected it as "Unexpected
+    // response" even though auth succeeded.
+    const apiResponse = {
+      userId: "user_abc123",
+      tokenType: "pat",
+      patValid: true,
+      authSource: "pat",
+      orgs: [
+        {
+          orgId: "org_1",
+          orgName: "ABC-XYZ",
+          role: "member",
+          projects: [{ projectId: "project_1", projectName: "TCM - TESTING" }],
+        },
+      ],
+      expiresAt: "2026-10-11T10:40:29.775Z",
+    };
+
+    mockFetchSuccess(apiResponse);
+
+    const result = await handleHealth({ token: "test-pat-token" });
+
+    expect(result.content[0].text).toContain("Connection Successful");
+    expect(result.content[0].text).toContain("ABC-XYZ");
+    expect(result.content[0].text).toContain("project_1");
+    expect(result.content[0].text).toContain("Your role: member");
+    expect(result.content[0].text).toContain("expires 2026-10-11");
+    expect(result.content[0].text).not.toContain("Unexpected response");
+  });
+
+  it("omits the role line when the server does not supply role (pre-enrichment server)", async () => {
+    // The role field ships in npm before the gateway/user-svc enrichment
+    // reaches prod, so the renderer must stay clean when role is absent —
+    // no empty "Your role:" line.
+    mockFetchSuccess({
+      userId: "user_abc123",
+      patValid: true,
+      orgs: [
+        {
+          orgId: "org_1",
+          orgName: "No Role Org",
+          projects: { allProjects: true },
+        },
+      ],
+    });
+
+    const result = await handleHealth({ token: "test-pat-token" });
+
+    expect(result.content[0].text).toContain("No Role Org");
+    expect(result.content[0].text).not.toContain("Your role");
+  });
+
+  it("describes wildcard scopes in the MCP service shape", async () => {
+    mockFetchSuccess({
+      userId: "user_abc123",
+      patValid: true,
+      orgs: [
+        {
+          orgId: "org_1",
+          orgName: "Wild Org",
+          projects: { allProjects: true },
+        },
+      ],
+    });
+
+    const result = await handleHealth({ token: "test-pat-token" });
+
+    expect(result.content[0].text).toContain("all projects (wildcard scope)");
+  });
+
+  it("shows no organizations warning for the MCP service shape with empty orgs", async () => {
+    mockFetchSuccess({ userId: "user_abc123", patValid: true, orgs: [] });
+
+    const result = await handleHealth({ token: "test-pat-token" });
+
+    expect(result.content[0].text).toContain("No Organizations Found");
+  });
+
   it("reads PAT from process.env.TESTDINO_PAT when no args token", async () => {
     process.env.TESTDINO_PAT = "env-pat-token";
 

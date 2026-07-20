@@ -8,21 +8,23 @@ Severity levels: `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
 
 ## Summary
 
-| ID      | Severity  | Status | Description                                                                                     |
-| ------- | --------- | ------ | ----------------------------------------------------------------------------------------------- |
-| ISS-001 | CRITICAL  | FOUND  | PAT precedence inverted — env var overrides explicit args.token                                 |
-| ISS-002 | CRITICAL  | FOUND  | readFileSync for skill.md crashes server if file missing                                        |
-| ISS-003 | CRITICAL  | FOUND  | Zero test coverage — entire test suite absent                                                   |
-| ISS-004 | IMPORTANT | FOUND  | Raw API error body leaked into tool output, no size cap                                         |
-| ISS-005 | IMPORTANT | FOUND  | list_testcase: args.projectId accessed without null guard                                       |
-| ISS-006 | IMPORTANT | FOUND  | get_testcase_details: unsafe cast bypasses endpoint type system                                 |
-| ISS-007 | IMPORTANT | FOUND  | health tool returns soft error on missing PAT, inconsistent with all other tools                |
-| ISS-008 | IMPORTANT | FOUND  | get_testcase_details: by_status alone satisfies validation, enabling unscoped queries           |
-| ISS-009 | MEDIUM    | FOUND  | processSubStepImages silently swallows file read errors                                         |
-| ISS-010 | MEDIUM    | FOUND  | debug_testcase: error message deviates from convention                                          |
-| ISS-011 | MEDIUM    | FOUND  | list_manual_test_cases: default limit hardcoded in handler, duplicating schema                  |
-| ISS-012 | MEDIUM    | FOUND  | listManualTestCases/listManualTestSuites endpoint produces undefined in URL when params omitted |
-| ISS-013 | MEDIUM    | FOUND  | Enum "Accessability" misspelled across 3 tool files                                             |
+| ID      | Severity  | Status | Description                                                                                                                |
+| ------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| ISS-001 | CRITICAL  | FOUND  | PAT precedence inverted — env var overrides explicit args.token                                                            |
+| ISS-002 | CRITICAL  | FOUND  | readFileSync for skill.md crashes server if file missing                                                                   |
+| ISS-003 | CRITICAL  | FOUND  | Zero test coverage — entire test suite absent                                                                              |
+| ISS-004 | IMPORTANT | FOUND  | Raw API error body leaked into tool output, no size cap                                                                    |
+| ISS-005 | IMPORTANT | FOUND  | list_testcase: args.projectId accessed without null guard                                                                  |
+| ISS-006 | IMPORTANT | FOUND  | get_testcase_details: unsafe cast bypasses endpoint type system                                                            |
+| ISS-007 | IMPORTANT | FOUND  | health tool returns soft error on missing PAT, inconsistent with all other tools                                           |
+| ISS-008 | IMPORTANT | FOUND  | get_testcase_details: by_status alone satisfies validation, enabling unscoped queries                                      |
+| ISS-009 | MEDIUM    | FOUND  | processSubStepImages silently swallows file read errors                                                                    |
+| ISS-010 | MEDIUM    | FOUND  | debug_testcase: error message deviates from convention                                                                     |
+| ISS-011 | MEDIUM    | FOUND  | list_manual_test_cases: default limit hardcoded in handler, duplicating schema                                             |
+| ISS-012 | MEDIUM    | FOUND  | listManualTestCases/listManualTestSuites endpoint produces undefined in URL when params omitted                            |
+| ISS-013 | MEDIUM    | FOUND  | Enum "Accessability" misspelled across 3 tool files                                                                        |
+| ISS-014 | HIGH      | FIXED  | list_testruns: by_status/search/by_test_case_tags/sort missing from schema — filters silently dropped (TDV2-105)           |
+| ISS-015 | HIGH      | FIXED  | Transport parity: 13 tools + resource/prompt drifted from the streaming MCP (phantom params, missing params, wrong shapes) |
 
 ---
 
@@ -269,3 +271,47 @@ if (!args?.projectId) {
 
 **Files:** 3 tool files (see above)
 **Tests:** N/A — depends on API behavior
+
+---
+
+## ISS-014: list_testruns Missing Filter Params — Silently Dropped by Agents (HIGH)
+
+**Status:** FIXED (2026-07-17)
+
+**Symptoms:** Jira TDV2-105 reported "filters are ignored and unfiltered data is returned" for list_testruns via STDIO MCP. Live check 2026-07-17 against staging: the gateway applies status/search/tags/sort correctly, but this package's tool schema never declared them, so agents' filter args were dropped client-side and the unfiltered baseline came back — indistinguishable from "filters ignored".
+
+**Root cause:** `src/tools/testruns/list-testruns.ts` inputSchema + handler and `src/lib/endpoints.ts` listTestRuns signature only carried branch/time/author/commit/environment/pagination. The server (gateway stdio route → translateListRunsQuery) already accepts `by_status`, `by_test_case_tags`, `search`, and `sort`.
+
+**Fix:** Declared all four params (enums mirroring the gateway: by_status passed/failed/interrupted/incomplete/running; sort counter_desc/counter_asc/duration_asc/duration_desc), forwarded them in the handler, extended the endpoint builder signature, and updated docs. Also corrected `by_author` description: claimed "case-insensitive, partial match" but proven live to be exact match ("sahip"/"SAHIP" → 0 results, "sahip9211" → 18).
+
+**Files:** `src/tools/testruns/list-testruns.ts`, `src/lib/endpoints.ts`, `docs/TOOLS.md`, `docs/skill.md`
+**Tests:** `tests/unit/tools/testruns/list-testruns.test.ts` — "forwards status, tags, search, and sort filters" (regression for the dropped-param path)
+
+---
+
+## ISS-015: Transport Parity — npm Package Drifted From the Streaming MCP (HIGH)
+
+**Status:** FIXED (2026-07-19)
+
+**Symptoms:** A full tool-by-tool audit of this package (`mcpv1.1.0`) against the streaming MCP server (`microservices/services/mcp/node/src/mcp/streaming`) found the tool _inventory_ matched (33 tools) but ~13 tools had schema drift: phantom params the gateway silently drops, real params missing, wrong types/enums, and one wrong shape. The skills resource used a different URI and the `testdino_guide` prompt was absent. Drift misleads AI agents (advertise filters that do nothing / can't pass filters that work).
+
+**Root cause:** Schemas were maintained independently per transport with no lock-step check. Concentrated in analytics, integrations, and releases.
+
+**Fix (aligned npm → streaming, the source of truth):**
+
+- `list_testcase` — removed phantoms `by_spec_file_name`/`by_error_category`/`by_browser_name`/`by_error_message`; added `search`/`by_testsuite_id`/`by_shard`/`sort`; fixed `by_status` enum (7 values) and `by_total_runtime` unit copy (seconds default + `ms`/`s`, TDV2-108) and `by_attempt_number` (0 = no-retry).
+- `get_testcase_details` — removed phantom/extra params (`by_error_message`, `by_code_snippet`, `by_status`, `testsuite_id`, `counter`, `include_artifacts/screenshots/traces/videos/attachments`, `limit`, `page`, `sort_by`, `sort_order`, `get_all`); renamed `testcase_fulltitle`→`by_fulltitle`, `testrun_ids`→`by_testrun_ids`.
+- `get_run_details` — `counter` now accepts number OR comma-separated string batch.
+- `list_testruns` — removed phantom `get_all`.
+- `debug_testcase` — added `suite_file_path`.
+- `create_release` — added `branch`, `environment`, `buildTarget`, `testers`.
+- `update_release` / `update_run_test_case` / `update_manual_test_case` — documented the missing `updates` sub-fields.
+- `get_integration_status` / `get_external_issue` — added `target`; `get_external_issue` now takes `issueIds` (array) matching streaming (handler fans out over the single-issue backend and aggregates).
+- `create_external_issue` — added `source.runId`/`testRunId`/`caseId`; `idempotencyKey` minLength 1.
+- Resource URI aligned to `testdino://skills/guide` (legacy `testdino://docs/skill.md` still served); added the `testdino_guide` prompt + `prompts` capability.
+
+**Files:** `src/lib/endpoints.ts`, `src/index.ts`, all 5 analytics tools, 4 integration tools, `create-release.ts`/`update-release.ts`/`update-manual-test-case.ts`/`update-run-test-case.ts`, `docs/skill.md`, `docs/TOOLS.md`, and matching unit tests + `tests/integration/server.test.ts`.
+**Tests:** 154 pass (was 143). New coverage: string `counter`, new list_testcase filters, get_testcase_details renamed/deprecated aliases, `suite_file_path`, create_release build fields, `issueIds` array + multi-issue aggregation, and the `testdino_guide` prompt + resource URI.
+**Not verified:** live MCP client run against the real backend (schema/handler-level only); the array-typed `type: ["number","string"]` fields typecheck but were not exercised through actual tool registration.
+
+**Known remaining gap (separate follow-up):** the integration tools (`get_integration_status`, `connect_integration`, `create_external_issue`, `get_external_issue`) have no dedicated section in `docs/skill.md` / `docs/TOOLS.md` — net-new documentation, not schema drift.

@@ -7,6 +7,8 @@ import {
   ErrorCode,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
   McpError,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -75,22 +77,52 @@ import {
   handleCreateSession,
   updateSessionTool,
   handleUpdateSession,
+  // Error clusters
+  getRunErrorClustersTool,
+  handleGetRunErrorClusters,
+  // Integrations
+  getIntegrationStatusTool,
+  handleGetIntegrationStatus,
+  connectIntegrationTool,
+  handleConnectIntegration,
+  createExternalIssueTool,
+  handleCreateExternalIssue,
+  getExternalIssueTool,
+  handleGetExternalIssue,
 } from "./tools/index.js";
 
 // Get the directory of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Skills guide surface — kept in lock-step with the streaming MCP server, which
+// exposes the SAME resource URI (`testdino://skills/guide`) and the SAME
+// zero-arg prompt (`testdino_guide`). Both serve docs/skill.md verbatim.
+const SKILLS_GUIDE_URI = "testdino://skills/guide";
+// Backward-compatible alias for the legacy URI, still accepted on read.
+const LEGACY_SKILLS_URI = "testdino://docs/skill.md";
+const SKILLS_PROMPT_NAME = "testdino_guide";
+const SKILLS_DESCRIPTION =
+  "TestDino AI agent skills guide — tool selection rules, decision trees, " +
+  "workflow patterns, and the TestDino audit protocol. Read this before " +
+  "making any TestDino tool calls.";
+
+function readSkillsGuide(): string {
+  const skillPath = join(__dirname, "..", "docs", "skill.md");
+  return readFileSync(skillPath, "utf-8");
+}
+
 async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "1.0.11",
+      version: "2.0.0",
     },
     {
       capabilities: {
         tools: {},
         resources: {},
+        prompts: {},
       },
     }
   );
@@ -130,6 +162,13 @@ async function main() {
     getSessionTool,
     createSessionTool,
     updateSessionTool,
+    // Error clusters
+    getRunErrorClustersTool,
+    // Integrations
+    getIntegrationStatusTool,
+    connectIntegrationTool,
+    createExternalIssueTool,
+    getExternalIssueTool,
   ];
 
   /**
@@ -146,10 +185,9 @@ async function main() {
     return {
       resources: [
         {
-          uri: "testdino://docs/skill.md",
-          name: "TestDino MCP Skills Guide",
-          description:
-            "AI agent guide for using TestDino MCP tools - patterns, workflows, and best practices",
+          uri: SKILLS_GUIDE_URI,
+          name: "testdino_skills_guide",
+          description: SKILLS_DESCRIPTION,
           mimeType: "text/markdown",
         },
       ],
@@ -161,18 +199,16 @@ async function main() {
    */
   server.setRequestHandler(ReadResourceRequestSchema, (request) => {
     const { uri } = request.params;
-    const skillResourceUri = "testdino://docs/skill.md";
 
-    if (uri === skillResourceUri) {
-      const skillPath = join(__dirname, "..", "docs", "skill.md");
+    if (uri === SKILLS_GUIDE_URI || uri === LEGACY_SKILLS_URI) {
       let content: string;
 
       try {
-        content = readFileSync(skillPath, "utf-8");
+        content = readSkillsGuide();
       } catch {
         throw new McpError(
           ErrorCode.InternalError,
-          `Resource unavailable: ${skillResourceUri}`
+          `Resource unavailable: ${SKILLS_GUIDE_URI}`
         );
       }
 
@@ -188,6 +224,53 @@ async function main() {
     }
 
     throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`);
+  });
+
+  /**
+   * List available prompts — mirrors the streaming MCP server's `testdino_guide`
+   * prompt so clients (e.g. Claude Desktop) can auto-inject the skills guide.
+   */
+  server.setRequestHandler(ListPromptsRequestSchema, () => {
+    return {
+      prompts: [
+        {
+          name: SKILLS_PROMPT_NAME,
+          description: SKILLS_DESCRIPTION,
+        },
+      ],
+    };
+  });
+
+  /**
+   * Return the skills guide as a prompt message.
+   */
+  server.setRequestHandler(GetPromptRequestSchema, (request) => {
+    const { name } = request.params;
+
+    if (name === SKILLS_PROMPT_NAME) {
+      let content: string;
+
+      try {
+        content = readSkillsGuide();
+      } catch {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Prompt unavailable: ${SKILLS_PROMPT_NAME}`
+        );
+      }
+
+      return {
+        description: SKILLS_DESCRIPTION,
+        messages: [
+          {
+            role: "user",
+            content: { type: "text", text: content },
+          },
+        ],
+      };
+    }
+
+    throw new McpError(ErrorCode.InvalidParams, `Prompt ${name} not found`);
   });
 
   /**
@@ -352,6 +435,35 @@ async function main() {
     if (name === "update_session") {
       return await handleUpdateSession(
         args as Parameters<typeof handleUpdateSession>[0]
+      );
+    }
+
+    // Error clusters
+    if (name === "get_run_error_clusters") {
+      return await handleGetRunErrorClusters(
+        args as Parameters<typeof handleGetRunErrorClusters>[0]
+      );
+    }
+
+    // Integrations
+    if (name === "get_integration_status") {
+      return await handleGetIntegrationStatus(
+        args as Parameters<typeof handleGetIntegrationStatus>[0]
+      );
+    }
+    if (name === "connect_integration") {
+      return await handleConnectIntegration(
+        args as Parameters<typeof handleConnectIntegration>[0]
+      );
+    }
+    if (name === "create_external_issue") {
+      return await handleCreateExternalIssue(
+        args as Parameters<typeof handleCreateExternalIssue>[0]
+      );
+    }
+    if (name === "get_external_issue") {
+      return await handleGetExternalIssue(
+        args as Parameters<typeof handleGetExternalIssue>[0]
       );
     }
 

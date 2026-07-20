@@ -246,7 +246,7 @@ Restart Claude Desktop, then ask _"Check TestDino health"_ to verify.
 
 ### Local development
 
-By default the server talks to `https://api.testdino.com`. To point it at a local API while developing, set `TESTDINO_API_URL` (see [`.env.example`](./.env.example)):
+By default the server talks to `https://mcp.testdino.com`. To point it at a local API while developing, set `TESTDINO_API_URL` (see [`.env.example`](./.env.example)):
 
 ```bash
 TESTDINO_API_URL=http://localhost:3001

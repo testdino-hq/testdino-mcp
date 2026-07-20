@@ -116,42 +116,42 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
 ```
 ✅ **TestDino Connection Successful!**
 
-👤 **Account**: Kriti Verma
-🔑 **PAT**: Test yess
+👤 **User ID**: `user_f7901523ac1557b42edf4c2e`
+🔑 **PAT**: valid (expires 2026-10-11)
 
 📊 **Access Summary**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Organizations: 2 | Projects: 5
+Organizations: 2 | Projects: 4
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**1. New pricing testing**
-   📋 Org ID: `org_694f7891040b0d665bb2e643`
+**1. ABC-XYZ**
+   📋 Org ID: `org_40ab55e13745281abac5a752`
+   🛡️ Your role: admin
    📁 Projects (3):
 
-   1.1 👁️ **testing**
-       • Project ID: `project_694f9ef4461b86957958db05`
-       • Access: Read (project_viewer)
-       • Modules: Test Runs ✓
-       • Modules: Test Case Management ✓
+   1.1 **DEMO TCM**
+       • Project ID: `project_73cb2baac1f2ded815b6c2cd`
+
+   1.2 **Bulk import in TCM**
+       • Project ID: `project_a88a171eb1e506f6cc349464`
 
    ─────────────────────────────────────
 
-**2. testdino**
-   📋 Org ID: `org_693127439c57308af3fb2836`
-   📁 Projects (2):
+**2. Sahil INC**
+   📋 Org ID: `org_d84a7dde78b1b94d2d6379c4`
+   🛡️ Your role: member
+   📁 Projects (1):
 
-   2.1 ✏️ **playwright-sample-tests**
-       • Project ID: `project_6931274a9c57308af3fb284b`
-       • Access: Write (owner)
-       • Modules: Test Runs ✓
-       • Modules: Test Case Management ✓
+   2.1 **Proj 1**
+       • Project ID: `project_ba0f2a17c9804b03432c5361`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello👋 Kriti!
 You can use organisation Id and project Id in other MCP tools.
 Happy Testing!😀
 ```
+
+`🛡️ Your role` is your org-membership role (owner / admin / member / billing / viewer). It is informational — showing what you can do in the org — not a security guarantee; the server enforces real permissions on every call. Servers that predate role enrichment simply omit the line.
 
 **Response (without PAT):**
 
@@ -212,17 +212,20 @@ Perfect for answering questions like "What tests ran on the develop branch?" or 
 
 ### Parameters
 
-| Parameter          | Type    | Required | Default | Description                                                                                                                                                     |
-| ------------------ | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`        | string  | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                         |
-| `by_branch`        | string  | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
-| `by_time_interval` | string  | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
-| `by_author`        | string  | No       | -       | Filter by commit author name (case-insensitive, partial match)                                                                                                  |
-| `by_commit`        | string  | No       | -       | Filter by git commit hash (full or partial)                                                                                                                     |
-| `by_environment`   | string  | No       | -       | Filter by environment. Example: 'production', 'staging','development' - filters by metadata.git.environment                                                     |
-| `limit`            | number  | No       | 20      | Number of results per page (max: 1000)                                                                                                                          |
-| `page`             | number  | No       | 1       | Page number for pagination                                                                                                                                      |
-| `get_all`          | boolean | No       | false   | Get all results up to 1000 (default: false)                                                                                                                     |
+| Parameter           | Type   | Required | Default | Description                                                                                                                                                     |
+| ------------------- | ------ | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`         | string | Yes      | -       | Project ID (Required). The TestDino project identifier.                                                                                                         |
+| `by_branch`         | string | No       | -       | Filter by git branch name (e.g., 'main', 'develop', 'feature/login')                                                                                            |
+| `by_time_interval`  | string | No       | -       | Filter by time interval. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or date range '2024-01-01,2024-01-31' |
+| `by_author`         | string | No       | -       | Filter by commit author name (exact match)                                                                                                                      |
+| `by_commit`         | string | No       | -       | Filter by git commit hash (full or partial)                                                                                                                     |
+| `by_environment`    | string | No       | -       | Filter by environment. Example: 'production', 'staging','development' - filters by metadata.git.environment                                                     |
+| `by_status`         | string | No       | -       | Filter by run status: 'passed', 'failed', 'interrupted', 'incomplete', or 'running'                                                                             |
+| `by_test_case_tags` | string | No       | -       | Comma-separated test case tags contained in the run (exact match, include the '@' prefix if the tag has one, e.g. '@critical')                                  |
+| `search`            | string | No       | -       | Search run commit messages, or match an exact run counter when the value is numeric                                                                             |
+| `sort`              | string | No       | -       | Sort order: 'counter_desc' (newest first, default), 'counter_asc', 'duration_asc', or 'duration_desc'                                                           |
+| `limit`             | number | No       | 20      | Number of results per page (max: 1000)                                                                                                                          |
+| `page`              | number | No       | 1       | Page number for pagination                                                                                                                                      |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
@@ -325,17 +328,6 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   "arguments": {
     "page": 2,
     "limit": 20
-  }
-}
-```
-
-**Get All Results:**
-
-```json
-{
-  "name": "list_testruns",
-  "arguments": {
-    "get_all": true
   }
 }
 ```
@@ -470,27 +462,25 @@ Error: Failed to list test runs: [error message]
 This tool provides powerful filtering capabilities to find specific test cases. You can filter by:
 
 - **Test run identification**: By test run ID or counter
-- **Test case properties**: Status, spec file, browser, tags, runtime, artifacts, error messages, attempt number
+- **Test case properties**: Status, suite, shard, tags, runtime, artifacts, attempt number
+- **Search & sort**: Title/title-path search and case list sort order
 - **Test run context**: Branch, time interval, environment, author, commit hash
-- **Pagination**: By page number (doesn't require test run ID)
+- **Pagination**: `page`/`limit` within the resolved run(s)
 
-**Important**: You can identify which test runs to search in two ways:
+**Important**: A run scope is required. You can provide it in two ways:
 
 1. **Direct Test Run Identification**: Use `by_testrun_id` OR `counter` to specify specific test runs
-2. **Test Run Filters**: Use any of the following filters to first list matching test runs, then return test cases from those runs:
+2. **Cross-run Filters**: Use any of the following to first list matching test runs, then return test cases from those runs:
    - `by_branch` - Filter by git branch name
    - `by_commit` - Filter by git commit hash
    - `by_author` - Filter by commit author
    - `by_environment` - Filter by environment (production, staging, development, etc.)
    - `by_time_interval` - Filter by time period
-   - `by_pages` - List by page number
-   - `page` - Page number for pagination
-   - `limit` - Results per page
-   - `get_all` - Get all results
+   - `by_pages` - Test-run page for cross-run lookup
 
-When using test run filters (option 2), the tool first finds test runs matching those criteria, then returns all test cases from those filtered test runs. This allows you to find test cases across multiple test runs without needing to know specific test run IDs.
+Without a run scope the tool returns an empty result with a warning explaining what to provide. `page` and `limit` are **pagination within the resolved run(s)** — they do not select runs on their own, so calling with only `page`/`limit` is rejected.
 
-All other parameters are optional filters that can be combined to narrow down results.
+All other parameters are optional per-case filters that can be combined to narrow down results.
 
 ### Parameters
 
@@ -498,24 +488,23 @@ All other parameters are optional filters that can be combined to narrow down re
 | ------------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `by_testrun_id`     | string  | No\*     | Test run ID(s). Single ID or comma-separated for multiple runs (max 20). Example: 'test_run_123' or 'run1,run2,run3'. Required unless using counter, by_pages, or by_branch.                                                       |
 | `counter`           | number  | No\*     | Test run counter number. Alternative to by_testrun_id. Required unless using by_testrun_id, by_pages, or by_branch. Example: 43.                                                                                                   |
-| `by_status`         | string  | No       | Filter by status: 'passed', 'failed', 'skipped', or 'flaky'.                                                                                                                                                                       |
-| `by_spec_file_name` | string  | No       | Filter by spec file name. Example: 'login.spec.js' or 'user-profile.spec.ts'.                                                                                                                                                      |
-| `by_error_category` | string  | No       | Filter by error category. Example: 'timeout_issues', 'element_not_found', 'assertion_failures', 'network_issues'.                                                                                                                  |
-| `by_browser_name`   | string  | No       | Filter by browser name. Example: 'chromium', 'firefox', 'webkit'.                                                                                                                                                                  |
+| `by_status`         | string  | No       | Filter by status: 'passed', 'failed', 'flaky', 'skipped', 'interrupted', 'incomplete', or 'running'. (ID/Counter is required while using this parameter)                                                                           |
+| `search`            | string  | No       | Search test title or title path.                                                                                                                                                                                                   |
+| `by_testsuite_id`   | string  | No       | Filter by suite ID.                                                                                                                                                                                                                |
+| `by_shard`          | number  | No       | Filter by 1-based shard index.                                                                                                                                                                                                     |
 | `by_tag`            | string  | No       | Filter by tag(s). Single tag or comma-separated. Example: 'smoke' or 'smoke,regression'.                                                                                                                                           |
-| `by_total_runtime`  | string  | No       | Filter by total runtime. Use '<60' for less than 60 seconds, '>100' for more than 100 seconds. Example: '<60', '>100', '<30'.                                                                                                      |
+| `sort`              | string  | No       | Case list sort order: 'name_asc', 'name_desc', 'duration_asc', or 'duration_desc'.                                                                                                                                                 |
+| `by_total_runtime`  | string  | No       | Per-test duration filter. Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for seconds. Examples: '>10', '<1000ms', '>5s'.                                                                                 |
 | `by_artifacts`      | boolean | No       | Filter test cases that have artifacts available (screenshots, videos, traces). Set to true to list only test cases with artifacts (default: false).                                                                                |
-| `by_error_message`  | string  | No       | Filter by error message (partial match, case-insensitive). Example: 'Test timeout of 60000ms exceeded'.                                                                                                                            |
-| `by_attempt_number` | number  | No       | Filter by attempt number. Example: 1 for first attempt, 2 for second attempt.                                                                                                                                                      |
+| `by_attempt_number` | number  | No       | Exact retry count filter. 0 = initial/no-retry (attempt_count=1), 1 = one retry (attempt_count=2).                                                                                                                                 |
 | `by_pages`          | number  | No       | List test cases by page number. Does not require testrun_id or counter. Returns test cases from all test runs on the specified page.                                                                                               |
 | `by_branch`         | string  | No       | Filter by git branch name. Does not require testrun_id or counter. First lists test runs on the specified branch, then returns test cases from those test runs. Example: 'main', 'develop'.                                        |
 | `by_time_interval`  | string  | No       | Filter by time interval. Returns test cases from test runs in the specified time period. Supports: '1d' (last day), '3d' (last 3 days), 'weekly' (last 7 days), 'monthly' (last 30 days), or '2024-01-01,2024-01-31' (date range). |
-| `limit`             | number  | No       | Number of results per page (default: 1000, max: 1000).                                                                                                                                                                             |
+| `limit`             | number  | No       | Test cases per page within the resolved run(s). Snapped to the nearest of 10, 25, 50, 100 (data-handler's allowed page sizes). Requires a run scope.                                                                               |
 | `by_environment`    | string  | No       | Filter by environment. Returns test cases from test runs in the specified environment. Example: 'production', 'staging', 'development'.                                                                                            |
 | `by_author`         | string  | No       | Filter by commit author name (case-insensitive, partial match). Returns test cases from test runs by the specified author.                                                                                                         |
 | `by_commit`         | string  | No       | Filter by git commit hash (full or partial). Returns test cases from test runs with the specified commit.                                                                                                                          |
-| `page`              | number  | No       | Page number for pagination (default: 1).                                                                                                                                                                                           |
-| `get_all`           | boolean | No       | Get all results up to 1000 (default: false).                                                                                                                                                                                       |
+| `page`              | number  | No       | 1-indexed page number for pagination within the resolved run(s) (default: 1). Requires a run scope. To page across runs, use `by_pages`.                                                                                           |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
@@ -572,26 +561,26 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
-**Filter by Error Category - Timeout Issues:**
+**Filter by Suite:**
 
 ```json
 {
   "name": "list_testcase",
   "arguments": {
     "counter": 43,
-    "by_error_category": "timeout_issues"
+    "by_testsuite_id": "test_suite_690ded11f1fb81a3ca1bbc59"
   }
 }
 ```
 
-**Filter by Browser - Firefox:**
+**Search by Title:**
 
 ```json
 {
   "name": "list_testcase",
   "arguments": {
     "by_testrun_id": "test_run_6901b2abc6b187e63f536a6b",
-    "by_browser_name": "firefox"
+    "search": "login"
   }
 }
 ```
@@ -608,6 +597,18 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
+**Filter by Runtime - Over 1000 Milliseconds:**
+
+```json
+{
+  "name": "list_testcase",
+  "arguments": {
+    "counter": 43,
+    "by_total_runtime": "<1000ms"
+  }
+}
+```
+
 **Filter by Artifacts:**
 
 ```json
@@ -620,19 +621,19 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
-**Filter by Error Message:**
+**Sort by Duration:**
 
 ```json
 {
   "name": "list_testcase",
   "arguments": {
     "counter": 43,
-    "by_error_message": "Test timeout of 60000ms exceeded"
+    "sort": "duration_desc"
   }
 }
 ```
 
-**Filter by Attempt Number:**
+**Filter by Attempt Number (one retry):**
 
 ```json
 {
@@ -678,14 +679,14 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
-**Filter by Commit and Browser (No Test Run ID Required):**
+**Filter by Commit and Tag (No Test Run ID Required):**
 
 ```json
 {
   "name": "list_testcase",
   "arguments": {
     "by_commit": "1c402f4dac574278d11da59f5c63d3e73f28b1f4",
-    "by_browser_name": "chromium"
+    "by_tag": "@smoke"
   }
 }
 ```
@@ -722,7 +723,7 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
   "arguments": {
     "by_branch": "develop",
     "by_status": "failed",
-    "by_error_category": "timeout_issues",
+    "by_tag": "@critical",
     "by_total_runtime": ">100"
   }
 }
@@ -747,8 +748,8 @@ The tool returns a JSON response with test case information including:
 - **Status-based Filtering**: Focus on specific test outcomes (passed, failed, skipped, flaky)
 - **Cross-Run Analysis**: Find test cases across multiple test runs using filters (branch, environment, commit, author, time)
 - **Environment-Specific Analysis**: Analyze test cases from specific environments (production, staging, development)
-- **Browser-Specific Analysis**: Find test cases executed on specific browsers
-- **Error Pattern Detection**: Identify common error categories or messages across test runs
+- **Suite-Specific Analysis**: Find test cases within a specific suite using `by_testsuite_id`
+- **Title Search**: Locate test cases by title or title path using `search`
 - **Performance Analysis**: Find slow or fast tests using runtime filters
 - **Artifact Management**: Locate test cases with available debugging artifacts (screenshots, videos, traces)
 
@@ -764,7 +765,7 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 **Missing Required Parameters:**
 
 ```
-Error: At least one of the following must be provided: by_testrun_id, counter, or any test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)
+Error: A run scope is required: provide by_testrun_id, counter, or a cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages). page/limit paginate within a run scope — they do not select runs on their own.
 ```
 
 **API Request Failed:**
@@ -777,7 +778,7 @@ Error: Failed to list test cases: [error message]
 
 1. **TestDino Account**: Valid account with Testrun access
 2. **PAT Configuration**: `TESTDINO_PAT` must be set in `.cursor/mcp.json` under the `env` section
-3. **Test Run Identification**: Either a test run ID/counter OR at least one test run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages, page, limit, get_all)
+3. **Test Run Identification**: Either a test run ID/counter OR at least one cross-run filter (by_branch, by_commit, by_author, by_environment, by_time_interval, by_pages)
 4. **Internet Connectivity**: Required to access TestDino account
 
 ### Technical Details
@@ -813,16 +814,22 @@ Use this when you need to debug a failing test or understand exactly what happen
 **Important**: You can identify a test case in two ways:
 
 1. **By test case ID** - Use `testcase_id` alone (if you know the exact test case ID)
-2. **By test case name** - Use `testcase_name` combined with either `testrun_id` OR `counter` (required because test cases can have the same name across different test runs)
+2. **By test case name** - Use `testcase_name` combined with `testrun_id` (required because test cases can have the same name across different test runs)
 
 ### Parameters
 
-| Parameter       | Type   | Required | Description                                                                                                                                                            |
-| --------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testcase_id`   | string | No\*     | Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.                                                                                    |
-| `testcase_name` | string | No\*     | Test case name/title. Must be combined with either testrun_id or counter to identify which test run's test case you want. Example: 'Verify user can logout and login'. |
-| `testrun_id`    | string | No       | Test run ID. Required when using testcase_name to specify which test run's test case you want. Example: 'test_run_6901b2abc6b187e63f536a6b'.                           |
-| `counter`       | number | No       | Test run counter number. Required when using testcase_name (if testrun_id is not provided) to specify which test run's test case you want. Example: 43.                |
+| Parameter         | Type    | Required | Description                                                                                                                                       |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testcase_id`     | string  | No\*     | Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.                                                               |
+| `testcase_name`   | string  | No\*     | Test case title (partial match, case-insensitive). Must be combined with testrun_id when used alone. Example: 'Verify user can logout and login'. |
+| `testrun_id`      | string  | No       | Single test run ID to filter results. Example: 'test_run_6901b2abc6b187e63f536a6b'.                                                               |
+| `by_fulltitle`    | string  | No\*     | Full test case title including suite path (partial match, case-insensitive). Example: 'auth.spec.js > Login > Verify user can logout and login'.  |
+| `by_testrun_ids`  | string  | No       | Multiple test run IDs (comma-separated, max 20). Example: 'test_run_abc,test_run_def'.                                                            |
+| `include_history` | boolean | No       | Include historical executions of the same test case when searching by name. Default: false.                                                       |
+| `history_limit`   | number  | No       | Max number of history entries to return (max: 100, default: 10).                                                                                  |
+| `steps_filter`    | string  | No       | Filter steps in each attempt. Use 'failed_only' to return only steps with errors, stripping passing setup and hook steps.                         |
+
+**Deprecated aliases** (retained for backward compatibility — prefer the primary names above): `testcaseid` → `testcase_id`, `by_title` → `testcase_name`, `by_testrun_id` → `testrun_id`.
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
@@ -868,21 +875,36 @@ Configure your TestDino PAT in `.cursor/mcp.json`:
 }
 ```
 
-**Get Test Case Details by Name and Counter:**
+**Get Test Case Details by Full Title:**
+
+```json
+{
+  "name": "get_testcase_details",
+  "arguments": {
+    "by_fulltitle": "auth.spec.js > Login > Verify user can logout and login",
+    "testrun_id": "test_run_6901b2abc6b187e63f536a6b"
+  }
+}
+```
+
+**Get Test Case Details with History (failed steps only):**
 
 ```json
 {
   "name": "get_testcase_details",
   "arguments": {
     "testcase_name": "Verify user can logout and login",
-    "counter": 43
+    "testrun_id": "test_run_6901b2abc6b187e63f536a6b",
+    "include_history": true,
+    "history_limit": 20,
+    "steps_filter": "failed_only"
   }
 }
 ```
 
 **Natural Language Example:**
 
-- "Get test case details for 'Verify user can logout and login' in testrun #43"
+- "Get test case details for 'Verify user can logout and login' in that testrun"
 - "Show me details for test case test_case_6901b2abc6b187e63f536a6b"
 
 ### Response Format
@@ -917,16 +939,10 @@ Please configure it in your .cursor/mcp.json file under the 'env' section.
 **Missing Required Parameters:**
 
 ```
-Error: Either 'testcase_id' or 'testcase_name' must be provided.
-If using 'testcase_name', you must also provide either 'testrun_id' or 'counter' to specify which test run's test case you want.
+Error: At least one of the following must be provided: 'testcase_id', 'testcase_name', or 'by_fulltitle'.
 ```
 
-**Missing Test Run ID/Counter with Test Case Name:**
-
-```
-Error: When using 'testcase_name', you must also provide either 'testrun_id' or 'counter' to specify which test run's test case you want.
-This is required because test cases can have the same name across different test runs.
-```
+When using `testcase_name` on its own, also provide `testrun_id` to specify which test run's test case you want — test cases can have the same name across different test runs.
 
 **API Request Failed:**
 
@@ -979,10 +995,11 @@ Unlike `get_testcase_details` which shows details for a single execution, `debug
 
 ### Parameters
 
-| Parameter       | Type   | Required | Description                                                                                                                                                                 |
-| --------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`     | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                     |
-| `testcase_name` | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'. |
+| Parameter         | Type   | Required | Description                                                                                                                                                                 |
+| ----------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`       | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                     |
+| `testcase_name`   | string | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'. |
+| `suite_file_path` | string | No       | Optional spec file path to disambiguate when several tests share the same title. Example: 'tests/checkout.spec.ts'.                                                         |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`.
 
@@ -1299,10 +1316,10 @@ Use this when you want a full picture of what happened in a specific test run, n
 
 ### Parameters
 
-| Parameter    | Type   | Required | Default | Description                                                                                                                                                           |
-| ------------ | ------ | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testrun_id` | string | No       | -       | Test run ID(s). Can be a single ID or comma-separated IDs for batch operations (max 20). Example: 'test_run_xyz123' or 'run1,run2,run3'. Optional if using `counter`. |
-| `counter`    | number | No       | -       | Filter by test run counter number. The counter is a sequential number assigned to each test run. Optional if using `testrun_id`.                                      |
+| Parameter    | Type             | Required | Default | Description                                                                                                                                                           |
+| ------------ | ---------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testrun_id` | string           | No       | -       | Test run ID(s). Can be a single ID or comma-separated IDs for batch operations (max 20). Example: 'test_run_xyz123' or 'run1,run2,run3'. Optional if using `counter`. |
+| `counter`    | number \| string | No       | -       | Test run counter. A number for a single run (e.g. `47`), or a comma-separated string for a batch (max 20): `'47,48,49'`. Optional if using `testrun_id`.              |
 
 **Note:** The PAT is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. You don't need to pass it as a parameter.
 
@@ -1396,6 +1413,17 @@ Before using this tool, you must configure your TestDino PAT in `.cursor/mcp.jso
   "name": "get_run_details",
   "arguments": {
     "testrun_id": "run1,run2,run3"
+  }
+}
+```
+
+**Batch Operation (Multiple Counters):**
+
+```json
+{
+  "name": "get_run_details",
+  "arguments": {
+    "counter": "47,48,49"
   }
 }
 ```
@@ -1529,8 +1557,8 @@ Error: Missing required parameter: testrun_id
 
 ### Technical Details
 
-- **Project API Endpoint**: `https://api.testdino.com/api/projects`
-- **Run Details API Endpoint**: `https://api.testdino.com/api/test-runs/details?run_id={runId}`
+- **Project API Endpoint**: `https://mcp.testdino.com/api/projects`
+- **Run Details API Endpoint**: `https://mcp.testdino.com/api/test-runs/details?run_id={runId}`
 - **Method**: GET for both endpoints
 - **Authentication**: Bearer token from `TESTDINO_PAT` environment variable
 - **Response Format**: JSON with formatted markdown summary
@@ -2285,11 +2313,11 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 
 ### Parameters
 
-| Parameter   | Type   | Required | Description                                                                                                                                                                                                                |
-| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                                                                    |
-| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                                                                          |
-| `updates`   | object | Yes      | Object containing the fields to update. Can include: name, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, testStepsDeclarationType, attachments, customFields, etc. |
+| Parameter   | Type   | Required | Description                                                                                                                                                                                                                              |
+| ----------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                                                                                  |
+| `caseId`    | string | Yes      | Test case ID (Required). Can be internal \_id or human-readable ID like 'TC-123'.                                                                                                                                                        |
+| `updates`   | object | Yes      | Object containing the fields to update. Can include: title (alias name), description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, testStepsDeclarationType, attachments, customFields, etc. |
 
 **Note:** The Personal Access Token (PAT) is automatically read from the `TESTDINO_PAT` environment variable configured in `.cursor/mcp.json`. The PAT provides access to all organizations and projects you have permissions for.
 
@@ -2297,7 +2325,7 @@ Use this to keep test cases up-to-date as requirements change or to fix errors i
 
 The `updates` object can contain any of the following fields:
 
-- `name` (string): Updated test case title (maps to title)
+- `title` (string, alias `name`): Updated test case title. `title` is the rename-safe primary field; `name` is accepted as an alias.
 - `description` (string): Updated description
 - `preconditions` (string): Updated preconditions
 - `postconditions` (string): Updated postconditions
@@ -2933,21 +2961,25 @@ get_release({ projectId: "project_abc", releaseId: "MS-12" });
 
 ### Parameters
 
-| Parameter         | Type    | Required | Description                                                 |
-| ----------------- | ------- | -------- | ----------------------------------------------------------- |
-| `projectId`       | string  | Yes      | Project ID                                                  |
-| `name`            | string  | Yes      | Release name                                                |
-| `description`     | string  | No       | Plain-text description                                      |
-| `note`            | string  | No       | Rich HTML note                                              |
-| `type`            | string  | No       | Release type. Display or canonical form — server lowercases |
-| `parentReleaseId` | string  | No       | Parent release ID for nesting (max 3 levels deep)           |
-| `startDate`       | string  | No       | ISO date                                                    |
-| `endDate`         | string  | No       | ISO date                                                    |
-| `isStarted`       | boolean | No       | Whether the release has started                             |
-| `isCompleted`     | boolean | No       | Whether the release is completed                            |
-| `startedAt`       | string  | No       | ISO datetime — when started                                 |
-| `completedAt`     | string  | No       | ISO datetime — when completed                               |
-| `linkedIssues`    | array   | No       | Array of linked-issue objects                               |
+| Parameter         | Type    | Required | Description                                                                                              |
+| ----------------- | ------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `projectId`       | string  | Yes      | Project ID                                                                                               |
+| `name`            | string  | Yes      | Release name                                                                                             |
+| `description`     | string  | No       | Plain-text description                                                                                   |
+| `note`            | string  | No       | Rich HTML note                                                                                           |
+| `type`            | string  | No       | Release type. Display or canonical form — server lowercases                                              |
+| `parentReleaseId` | string  | No       | Parent release ID for nesting (max 3 levels deep)                                                        |
+| `startDate`       | string  | No       | ISO date                                                                                                 |
+| `endDate`         | string  | No       | ISO date                                                                                                 |
+| `isStarted`       | boolean | No       | Whether the release has started                                                                          |
+| `isCompleted`     | boolean | No       | Whether the release is completed                                                                         |
+| `startedAt`       | string  | No       | ISO datetime — when started                                                                              |
+| `completedAt`     | string  | No       | ISO datetime — when completed                                                                            |
+| `linkedIssues`    | array   | No       | Array of linked-issue objects                                                                            |
+| `branch`          | string  | No       | Source branch this release ships from                                                                    |
+| `environment`     | string  | No       | Environment label, e.g. 'Staging'                                                                        |
+| `buildTarget`     | object  | No       | Build target: `platform` (enum: web, ios, android, api), `version`, `buildNumber`, `source`, `deployUrl` |
+| `testers`         | array   | No       | User \_ids assigned as testers (must be org members)                                                     |
 
 ### Example Usage
 
@@ -2982,7 +3014,7 @@ create_release({
 | `releaseId` | string | Yes      | Internal \_id or counter-style (`"MS-12"`) |
 | `updates`   | object | Yes      | Fields to update — see below               |
 
-**`updates` object** accepts: `name`, `description`, `note`, `type`, `startDate`, `endDate`, `isStarted`, `isCompleted`, `startedAt`, `completedAt`, `linkedIssues`. Type is normalized to canonical lowercase.
+**`updates` object** accepts: `name`, `description`, `note`, `type`, `startDate`, `endDate`, `isStarted`, `isCompleted`, `startedAt`, `completedAt`, `linkedIssues`, `branch`, `environment`, `buildTarget`, `testers`, `parentReleaseId`. Type is normalized to canonical lowercase.
 
 ### Example Usage
 
@@ -3198,13 +3230,24 @@ list_run_test_cases({
 | `rtcRef`    | string | Yes      | One of: `tcm_rtc_…` \_id, caseKey (`"TC-156"`), or underlying test case \_id |
 | `updates`   | object | Yes      | Fields to update                                                             |
 
-**`updates` object** accepts:
+**`updates` object** — quick verdict and detailed modes are **mutually exclusive** (mixing an assignee with detailed fields is rejected server-side).
+
+_Quick verdict fields:_
 
 | Field                  | Type   | Description                                                                                                 |
 | ---------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
 | `assigneeUserId`       | string | User \_id OR email. Pass `null` to unassign                                                                 |
 | `result` (or `status`) | string | Display or canonical form. Canonical values: `untested`, `passed`, `failed`, `blocked`, `skipped`, `retest` |
 | `elapsed`              | number | Seconds spent on the case                                                                                   |
+
+_Detailed-mode fields:_
+
+| Field          | Type   | Description                                           |
+| -------------- | ------ | ----------------------------------------------------- |
+| `comment`      | string | HTML comment                                          |
+| `linkedIssues` | array  | Linked-issue objects                                  |
+| `attachments`  | array  | Attachment objects                                    |
+| `stepResults`  | array  | Per-step results, e.g. `[{ order, status, comment }]` |
 
 **Virtual cases supported**: in a `selectionMode='all'` run, cases without a record yet still show "Untested" in the UI. Passing the caseKey or the underlying test case \_id auto-creates the row on first edit.
 

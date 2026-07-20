@@ -35,7 +35,7 @@ export const updateRunTestCaseTool = {
       updates: {
         type: "object",
         description:
-          "Fields to update: assigneeUserId (email or _id, pass null to unassign), result/status (display or canonical form), elapsed (seconds).",
+          "Fields to update. Quick verdict fields: assigneeUserId (email or _id, pass null to unassign), result/status (display or canonical form), elapsed (seconds). Detailed-mode fields: comment (HTML), linkedIssues, attachments, stepResults (e.g. [{order, status, comment}]). Quick and detailed are mutually exclusive — mixing an assignee with detailed fields is rejected server-side.",
       },
     },
     required: ["projectId", "runId", "rtcRef", "updates"],

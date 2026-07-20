@@ -49,6 +49,20 @@ describe("handleGetRunDetails", () => {
     expect(url).toContain("counter=42");
   });
 
+  it("passes a comma-separated string counter as-is for batch", async () => {
+    mockFetchSuccess([{ id: "run-1" }, { id: "run-2" }]);
+
+    await handleGetRunDetails(
+      createArgs({
+        projectId: "proj-1",
+        counter: "47,48",
+      }) as never
+    );
+
+    const url = getLastFetchUrl();
+    expect(url).toContain("counter=47%2C48");
+  });
+
   it("supports comma-separated testrun_id for batch", async () => {
     mockFetchSuccess([{ id: "run-1" }, { id: "run-2" }]);
 

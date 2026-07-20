@@ -20,6 +20,16 @@ interface CreateReleaseArgs {
   startedAt?: string;
   completedAt?: string;
   linkedIssues?: unknown[];
+  branch?: string;
+  environment?: string;
+  buildTarget?: {
+    platform?: "web" | "ios" | "android" | "api";
+    version?: string;
+    buildNumber?: string;
+    source?: string;
+    deployUrl?: string;
+  };
+  testers?: string[];
 }
 
 export const createReleaseTool = {
@@ -53,6 +63,34 @@ export const createReleaseTool = {
         items: {},
         description:
           "Array of linked-issue objects (same shape list_releases returns).",
+      },
+      branch: {
+        type: "string",
+        description: "Source branch this release ships from",
+      },
+      environment: {
+        type: "string",
+        description: "Environment label, e.g. 'Staging'",
+      },
+      buildTarget: {
+        type: "object",
+        description: "Build target details.",
+        properties: {
+          platform: {
+            type: "string",
+            description: "Build platform.",
+            enum: ["web", "ios", "android", "api"],
+          },
+          version: { type: "string", description: "Build version." },
+          buildNumber: { type: "string", description: "Build number." },
+          source: { type: "string", description: "Build source." },
+          deployUrl: { type: "string", description: "Deployment URL." },
+        },
+      },
+      testers: {
+        type: "array",
+        items: { type: "string" },
+        description: "User _ids assigned as testers; must be org members",
       },
     },
     required: ["projectId", "name"],
