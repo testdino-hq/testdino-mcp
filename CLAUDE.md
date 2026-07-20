@@ -1,6 +1,6 @@
 # CLAUDE.md — TestDino MCP Server
 
-You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `testdino-mcp`. Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
+You are working on an MCP (Model Context Protocol) server that connects TestDino to AI agents (Cursor, Claude Code, VS Code, etc.). This is an npm package published as `@testdino/mcp`. Users install it and configure it in their AI tool to interact with TestDino's test data via natural language.
 
 Read this file fully before doing anything. Follow it without deviation.
 
@@ -11,7 +11,7 @@ Read this file fully before doing anything. Follow it without deviation.
 - **What**: MCP server (stdio transport, not HTTP)
 - **Language**: TypeScript (strict mode, ES modules)
 - **Runtime**: Node.js >= 20
-- **Published to**: npm (`testdino-mcp`)
+- **Published to**: npm (`@testdino/mcp`)
 - **API**: Talks to `https://mcp.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
 
@@ -42,7 +42,13 @@ src/
     ├── testruns/         ← list-testruns, get-run-details
     ├── testcases/        ← list-testcase, get-testcase-details, debug-testcase
     ├── manual-testcases/ ← CRUD for manual test cases
-    └── manual-testsuites/← list + create test suites
+    ├── manual-testsuites/← list + create test suites
+    ├── manual-runs/      ← CRUD for manual runs + per-case rows
+    ├── releases/         ← CRUD for releases (milestones)
+    ├── sessions/         ← CRUD for exploratory sessions
+    ├── audits/           ← get + submit audit reports
+    ├── integrations/     ← connect + issue tracker tools (Jira/Linear/Asana/monday)
+    └── testruns/         ← list, details, error clusters
 ```
 
 **Data flow for every tool call:**
@@ -182,7 +188,7 @@ tests/
 ├── helpers/            ← Mock factories, shared types
 ├── unit/               ← Unit tests (mirror src/ structure)
 │   ├── lib/            ← env, endpoints, request, file-utils
-│   └── tools/          ← All 12 tool handlers
+│   └── tools/          ← All 33 tool handlers
 └── integration/        ← End-to-end MCP server tests
 ```
 
@@ -404,6 +410,6 @@ When the same lesson pattern appears 3+ times in auto-memory:
 - Not an HTTP server (it's stdio)
 - Not a CLI tool for end users (it's a server that AI tools spawn)
 - Not a monorepo (single package, single concern)
-- Not a framework (it's a concrete implementation with 12 specific tools)
+- Not a framework (it's a concrete implementation with 33 specific tools)
 
 Keep it simple. Every tool follows the same pattern. Consistency is more important than cleverness.

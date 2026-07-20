@@ -21,8 +21,8 @@
 
 A Model Context Protocol (MCP) server that connects TestDino to AI agents. This server enables you to interact with your TestDino test data directly through natural language commands.
 
-[![npm version](https://img.shields.io/npm/v/testdino-mcp.svg)](https://www.npmjs.com/package/testdino-mcp)
-[![Node.js](https://img.shields.io/node/v/testdino-mcp.svg)](https://nodejs.org)
+[![npm version](https://img.shields.io/npm/v/@testdino/mcp.svg)](https://www.npmjs.com/package/@testdino/mcp)
+[![Node.js](https://img.shields.io/node/v/@testdino/mcp.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Docs](https://img.shields.io/badge/docs-testdino.com-blue.svg)](https://docs.testdino.com/testdino-mcp/overview/)
 
@@ -35,7 +35,7 @@ Add this to your MCP client config (`~/.cursor/mcp.json` for Cursor), then resta
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "your-pat-here"
       }
@@ -73,13 +73,15 @@ All through simple conversational commands.
 - **▶️ Manual Test Runs**: Spin up runs scoped to specific suites or the whole project, attach them to a release, and update workflow state without leaving chat.
 - **✅ Per-case Assignment & Verdicts**: Inside a run, assign each test case to a tester (by User \_id or email) and set the result — `passed`, `failed`, `blocked`, `skipped`, `retest` — exactly as the UI does.
 - **🔭 Exploratory Sessions**: Create exploratory testing sessions with mission/charter, assign a tester, link to a release, and track state.
+- **🧩 Failure Triage at Scale**: Group a run's failing tests by their underlying error signature to see which reds are one root cause versus many, so you fix the real problem first.
+- **🔗 Issue Tracker Integrations**: Connect Jira, Linear, Asana, or monday.com and file a tracked issue straight from a failing test or run, then check its status later without leaving chat.
 - **🔌 MCP Compatible**: Built on the Model Context Protocol standard. You can configure TestDino MCP with any MCP-compatible IDEs or AI agents (Cursor, Claude Desktop, etc.).
 - **⚡ Easy Setup**: Install and configure in minutes with npx. No installation required!
 - **🔐 Secure**: PAT stored securely in your local configuration. One PAT provides access to all organizations and projects you have permissions for.
 
 ### Available Tools
 
-The server provides 28 tools across six domains:
+The server provides 33 tools across eight domains:
 
 **Test Execution & Results:**
 
@@ -124,6 +126,19 @@ The server provides 28 tools across six domains:
 27. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
 28. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
 
+**Error Analysis:**
+
+29. **`get_run_error_clusters`** - Group a run's failing tests by error signature to triage at scale. Surfaces clusters of tests that share the same root-cause error, with an optional `status` filter (`all`, `failed`, `flaky`). Use it after `list_testruns` to understand why a run failed.
+
+**Integrations (Issue Trackers):**
+
+30. **`connect_integration`** - Return an OAuth connect URL for a provider (Jira, Linear, Asana, monday.com, GitHub). Show the URL to the user to authorize; do not open it programmatically.
+31. **`get_integration_status`** - Report whether a provider is connected for a project. Set `includeCreateOptions` to also fetch the fields available for issue creation. Call this before `create_external_issue`.
+32. **`create_external_issue`** - File an issue in a connected tracker (Jira, Linear, Asana, monday.com) from a TestDino source entity such as a failing test case or run. Supports `preview` and idempotent retries via `idempotencyKey`.
+33. **`get_external_issue`** - Fetch previously created issues by their IDs or keys (one or many) and return their current status in the provider (Jira, Linear, Asana).
+
+> **Provider support**: All providers can be connected and status-checked. Issue **creation** works with Jira, Linear, Asana, and monday.com. Issue **read-back** works with Jira, Linear, and Asana. GitHub is supported as a PR/CI integration, not an issue tracker.
+
 ### Installation Options
 
 #### There are mainly 3 options to use TestDino MCP:
@@ -138,7 +153,7 @@ The server provides 28 tools across six domains:
 **Option 2: Global Installation**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 - Install once, use in any project
@@ -148,11 +163,11 @@ npm install -g testdino-mcp
 **Option 3: Project Installation**
 
 ```bash
-npm install testdino-mcp
+npm install @testdino/mcp
 ```
 
 - Installed in your project's `node_modules`
-- Use command: `npx testdino-mcp`
+- Use command: `npx @testdino/mcp`
 
 ## Integration
 
@@ -179,7 +194,7 @@ npm install testdino-mcp
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -201,7 +216,7 @@ npm install testdino-mcp
 **If you prefer to install globally instead of using npx or project installation:**
 
 ```bash
-npm install -g testdino-mcp
+npm install -g @testdino/mcp
 ```
 
 Then use this configuration:
@@ -233,7 +248,7 @@ Claude Desktop uses the same config shape, in a different file:
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "your-pat-here"
       }
@@ -340,7 +355,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 ## Documentation
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 27 available tools with examples, parameters, and use cases
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 33 available tools with examples, parameters, and use cases
 - **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements

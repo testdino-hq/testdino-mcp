@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This comprehensive guide covers all available tools in the `testdino-mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
+This comprehensive guide covers all available tools in the `@testdino/mcp` MCP server. Each tool enables you to interact with your TestDino test data through natural language commands in AI coding assistants.
 
 > **Platform Support**: The tools work with any MCP-compatible client. Setup is verified on **Cursor**, **Claude Desktop**, **VS Code**, and **JetBrains** IDEs. Configuration paths in examples use Cursor's `.cursor/mcp.json` — substitute the equivalent file for your client.
 
@@ -24,6 +24,12 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - [list_testcase](#list_testcase)
 - [get_testcase_details](#get_testcase_details)
 - [debug_testcase](#debug_testcase)
+- [get_run_error_clusters](#get_run_error_clusters)
+
+**Test Quality Audit:**
+
+- [get_audit_report](#get_audit_report)
+- [submit_audit_report](#submit_audit_report)
 
 **Test Case Management:**
 
@@ -57,6 +63,13 @@ This comprehensive guide covers all available tools in the `testdino-mcp` MCP se
 - [create_session](#create_session)
 - [update_session](#update_session)
 
+**Integrations (Issue Trackers):**
+
+- [connect_integration](#connect_integration)
+- [get_integration_status](#get_integration_status)
+- [create_external_issue](#create_external_issue)
+- [get_external_issue](#get_external_issue)
+
 ---
 
 ## health
@@ -89,7 +102,7 @@ Before using this tool with PAT validation, configure your TestDino PAT in `.cur
   "mcpServers": {
     "TestDino": {
       "command": "npx",
-      "args": ["-y", "testdino-mcp"],
+      "args": ["-y", "@testdino/mcp"],
       "env": {
         "TESTDINO_PAT": "Your PAT here"
       }
@@ -3416,6 +3429,144 @@ update_session({
 
 ---
 
+## get_run_error_clusters
+
+**Purpose**: Group the failing tests in a run by their error signature so you can triage failures at scale. Instead of reading dozens of red tests one by one, you see clusters of tests that share the same root-cause error. Use it after `list_testruns` to understand _why_ a run failed.
+
+**Parameters**:
+
+| Parameter     | Type   | Required | Description                                                                                                          |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| `projectId`   | string | Yes      | The TestDino project identifier.                                                                                    |
+| `testrun_id`  | string | Yes      | The run to cluster errors for.                                                                                      |
+| `status`      | string | No       | Filter by test status: `failed` (definitively failed), `flaky` (flaky tests), or `all` (default, includes both).   |
+
+**Example prompts**:
+
+- _"Cluster the errors in test run RUN-482 so I can see the main failure patterns."_
+- _"Group the failed tests in run 6617f… by error and tell me which cluster is biggest."_
+- _"What are the distinct failure reasons in my latest run on main?"_
+
+**Returns**: Clusters of tests grouped by shared error signature, each with the representative error and the tests that fall under it, so you can fix one root cause instead of chasing duplicates.
+
+**Errors**:
+
+- Missing `projectId` or `testrun_id` → specific "is required" message.
+- Missing PAT → `TESTDINO_PAT` configuration error.
+
+---
+
+## connect_integration
+
+**Purpose**: Return an OAuth connect URL for a third-party provider so the user can authorize TestDino to talk to their issue tracker. **Show the returned URL to the user** — do not open it programmatically. The user must visit it in their browser to complete the connection.
+
+**Parameters**:
+
+| Parameter   | Type   | Required | Description                                                                                                          |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| `projectId` | string | Yes      | The TestDino project identifier.                                                                                    |
+| `provider`  | string | Yes      | One of `jira`, `linear`, `asana`, `monday`, `github`.                                                              |
+| `orgId`     | string | No       | Organization ID. Derived from your PAT scopes when omitted; pass it explicitly if your PAT spans multiple orgs.     |
+
+**Usage note**: Call [`get_integration_status`](#get_integration_status) first. If the provider is already connected, this returns status `already_connected` instead of a URL.
+
+**Example prompts**:
+
+- _"Connect Jira to my TestDino project."_
+- _"Give me the link to authorize Linear for project abc123."_
+
+**Returns**: An OAuth connect URL to show the user (or `already_connected` if the provider is live).
+
+---
+
+## get_integration_status
+
+**Purpose**: Report whether a provider is connected for a project. Call this before [`create_external_issue`](#create_external_issue) or [`connect_integration`](#connect_integration) to check whether the provider is already active, and to discover the fields available for issue creation.
+
+**Parameters**:
+
+| Parameter              | Type    | Required | Description                                                                                                                                            |
+| ---------------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`            | string  | Yes      | The TestDino project identifier.                                                                                                                      |
+| `provider`             | string  | Yes      | One of `jira`, `linear`, `asana`, `monday`, `github`.                                                                                                |
+| `includeCreateOptions` | boolean | No       | When true, the response also includes `createOptions`: provider projects, issue types, and required/optional/custom fields for `create_external_issue`. |
+| `target`               | object  | No       | Provider-specific values to resolve `createOptions` against a specific target. Examples: Jira `{ jiraProjectKey, issueType }`, Linear `{ teamId }`, Asana `{ workspaceId, projectId }`, monday `{ boardId }`. |
+
+**Example prompts**:
+
+- _"Is Jira connected for this project?"_
+- _"Check the Linear integration and show me which issue types I can create."_
+
+**Returns**: Connection status, and when `includeCreateOptions` is set, the create fields available for the provider.
+
+---
+
+## create_external_issue
+
+**Purpose**: File an issue in a connected tracker directly from a TestDino source entity — for example a failing test case or a test run. The server resolves the source into an issue draft so the ticket lands with the right context instead of a blank template.
+
+**Parameters**:
+
+| Parameter        | Type    | Required | Description                                                                                                                                          |
+| ---------------- | ------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`      | string  | Yes      | The TestDino project identifier.                                                                                                                    |
+| `provider`       | string  | Yes      | Tracker to file in: `jira`, `linear`, `asana`, or `monday`. (GitHub is not supported for issue creation.)                                          |
+| `source`         | object  | Yes      | The TestDino entity the issue is about. Both `source.type` and `source.id` are required.                                                            |
+| `summary`        | string  | No       | Issue title. Derived from the source entity when omitted.                                                                                           |
+| `description`    | string  | No       | Issue description body (plain text).                                                                                                                |
+| `target`         | object  | No       | Provider-specific destination fields (e.g. Jira project key + issue type, monday board ID). Discover them via `get_integration_status` with `includeCreateOptions: true`. |
+| `linkBack`       | boolean | No       | When true, links the created issue back to the TestDino source entity (currently supported for Jira).                                               |
+| `idempotencyKey` | string  | No       | Unique key to prevent duplicate issues on retry. Use a stable identifier such as the source entity ID.                                              |
+| `preview`        | boolean | No       | When true, returns the draft that _would_ be created (`wouldCreate: false`) without filing the issue.                                               |
+
+**`source` object**:
+
+| Field        | Required | Description                                                                                                                                        |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type`       | Yes      | One of `test_case`, `test_run`, `test_suite`, `manual_test_case`, `manual_test_suite`, `release`, `manual_run`, `manual_run_test_case`, `session`. |
+| `id`         | Yes      | Source entity ID, counter-style ID, or key within TestDino.                                                                                       |
+| `runId`      | No       | Parent automated/manual run ID when the source is a run-scoped test case.                                                                         |
+| `testRunId`  | No       | Alias for `runId` for automated test cases.                                                                                                       |
+| `caseId`     | No       | Underlying test case ID when `id` is a run-test-case row/reference.                                                                               |
+
+**Usage note**: If the provider is not connected, this returns `INTEGRATION_NOT_CONNECTED` with a connect URL — show that URL to the user, do not open it programmatically. Idempotent when `idempotencyKey` is supplied, so it is safe to retry with the same key.
+
+**Example prompts**:
+
+- _"File a Jira bug for the failing test case TC-156 in this run."_
+- _"Preview the Linear issue you'd create for test run RUN-482 before filing it."_
+- _"Create an Asana task from the failed login test and link it back to the run."_
+
+**Returns**: The created issue (key, URL, status), or the draft when `preview: true`.
+
+---
+
+## get_external_issue
+
+**Purpose**: Fetch previously created issues by their IDs or keys and return their current status in the external provider. Use it to check whether issues you filed via [`create_external_issue`](#create_external_issue) are still open or have been resolved. Accepts one or many IDs in a single call.
+
+**Parameters**:
+
+| Parameter   | Type     | Required | Description                                                                                                                     |
+| ----------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string   | Yes      | The TestDino project identifier.                                                                                              |
+| `provider`  | string   | Yes      | Tracker the issue lives in: `jira`, `linear`, or `asana`. Use the same provider passed to `create_external_issue`.           |
+| `issueIds`  | string[] | Yes      | One or more external issue IDs or keys (e.g. Jira keys like `TD-17` or Linear identifiers). Non-empty array.                  |
+| `target`    | object   | No       | Provider-specific read context. For Jira, pass `{ defaultApp }` to read from a specific Atlassian site/resource.             |
+
+**Response shape**: A single ID returns that issue's details directly. Multiple IDs return `{ issues: [...] }`, where each entry is `{ issueId, issue }` on success or `{ issueId, error }` for an ID that could not be fetched — so one stale ID does not hide the ones that resolved fine.
+
+**Example prompts**:
+
+- _"What's the current status of Jira issue TD-17?"_
+- _"Check whether TD-17, TD-22, and TD-30 have been resolved yet."_
+
+**Returns**: Current issue details including status in the provider.
+
+> **Provider support summary**: Every provider (Jira, Linear, Asana, monday.com, GitHub) can be **connected** and **status-checked**. Issue **creation** works with Jira, Linear, Asana, and monday.com. Issue **read-back** (`get_external_issue`) works with Jira, Linear, and Asana. GitHub is a PR/CI integration, not an issue tracker.
+
+---
+
 ## Adding New Tools
 
 When adding new tools to the MCP server:
@@ -3429,6 +3580,16 @@ When adding new tools to the MCP server:
 ---
 
 ## Version History
+
+- **v2.0.1**:
+  - **Changed**: Package renamed to `@testdino/mcp`. Update your MCP config to the new name; the old `testdino-mcp` package is no longer updated. No tool or behavior changes from 2.0.0.
+
+- **v2.0.0**:
+  - **Added**: Issue tracker integrations — `connect_integration`, `get_integration_status`, `create_external_issue`, `get_external_issue` (Jira, Linear, Asana, monday.com; GitHub connect/status only).
+  - **Added**: `get_run_error_clusters` — group a run's failing tests by error signature for triage at scale.
+  - **Changed**: `get_external_issue` accepts one or many issue IDs (`issueIds[]`).
+  - **Changed**: API base URL is now `https://mcp.testdino.com`.
+  - **Changed**: A new Personal Access Token must be generated after upgrading; tokens from earlier versions no longer work.
 
 - **v1.0.7**:
   - Documentation updates: Corrected `create_manual_test_case` to use `suiteName` (not `suiteId`), fixed API endpoints for manual test tools, removed deprecated `upload_latest_local_test_runs` documentation, updated response formats and parameter tables.
