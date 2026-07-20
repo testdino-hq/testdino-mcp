@@ -875,11 +875,11 @@ list_testruns() → pick a failed run → get_run_error_clusters(projectId, test
 
 **Provider support** (do not offer an unsupported combination):
 
-| Operation | Jira | Linear | Asana | monday.com | GitHub |
-| --------- | :--: | :----: | :---: | :--------: | :----: |
-| connect / status | ✓ | ✓ | ✓ | ✓ | ✓ |
-| create issue | ✓ | ✓ | ✓ | ✓ | — |
-| read issue back | ✓ | ✓ | ✓ | — | — |
+| Operation        | Jira | Linear | Asana | monday.com | GitHub |
+| ---------------- | :--: | :----: | :---: | :--------: | :----: |
+| connect / status |  ✓   |   ✓    |   ✓   |     ✓      |   ✓    |
+| create issue     |  ✓   |   ✓    |   ✓   |     ✓      |   —    |
+| read issue back  |  ✓   |   ✓    |   ✓   |     —      |   —    |
 
 GitHub is a PR/CI integration here, not an issue tracker. Never pass `provider: "github"` to `create_external_issue` or `get_external_issue`.
 
