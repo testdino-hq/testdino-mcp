@@ -15,6 +15,7 @@
      - [list_testcase](#list_testcase)
      - [get_testcase_details](#get_testcase_details)
      - [debug_testcase](#debug_testcase)
+     - [get_run_error_clusters](#get_run_error_clusters)
      - [get_audit_report and submit_audit_report](#get_audit_report-and-submit_audit_report)
    - **Manual test cases**
      - [list_manual_test_cases](#list_manual_test_cases)
@@ -40,6 +41,11 @@
      - [get_session](#get_session)
      - [create_session](#create_session)
      - [update_session](#update_session)
+   - **Integrations (issue trackers)**
+     - [connect_integration](#connect_integration)
+     - [get_integration_status](#get_integration_status)
+     - [create_external_issue](#create_external_issue)
+     - [get_external_issue](#get_external_issue)
 3. [Workflows & Patterns](#workflows--patterns)
 4. [Decision Trees](#decision-trees)
 5. [Parameter Quick Reference](#parameter-quick-reference)
@@ -843,6 +849,94 @@ _Detailed-mode fields:_
 
 ---
 
+### `get_run_error_clusters`
+
+**Purpose**: Group a run's failing tests by error signature so you can triage at scale instead of reading each red test.
+
+**Required parameters**: `projectId`, `testrun_id`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | string | `'failed'`, `'flaky'`, or `'all'` (default) |
+
+**Workflow**:
+
+```
+list_testruns() → pick a failed run → get_run_error_clusters(projectId, testrun_id)
+→ report the largest clusters as the primary failure themes
+```
+
+**Good uses**: explaining _why_ a run failed, spotting a single root cause behind many reds, prioritizing fixes by cluster size.
+
+---
+
+### Integrations (issue trackers)
+
+**Provider support** (do not offer an unsupported combination):
+
+| Operation        | Jira | Linear | Asana | monday.com | GitHub |
+| ---------------- | :--: | :----: | :---: | :--------: | :----: |
+| connect / status |  ✓   |   ✓    |   ✓   |     ✓      |   ✓    |
+| create issue     |  ✓   |   ✓    |   ✓   |     ✓      |   —    |
+| read issue back  |  ✓   |   ✓    |   ✓   |     —      |   —    |
+
+GitHub is a PR/CI integration here, not an issue tracker. Never pass `provider: "github"` to `create_external_issue` or `get_external_issue`.
+
+### `connect_integration`
+
+**Purpose**: Get an OAuth URL to authorize a provider. **Show the URL to the user; never open it yourself.**
+
+**Required parameters**: `projectId`, `provider` (`jira` | `linear` | `asana` | `monday` | `github`)
+
+**Optional**: `orgId` (derived from PAT when omitted). Call `get_integration_status` first — an already-connected provider returns `already_connected` instead of a URL.
+
+### `get_integration_status`
+
+**Purpose**: Check whether a provider is connected, and optionally discover the fields available for issue creation.
+
+**Required parameters**: `projectId`, `provider`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `includeCreateOptions` | boolean | Also return `createOptions` (projects, issue types, required/optional/custom fields) |
+| `target` | object | Resolve `createOptions` against a specific target, e.g. Jira `{ jiraProjectKey, issueType }` |
+
+Always call this before `create_external_issue` (with `includeCreateOptions: true`) to learn the `target` fields the provider needs.
+
+### `create_external_issue`
+
+**Purpose**: File a tracked issue from a TestDino source entity (a failing test case, run, session, etc.).
+
+**Required parameters**: `projectId`, `provider` (`jira` | `linear` | `asana` | `monday`), `source`
+
+**`source`**: `{ type, id }` required. `type` is one of `test_case`, `test_run`, `test_suite`, `manual_test_case`, `manual_test_suite`, `release`, `manual_run`, `manual_run_test_case`, `session`. Optional `runId` / `testRunId` / `caseId` locate a run-scoped case.
+
+**Optional parameters**: `summary`, `description`, `target` (provider destination fields), `linkBack` (Jira), `idempotencyKey` (safe retries), `preview` (draft only, nothing filed).
+
+**Workflow**:
+
+```
+get_integration_status(provider, includeCreateOptions=true)  → learn target fields
+create_external_issue(source={type,id}, target={...}, preview=true)  → confirm the draft
+create_external_issue(..., idempotencyKey=<source id>)       → file it
+```
+
+If the provider is not connected, the response is `INTEGRATION_NOT_CONNECTED` with a connect URL — show that URL to the user.
+
+### `get_external_issue`
+
+**Purpose**: Look up filed issues and their current status. Accepts one or many IDs.
+
+**Required parameters**: `projectId`, `provider` (`jira` | `linear` | `asana`), `issueIds` (non-empty array)
+
+**Optional**: `target` (e.g. Jira `{ defaultApp }`).
+
+**Response**: a single ID returns the issue directly; multiple IDs return `{ issues: [{ issueId, issue } | { issueId, error }] }` so one bad ID does not fail the batch.
+
+---
+
 ## Workflows & Patterns
 
 ### Session Startup
@@ -888,6 +982,22 @@ _Detailed-mode fields:_
    → List the specific tests that broke
 4. debug_testcase(projectId, "<test name>") for key failing tests
    → Confirm this is a new regression, not pre-existing flakiness
+```
+
+### Triage a Big Failing Run and File Bugs
+
+```
+1. list_testruns(projectId, by_status="failed", limit=5)
+   → Pick the run to triage
+2. get_run_error_clusters(projectId, testrun_id="<run>", status="failed")
+   → Group failures; report the largest clusters as the primary themes
+3. get_integration_status(projectId, provider="jira", includeCreateOptions=true)
+   → Confirm Jira is connected and learn the target fields
+4. create_external_issue(projectId, provider="jira",
+     source={type:"test_run", id:"<run>"}, target={...}, preview=true)
+   → Show the draft to the user for confirmation
+5. create_external_issue(..., idempotencyKey="<run id>")
+   → File it, then share the returned issue key/URL
 ```
 
 ### Track a Flaky Test Over Time
@@ -1102,6 +1212,26 @@ update_manual_run(projectId, runId="RUN-1", updates={ state: "done" })
 create_session(projectId, name="<charter title>",
   mission="<HTML>", assigneeUserId="tester@company.com")
 ```
+
+### "Why did this run fail?" / "Group the failures"
+
+```
+get_run_error_clusters(projectId, testrun_id="<run>", status="failed")
+→ report the largest clusters as the primary failure themes
+```
+
+### "File a Jira bug for this failing test"
+
+```
+1. get_integration_status(projectId, provider="jira", includeCreateOptions=true)
+   → not connected? return the connect URL from connect_integration and stop
+2. create_external_issue(projectId, provider="jira",
+     source={type:"test_case", id:"<caseKey>", runId:"<run>"},
+     target={...}, preview=true)   → show the draft
+3. create_external_issue(..., idempotencyKey="<caseKey>")   → file, return the key/URL
+```
+
+Never use `provider:"github"` here — GitHub cannot receive issues.
 
 ---
 

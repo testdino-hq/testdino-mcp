@@ -116,7 +116,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.0.0",
+      version: "2.0.1",
     },
     {
       capabilities: {
