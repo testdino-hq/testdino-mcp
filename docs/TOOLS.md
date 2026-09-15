@@ -40,6 +40,14 @@ This comprehensive guide covers all available tools in the `@testdino/mcp` MCP s
 - [list_manual_test_suites](#list_manual_test_suites)
 - [create_manual_test_suite](#create_manual_test_suite)
 
+**Automation Links (manual case ↔ automated test):**
+
+- [list_automated_tests](#list_automated_tests)
+- [get_test_case_links](#get_test_case_links)
+- [link_automated_test](#link_automated_test)
+- [unlink_automated_test](#unlink_automated_test)
+- [bulk_link_automated_tests](#bulk_link_automated_tests)
+
 **Releases (a.k.a. Milestones):**
 
 - [list_releases](#list_releases)
@@ -2908,6 +2916,124 @@ Error: Failed to create manual test suite: Parent suite not found
 
 - [TestDino API Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## list_automated_tests
+
+**Purpose**: Search the automated (Playwright) tests a project has recorded — the source of the `pwTestId` + `fullTitle` pair every link call needs.
+
+### Description
+
+TestDino reconstructs `fullTitle` server-side as `"<spec file> > <describe…> > <test title>"`. Always copy it from this tool; a hand-built title (from a spec file, from `list_testcase`'s `title_path`, from memory) fails identity validation with `"Automated test not found in this project"`. `pwTestId` equals `list_testcase`'s `pw_test_id`, so rows can be matched across the two tools by that key.
+
+### Parameters
+
+| Parameter    | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `projectId`  | string | Yes      | Project ID.                            |
+| `search`     | string | No       | Substring match on the test title.     |
+| `linkStatus` | string | No       | `all` (default), `linked`, `unlinked`. |
+| `cursor`     | string | No       | Opaque cursor from the previous page.  |
+| `limit`      | number | No       | Page size (default 50, max 500).       |
+
+### Example Usage
+
+```json
+{
+  "name": "list_automated_tests",
+  "arguments": {
+    "projectId": "project_…",
+    "linkStatus": "unlinked",
+    "limit": 200
+  }
+}
+```
+
+---
+
+## get_test_case_links
+
+**Purpose**: List the automated tests linked to one manual case, enriched with recent automation metrics (`successRate`, `lastExecution`, `platforms`). Also the way to find a `linkId` for `unlink_automated_test`.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                         |
+| ----------- | ------ | -------- | --------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID.                                         |
+| `caseId`    | string | Yes      | Internal `_id` or `TC-123`.                         |
+| `days`      | number | No       | Metrics window in days (server default if omitted). |
+
+---
+
+## link_automated_test
+
+**Purpose**: Link ONE automated test to ONE manual test case so automation results surface on the case. Sets the case's automation status to Automated.
+
+### Parameters
+
+| Parameter      | Type   | Required | Description                                                     |
+| -------------- | ------ | -------- | --------------------------------------------------------------- |
+| `projectId`    | string | Yes      | Project ID.                                                     |
+| `caseId`       | string | Yes      | Internal `_id` or `TC-123`.                                     |
+| `pwTestId`     | string | Yes      | Stable Playwright test id.                                      |
+| `fullTitle`    | string | Yes      | Server join key from `list_automated_tests` — never hand-built. |
+| `displayTitle` | string | No       | Label shown on the case; defaults to the test title.            |
+
+### Errors
+
+| Status | Cause                                                                                          |
+| ------ | ---------------------------------------------------------------------------------------------- |
+| 400    | identity unknown to the project (wrong `fullTitle`), `pwTestId` already linked, or 50-link cap |
+| 403    | caller is a viewer, or the org's plan lacks automation linking — upgrade; do not retry         |
+| 404    | case not found                                                                                 |
+
+Do **not** pass `linkedTests` to `update_manual_test_case` — that call is rejected with a pointer here. The generic update path skips the plan gate, the link cap, identity validation and the audit trail.
+
+### Example Usage
+
+```json
+{
+  "name": "link_automated_test",
+  "arguments": {
+    "projectId": "project_…",
+    "caseId": "TC-42",
+    "pwTestId": "ce6bd97fa7eddacfd02b-e40800435f9eaeb6ef64",
+    "fullTitle": "e2e/cart-wishlist.spec.ts > Wishlist @wishlist @regression > with items > Add to Cart flips to In Cart and enables View Cart"
+  }
+}
+```
+
+---
+
+## unlink_automated_test
+
+**Purpose**: Remove one link by `linkId` (`linkedTests[]._id`, `tcm_link_…`). When the last link goes, the case's automation status reverts to Manual. Not plan-gated.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                 |
+| ----------- | ------ | -------- | --------------------------- |
+| `projectId` | string | Yes      | Project ID.                 |
+| `caseId`    | string | Yes      | Internal `_id` or `TC-123`. |
+| `linkId`    | string | Yes      | `linkedTests[]._id`.        |
+
+---
+
+## bulk_link_automated_tests
+
+**Purpose**: Link up to 500 case ↔ test pairs in one call.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                                                                                                                        |
+| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID.                                                                                                                                        |
+| `links`     | array  | Yes      | 1–500 of `{ manualTestCaseId, pwTestId, fullTitle, displayTitle? }`. `manualTestCaseId` is the case **internal `_id`** (`tcm_tc_…`), not `TC-123`. |
+
+### Response
+
+Per-item results: `[{ manualTestCaseId, fullTitle, success, error?, link? }]`. **One bad row never fails the batch** — a 200 is not "all linked"; scan every item's `success` and report the failures. Same 403 plan gate as `link_automated_test`.
 
 ---
 

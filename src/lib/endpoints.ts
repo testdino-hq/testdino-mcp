@@ -255,6 +255,69 @@ export const endpoints = {
     return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-suites`;
   },
 
+  // ─── Automation links (manual case ↔ automated test) ───────────────────────
+
+  /**
+   * List automated test identities available for linking
+   * GET /api/mcp/manual-tests/:projectId/automated-tests
+   */
+  listAutomatedTests: (params: {
+    projectId: string;
+    search?: string;
+    linkStatus?: string;
+    cursor?: string;
+    limit?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/automated-tests${buildQueryString(queryParams)}`;
+  },
+
+  /**
+   * Get a manual test case's automated-test links
+   * GET /api/mcp/manual-tests/:projectId/test-cases/:caseId/links
+   */
+  getTestCaseLinks: (params: {
+    projectId: string;
+    caseId: string;
+    days?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, caseId, ...queryParams } = params;
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases/${caseId}/links${buildQueryString(queryParams)}`;
+  },
+
+  /**
+   * Link one automated test to a manual test case
+   * POST /api/mcp/manual-tests/:projectId/test-cases/:caseId/links
+   */
+  linkAutomatedTest: (projectId: string, caseId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases/${caseId}/links`;
+  },
+
+  /**
+   * Remove one automated-test link from a manual test case
+   * DELETE /api/mcp/manual-tests/:projectId/test-cases/:caseId/links/:linkId
+   */
+  unlinkAutomatedTest: (
+    projectId: string,
+    caseId: string,
+    linkId: string
+  ): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-cases/${caseId}/links/${linkId}`;
+  },
+
+  /**
+   * Bulk-link manual test cases to automated tests
+   * POST /api/mcp/manual-tests/:projectId/test-case-links/bulk
+   */
+  bulkLinkAutomatedTests: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/manual-tests/${projectId}/test-case-links/bulk`;
+  },
+
   /**
    * Debug test case - returns aggregated debug data with debugging_prompt
    * GET /api/mcp/:projectId/debug-testcase

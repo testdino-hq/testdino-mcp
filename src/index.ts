@@ -46,6 +46,17 @@ import {
   handleListManualTestSuites,
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
+  // Automation links
+  listAutomatedTestsTool,
+  handleListAutomatedTests,
+  getTestCaseLinksTool,
+  handleGetTestCaseLinks,
+  linkAutomatedTestTool,
+  handleLinkAutomatedTest,
+  unlinkAutomatedTestTool,
+  handleUnlinkAutomatedTest,
+  bulkLinkAutomatedTestsTool,
+  handleBulkLinkAutomatedTests,
   // Releases
   listReleasesTool,
   handleListReleases,
@@ -121,7 +132,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.0.2",
+      version: "2.1.0",
     },
     {
       capabilities: {
@@ -150,6 +161,12 @@ async function main() {
     updateManualTestCaseTool,
     listManualTestSuitesTool,
     createManualTestSuiteTool,
+    // Automation links
+    listAutomatedTestsTool,
+    getTestCaseLinksTool,
+    linkAutomatedTestTool,
+    unlinkAutomatedTestTool,
+    bulkLinkAutomatedTestsTool,
     // Releases
     listReleasesTool,
     getReleaseTool,
@@ -355,6 +372,36 @@ async function main() {
     if (name === "update_manual_test_case") {
       return await handleUpdateManualTestCase(
         args as Parameters<typeof handleUpdateManualTestCase>[0]
+      );
+    }
+
+    if (name === "list_automated_tests") {
+      return await handleListAutomatedTests(
+        args as Parameters<typeof handleListAutomatedTests>[0]
+      );
+    }
+
+    if (name === "get_test_case_links") {
+      return await handleGetTestCaseLinks(
+        args as Parameters<typeof handleGetTestCaseLinks>[0]
+      );
+    }
+
+    if (name === "link_automated_test") {
+      return await handleLinkAutomatedTest(
+        args as Parameters<typeof handleLinkAutomatedTest>[0]
+      );
+    }
+
+    if (name === "unlink_automated_test") {
+      return await handleUnlinkAutomatedTest(
+        args as Parameters<typeof handleUnlinkAutomatedTest>[0]
+      );
+    }
+
+    if (name === "bulk_link_automated_tests") {
+      return await handleBulkLinkAutomatedTests(
+        args as Parameters<typeof handleBulkLinkAutomatedTests>[0]
       );
     }
 

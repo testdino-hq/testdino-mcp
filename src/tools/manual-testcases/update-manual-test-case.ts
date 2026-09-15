@@ -70,7 +70,8 @@ export const updateManualTestCaseTool = {
   description:
     "Update an existing manual test case. Use this to modify test case details, steps, status, priority, or any other fields. Provide only the fields you want to update in the updates object. " +
     "To add comments, pass `updates.comments` as an array of strings — each becomes a new comment (PAT owner is author). " +
-    "To link Jira issues, pass `updates.issues` as an array of ticket keys (e.g. ['PROJ-123']); the server looks each up in the project's connected Jira and saves with title+url, or as a plain text stub when Jira isn't connected or the ticket isn't found (same fallback as the UI).",
+    "To link Jira issues, pass `updates.issues` as an array of ticket keys (e.g. ['PROJ-123']); the server looks each up in the project's connected Jira and saves with title+url, or as a plain text stub when Jira isn't connected or the ticket isn't found (same fallback as the UI). " +
+    "Automated-test links are NOT writable here — `updates.linkedTests` is rejected; use link_automated_test / bulk_link_automated_tests / unlink_automated_test.",
   inputSchema: {
     type: "object",
     properties: {
@@ -298,6 +299,14 @@ export async function handleUpdateManualTestCase(
   }
   if (!args?.updates) {
     throw new Error("updates object is required");
+  }
+
+  // The server strips linkedTests from the generic update (links go through the
+  // gated, audited link path), so forwarding it would return 200 and change nothing.
+  if ("linkedTests" in args.updates) {
+    throw new Error(
+      "updates.linkedTests is not writable here. Use link_automated_test (one case) or bulk_link_automated_tests (many) to link automated tests, and unlink_automated_test to remove a link."
+    );
   }
 
   try {

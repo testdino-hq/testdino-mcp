@@ -26,6 +26,21 @@ describe("handleUpdateManualTestCase", () => {
     ).rejects.toThrow("updates object is required");
   });
 
+  it("rejects updates.linkedTests locally and never sends the PATCH", async () => {
+    // Bug caught: the server strips linkedTests and answers 200, so a forwarded
+    // call looked like success while linking nothing.
+    mockFetchSuccess({ id: "TC-1" });
+    await expect(
+      handleUpdateManualTestCase(
+        createArgs({
+          caseId: "TC-1",
+          updates: { linkedTests: [{ pwTestId: "pw", fullTitle: "a > b" }] },
+        })
+      )
+    ).rejects.toThrow(/link_automated_test/);
+    expect(getLastFetchOptions()).toBeUndefined();
+  });
+
   it("should include all update fields in PATCH body", async () => {
     mockFetchSuccess({ id: "TC-999" });
 

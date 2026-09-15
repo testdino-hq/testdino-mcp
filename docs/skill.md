@@ -24,6 +24,12 @@
      - [update_manual_test_case](#update_manual_test_case)
      - [list_manual_test_suites](#list_manual_test_suites)
      - [create_manual_test_suite](#create_manual_test_suite)
+   - **Automation links (manual case ↔ automated test)**
+     - [list_automated_tests](#list_automated_tests)
+     - [get_test_case_links](#get_test_case_links)
+     - [link_automated_test](#link_automated_test)
+     - [unlink_automated_test](#unlink_automated_test)
+     - [bulk_link_automated_tests](#bulk_link_automated_tests)
    - **Releases (a.k.a. milestones)**
      - [list_releases](#list_releases)
      - [get_release](#get_release)
@@ -604,6 +610,72 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 ---
 
+### `list_automated_tests`
+
+**Purpose**: Search the automated (Playwright) test identities a project has recorded. This is where `pwTestId` + `fullTitle` — the pair every link call needs — come from.
+
+**Required parameters**: `projectId`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Substring match on the test title |
+| `linkStatus` | string | `"all"` (default), `"linked"`, `"unlinked"` |
+| `cursor` | string | Opaque cursor from the previous page |
+| `limit` | int | Page size (default 50, max 500) |
+
+> **`fullTitle` is a server-reconstructed join key** (`"<spec file> > <describe…> > <test title>"`). Always copy it from this tool. A hand-built title — from `list_testcase`'s `title_path`, from a spec file, from memory — fails identity validation with `"Automated test not found in this project"`. `pwTestId` here equals `list_testcase`'s `pw_test_id`, so you can match rows across the two tools by that key.
+
+---
+
+### `get_test_case_links`
+
+**Purpose**: List the automated tests linked to one manual case, enriched with recent automation metrics (`successRate`, `lastExecution`, `platforms`). Also the way to find a `linkId` for `unlink_automated_test`.
+
+**Required parameters**: `projectId`, `caseId` (`_id` or `TC-123`)
+
+**Optional parameters**: `days` (metrics window).
+
+---
+
+### `link_automated_test`
+
+**Purpose**: Link ONE automated test to ONE manual case so automation results surface on the case. Sets the case's `automationStatus` to `Automated`.
+
+**Required parameters**: `projectId`, `caseId`, `pwTestId`, `fullTitle`
+
+**Optional parameters**: `displayTitle`.
+
+**Rejections**:
+| Status | Cause |
+|--------|-------|
+| 400 | identity unknown to the project (wrong/hand-built `fullTitle`), `pwTestId` already linked to this case, or the case already has 50 links |
+| 403 | caller is a viewer, or the org's plan lacks automation linking — tell the user to upgrade; do not retry |
+| 404 | case not found |
+
+**Do NOT** pass `linkedTests` to `update_manual_test_case` — that call is rejected with a pointer here.
+
+---
+
+### `unlink_automated_test`
+
+**Purpose**: Remove one link by `linkId` (`linkedTests[]._id`). When the last link goes, `automationStatus` reverts to `Manual`. Not plan-gated.
+
+**Required parameters**: `projectId`, `caseId`, `linkId`
+
+---
+
+### `bulk_link_automated_tests`
+
+**Purpose**: Link up to 500 case ↔ test pairs in one call.
+
+**Required parameters**: `projectId`, `links` — array of `{ manualTestCaseId, pwTestId, fullTitle, displayTitle? }`
+
+- `manualTestCaseId` is the case **internal `_id`** (`tcm_tc_…`), NOT `TC-123`.
+- Returns per-item results; **one bad row never fails the batch** — always scan `success` per item and report the failures.
+
+---
+
 ### `list_releases`
 
 **Purpose**: Browse releases (a.k.a. milestones) for a project. Each release groups runs + sessions and may nest under a parent release up to 3 levels deep.
@@ -1076,6 +1148,22 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
      steps=[...], priority="high", type="functional")
 ```
 
+### Link Manual Cases to Automated Tests
+
+```
+1. list_manual_test_cases(projectId, limit=1000)
+   → each case's _id (tcm_tc_…) and title
+2. list_automated_tests(projectId, linkStatus="unlinked", limit=500)
+   → each test's pwTestId + fullTitle (page with cursor until exhausted)
+3. Match by title (a manual case mirroring an automated test usually shares its title);
+   when in doubt, show the proposed pairs and get a yes before writing.
+4. bulk_link_automated_tests(projectId, links=[{ manualTestCaseId, pwTestId, fullTitle }, …])
+   → inspect every item's success; retry or report the failed rows
+5. get_test_case_links(projectId, caseId) to confirm, or get_manual_test_case → linkedTests[]
+```
+
+For a single case use `link_automated_test`. Never fabricate `fullTitle`; never write links through `update_manual_test_case`.
+
 ### Update Test Case Steps
 
 ```
@@ -1337,35 +1425,40 @@ Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for sec
 
 ### Required Parameters Summary
 
-| Tool                       | Required                                                                                 |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| `health`                   | —                                                                                        |
-| `list_testruns`            | `projectId`                                                                              |
-| `get_run_details`          | `projectId` + (`testrun_id` OR `counter`)                                                |
-| `list_testcase`            | `projectId` + (run ID or run filter)                                                     |
-| `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
-| `debug_testcase`           | `projectId`, `testcase_name`                                                             |
-| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
-| `list_manual_test_cases`   | `projectId`                                                                              |
-| `get_manual_test_case`     | `projectId`, `caseId`                                                                    |
-| `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                        |
-| `update_manual_test_case`  | `projectId`, `caseId`, `updates` (object)                                                |
-| `list_manual_test_suites`  | `projectId`                                                                              |
-| `create_manual_test_suite` | `projectId`, `name`                                                                      |
-| `list_releases`            | `projectId`                                                                              |
-| `get_release`              | `projectId`, `releaseId`                                                                 |
-| `create_release`           | `projectId`, `name`                                                                      |
-| `update_release`           | `projectId`, `releaseId`, `updates` (object)                                             |
-| `list_manual_runs`         | `projectId`                                                                              |
-| `get_manual_run`           | `projectId`, `runId`                                                                     |
-| `create_manual_run`        | `projectId`, `name`                                                                      |
-| `update_manual_run`        | `projectId`, `runId`, `updates` (object)                                                 |
-| `list_run_test_cases`      | `projectId`, `runId`                                                                     |
-| `update_run_test_case`     | `projectId`, `runId`, `rtcRef`, `updates` (object)                                       |
-| `list_sessions`            | `projectId`                                                                              |
-| `get_session`              | `projectId`, `sessionId`                                                                 |
-| `create_session`           | `projectId`, `name`                                                                      |
-| `update_session`           | `projectId`, `sessionId`, `updates` (object)                                             |
+| Tool                        | Required                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `health`                    | —                                                                                        |
+| `list_testruns`             | `projectId`                                                                              |
+| `get_run_details`           | `projectId` + (`testrun_id` OR `counter`)                                                |
+| `list_testcase`             | `projectId` + (run ID or run filter)                                                     |
+| `get_testcase_details`      | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
+| `debug_testcase`            | `projectId`, `testcase_name`                                                             |
+| `test_audit`                | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
+| `list_manual_test_cases`    | `projectId`                                                                              |
+| `get_manual_test_case`      | `projectId`, `caseId`                                                                    |
+| `create_manual_test_case`   | `projectId`, `title`, `suiteName`                                                        |
+| `update_manual_test_case`   | `projectId`, `caseId`, `updates` (object)                                                |
+| `list_manual_test_suites`   | `projectId`                                                                              |
+| `create_manual_test_suite`  | `projectId`, `name`                                                                      |
+| `list_automated_tests`      | `projectId`                                                                              |
+| `get_test_case_links`       | `projectId`, `caseId`                                                                    |
+| `link_automated_test`       | `projectId`, `caseId`, `pwTestId`, `fullTitle`                                           |
+| `unlink_automated_test`     | `projectId`, `caseId`, `linkId`                                                          |
+| `bulk_link_automated_tests` | `projectId`, `links` (array)                                                             |
+| `list_releases`             | `projectId`                                                                              |
+| `get_release`               | `projectId`, `releaseId`                                                                 |
+| `create_release`            | `projectId`, `name`                                                                      |
+| `update_release`            | `projectId`, `releaseId`, `updates` (object)                                             |
+| `list_manual_runs`          | `projectId`                                                                              |
+| `get_manual_run`            | `projectId`, `runId`                                                                     |
+| `create_manual_run`         | `projectId`, `name`                                                                      |
+| `update_manual_run`         | `projectId`, `runId`, `updates` (object)                                                 |
+| `list_run_test_cases`       | `projectId`, `runId`                                                                     |
+| `update_run_test_case`      | `projectId`, `runId`, `rtcRef`, `updates` (object)                                       |
+| `list_sessions`             | `projectId`                                                                              |
+| `get_session`               | `projectId`, `sessionId`                                                                 |
+| `create_session`            | `projectId`, `name`                                                                      |
+| `update_session`            | `projectId`, `sessionId`, `updates` (object)                                             |
 
 ---
 
