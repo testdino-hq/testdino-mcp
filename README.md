@@ -81,7 +81,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 35 tools across nine domains:
+The server provides 43 tools across nine domains:
 
 **Test Execution & Results:**
 
@@ -91,58 +91,61 @@ The server provides 35 tools across nine domains:
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
 6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
-7. **`get_audit_report`** - Fetch the audit context (server-curated prompt + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
-8. **`submit_audit_report`** - Submit a completed audit report (score, findings, recommendations, markdown) to TestDino.
+7. **`get_debug_evidence`** - Start every failing-test investigation here: one call returns the flake verdict with per-attempt signatures, the regression boundary (last pass → first fail), and short-lived download links for every stored artifact (trace, screenshots, visual diff images). JSON or markdown.
+8. **`get_flake_verdict`** - Compare a test's retry attempts within one run and say whether the failure repeats: `deterministic`, `flaky`, or `inconclusive`.
+9. **`verify_fix`** - After a new run lands, check whether a fix held against the run you saw the failure in: `fixed`, `not_fixed`, `changed_failure`, `still_failing`, `unstable`, `no_runs_since_baseline`, or `baseline_not_found`.
+10. **`get_audit_report`** - Fetch the audit context (server-curated prompt + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
+11. **`submit_audit_report`** - Submit a completed audit report (score, findings, recommendations, markdown) to TestDino.
 
 **Test Case Management:**
 
-9. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
-10. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
-11. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
-12. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
-13. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
-14. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
+12. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
+13. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
+14. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
+15. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
+16. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
+17. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
 
 **Releases (a.k.a. Milestones):**
 
-15. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
-16. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
-17. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
-18. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
+18. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
+19. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
+20. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
+21. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
 
 **Manual Test Runs:**
 
-19. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
-20. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
-21. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
-22. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
-23. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
-24. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
+22. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
+23. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
+24. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
+25. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
+26. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
+27. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
 
 **Exploratory Sessions:**
 
-25. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
-26. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
-27. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
-28. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
+28. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
+29. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
+30. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
+31. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
 
 **Error Analysis:**
 
-29. **`get_run_error_clusters`** - Group a run's failing tests by error signature to triage at scale. Surfaces clusters of tests that share the same root-cause error, with an optional `status` filter (`all`, `failed`, `flaky`). Use it after `list_testruns` to understand why a run failed.
+32. **`get_run_error_clusters`** - Group a run's failing tests by error signature to triage at scale. Surfaces clusters of tests that share the same root-cause error, with an optional `status` filter (`all`, `failed`, `flaky`). Use it after `list_testruns` to understand why a run failed.
 
 **Integrations (Issue Trackers):**
 
-30. **`connect_integration`** - Return an OAuth connect URL for a provider (Jira, Linear, Asana, monday.com, GitHub). Show the URL to the user to authorize; do not open it programmatically.
-31. **`get_integration_status`** - Report whether a provider is connected for a project. Set `includeCreateOptions` to also fetch the fields available for issue creation. Call this before `create_external_issue`.
-32. **`create_external_issue`** - File an issue in a connected tracker (Jira, Linear, Asana, monday.com) from a TestDino source entity such as a failing test case or run. Supports `preview` and idempotent retries via `idempotencyKey`.
-33. **`get_external_issue`** - Fetch previously created issues by their IDs or keys (one or many) and return their current status in the provider (Jira, Linear, Asana).
+33. **`connect_integration`** - Return an OAuth connect URL for a provider (Jira, Linear, Asana, monday.com, GitHub). Show the URL to the user to authorize; do not open it programmatically.
+34. **`get_integration_status`** - Report whether a provider is connected for a project. Set `includeCreateOptions` to also fetch the fields available for issue creation. Call this before `create_external_issue`.
+35. **`create_external_issue`** - File an issue in a connected tracker (Jira, Linear, Asana, monday.com) from a TestDino source entity such as a failing test case or run. Supports `preview` and idempotent retries via `idempotencyKey`.
+36. **`get_external_issue`** - Fetch previously created issues by their IDs or keys (one or many) and return their current status in the provider (Jira, Linear, Asana).
 
 > **Provider support**: All providers can be connected and status-checked. Issue **creation** works with Jira, Linear, Asana, and monday.com. Issue **read-back** works with Jira, Linear, and Asana. GitHub is supported as a PR/CI integration, not an issue tracker.
 
 **AI Insights:**
 
-34. **`get_ai_insights`** - TestDino's AI analysis at three levels: project overview (per-category failure counts + top offenders over a date range), run (AI failure categorization, failure clusters, error-analysis table, LLM-written summary), and test case (recommendations + quick fixes). Returns a `disabled` status when AI features are turned off for the project (Settings → AI).
-35. **`get_trace_analysis`** - Resolve a failing test's hosted Playwright trace to a short-lived download URL and return a runbook for local trace-CLI debugging (open → actions → snapshot → close).
+37. **`get_ai_insights`** - TestDino's AI analysis at three levels: project overview (per-category failure counts + top offenders over a date range), run (AI failure categorization, failure clusters, error-analysis table, LLM-written summary), and test case (recommendations + quick fixes). Returns a `disabled` status when AI features are turned off for the project (Settings → AI).
+38. **`get_trace_analysis`** - Resolve a failing test's hosted Playwright trace to a short-lived download URL and return a runbook for local trace-CLI debugging (open → actions → snapshot → close).
 
 > AI Insights are also available inline: pass `include_ai_insights: true` to `get_run_details` (attaches the run's AI Insights under `ai_insights`) or `debug_testcase` (attaches recommendations + quick fixes under `ai_fixes`).
 
@@ -362,7 +365,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 ## Documentation
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 33 available tools with examples, parameters, and use cases
+- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 43 available tools with examples, parameters, and use cases
 - **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements

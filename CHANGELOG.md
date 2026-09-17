@@ -2,6 +2,27 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.0.3 (2026-09-15)
+
+### Added
+
+- **Automation linking.** Five tools let an agent wire a manual test case to
+  the Playwright test that covers it and see automation results on the case:
+  `list_automated_tests` (source of `pwTestId` + `fullTitle`),
+  `get_test_case_links`, `link_automated_test`, `unlink_automated_test`, and
+  `bulk_link_automated_tests` (up to 500 pairs, per-item results). Same plan
+  gate, 50-link cap and audit trail as the UI's link dialog.
+- **Debug ladder.** Three tools already on the hosted streaming server now
+  ship here too: `get_debug_evidence` (one call — flake verdict, regression
+  boundary, every artifact link, JSON or markdown), `get_flake_verdict`, and
+  `verify_fix` (did the fix hold against the baseline run?).
+
+### Changed
+
+- `update_manual_test_case` now rejects `updates.linkedTests` with a message
+  naming the link tools, instead of forwarding it and reporting a success that
+  linked nothing (the server strips that field from the generic update).
+
 ## 2.0.2 (2026-08-06)
 
 ### Added

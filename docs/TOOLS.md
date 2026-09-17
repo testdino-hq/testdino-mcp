@@ -24,6 +24,9 @@ This comprehensive guide covers all available tools in the `@testdino/mcp` MCP s
 - [list_testcase](#list_testcase)
 - [get_testcase_details](#get_testcase_details)
 - [debug_testcase](#debug_testcase)
+- [get_debug_evidence](#get_debug_evidence)
+- [get_flake_verdict](#get_flake_verdict)
+- [verify_fix](#verify_fix)
 - [get_run_error_clusters](#get_run_error_clusters)
 
 **Test Quality Audit:**
@@ -39,6 +42,14 @@ This comprehensive guide covers all available tools in the `@testdino/mcp` MCP s
 - [update_manual_test_case](#update_manual_test_case)
 - [list_manual_test_suites](#list_manual_test_suites)
 - [create_manual_test_suite](#create_manual_test_suite)
+
+**Automation Links (manual case ↔ automated test):**
+
+- [list_automated_tests](#list_automated_tests)
+- [get_test_case_links](#get_test_case_links)
+- [link_automated_test](#link_automated_test)
+- [unlink_automated_test](#unlink_automated_test)
+- [bulk_link_automated_tests](#bulk_link_automated_tests)
 
 **Releases (a.k.a. Milestones):**
 
@@ -1593,6 +1604,79 @@ Error: Missing required parameter: testrun_id
 
 ---
 
+## get_debug_evidence
+
+**Purpose**: Start every failing-test investigation here. One call returns the cheap tier of the evidence ladder: the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for every stored artifact — trace, screenshots, and the expected/actual/diff images on a visual failure. Replaces the `debug_testcase` → `get_testcase_details` → `get_trace_analysis` round trips for the first pass.
+
+**Parameters**:
+
+| Parameter              | Type    | Required | Description                                                                                                                                          |
+| ---------------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`            | string  | Yes      | The TestDino project identifier.                                                                                                                     |
+| `testcase_name`        | string  | No       | Full test title. Required for the regression boundary — prefer it when known.                                                                        |
+| `testcase_id`          | string  | No       | The case's `pw_test_id`. Either this or `testcase_name` must identify the test.                                                                      |
+| `testrun_id`           | string  | No       | Run scope. Omit to use the most recently started run carrying this case.                                                                             |
+| `suite_file_path`      | string  | No       | Spec file path — only needed when the title is shared across files.                                                                                  |
+| `format`               | string  | No       | `"json"` (default) or `"md"`. Markdown is markedly cheaper for the same content and is returned as raw text.                                         |
+| `include_instructions` | boolean | No       | Default `true`. The debugging procedure and the trace runbook are identical on every call and about half the response — set `false` on repeat calls. |
+| `maxLength`            | integer | No       | Cap the markdown length (`format="md"` only); anything cut is announced in the output. JSON is never truncated.                                      |
+
+**Notes**: Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why. Artifact links are minutes-scale — download what you need immediately, and call this again to mint fresh links rather than treating an expired one as a missing artifact.
+
+**Example prompts**:
+
+- _"Why is the checkout test failing on main?"_
+- _"Give me everything you have on the login test in run test_run_123, as markdown."_
+
+**Returns**: `test` identity, `verdict` (see `get_flake_verdict`), `regression_boundary`, `artifacts[]` with `url` + `expires_at`, `environment`, and — unless `include_instructions=false` — `debugging_prompt` and `trace_runbook`.
+
+---
+
+## get_flake_verdict
+
+**Purpose**: Say whether a failing test behaves the same way every time, by comparing its retry attempts within one run. If you are debugging a failing test, call `get_debug_evidence` first — it already includes this verdict.
+
+**Parameters**:
+
+| Parameter     | Type   | Required | Description                                                              |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `projectId`   | string | Yes      | The TestDino project identifier.                                         |
+| `testcase_id` | string | Yes      | Playwright `pw_test_id` of the failing case.                             |
+| `testrun_id`  | string | No       | Run scope. Omit to use the most recently started run carrying this case. |
+
+**Notes**: Needs a test that ran with retries enabled; a single attempt is always inconclusive. The verdict describes the behaviour, not the cause — it tells you which fixes the evidence cannot support, not where the fix goes.
+
+**Example prompts**:
+
+- _"Is the login test flaky or does it fail every time?"_
+
+**Returns**: `verdict` — `"deterministic"` (every attempt failed with the same signature), `"flaky"` (an attempt passed on retry), or `"inconclusive"` (too few attempts, or the attempts failed differently) — plus the per-attempt signatures behind it.
+
+---
+
+## verify_fix
+
+**Purpose**: Check whether a fix actually held for one test, against the run you saw when you proposed it. Splits the test's run history at that baseline and compares after against before.
+
+**Parameters**:
+
+| Parameter         | Type   | Required | Description                                                         |
+| ----------------- | ------ | -------- | ------------------------------------------------------------------- |
+| `projectId`       | string | Yes      | The TestDino project identifier.                                    |
+| `testcase_name`   | string | Yes      | Full test title, same identifier `debug_testcase` takes.            |
+| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.           |
+| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files. |
+
+**Notes**: Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.
+
+**Example prompts**:
+
+- _"Did my fix for the checkout test hold? The failure was in run test_run_123."_
+
+**Returns**: `"fixed"` (passing with no retries since), `"not_fixed"` (still failing with the same error), `"changed_failure"` (still failing with a different, comparable error), `"still_failing"` (still failing, errors not comparable), `"unstable"` (passing only after retries), `"no_runs_since_baseline"`, or `"baseline_not_found"`.
+
+---
+
 ## get_audit_report
 
 **Purpose**: Read-only TestDino Playwright audit reads. Fetches the server-curated audit prompt + `branchSignals` (top failing / flaky / slow tests) to START an audit, browses past reports, or retrieves one by `reportId`. This is the **first step** of the audit flow — always call `action='context'` before writing any findings in chat.
@@ -2911,6 +2995,124 @@ Error: Failed to create manual test suite: Parent suite not found
 
 ---
 
+## list_automated_tests
+
+**Purpose**: Search the automated (Playwright) tests a project has recorded — the source of the `pwTestId` + `fullTitle` pair every link call needs.
+
+### Description
+
+TestDino reconstructs `fullTitle` server-side as `"<spec file> > <describe…> > <test title>"`. Always copy it from this tool; a hand-built title (from a spec file, from `list_testcase`'s `title_path`, from memory) fails identity validation with `"Automated test not found in this project"`. `pwTestId` equals `list_testcase`'s `pw_test_id`, so rows can be matched across the two tools by that key.
+
+### Parameters
+
+| Parameter    | Type   | Required | Description                                                   |
+| ------------ | ------ | -------- | ------------------------------------------------------------- |
+| `projectId`  | string | Yes      | Project ID.                                                   |
+| `search`     | string | No       | Substring match on the test title.                            |
+| `linkStatus` | string | No       | `all` (default), `linked`, `unlinked`.                        |
+| `cursor`     | string | No       | `nextCursor` from the previous page; omit for the first page. |
+| `limit`      | number | No       | Page size (default 20, max 100).                              |
+
+### Example Usage
+
+```json
+{
+  "name": "list_automated_tests",
+  "arguments": {
+    "projectId": "project_…",
+    "linkStatus": "unlinked",
+    "limit": 200
+  }
+}
+```
+
+---
+
+## get_test_case_links
+
+**Purpose**: List the automated tests linked to one manual case, enriched with recent automation metrics (`successRate`, `lastExecution`, `platforms`). Also the way to find a `linkId` for `unlink_automated_test`.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                         |
+| ----------- | ------ | -------- | --------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID.                                         |
+| `caseId`    | string | Yes      | Internal `_id` or `TC-123`.                         |
+| `days`      | number | No       | Metrics window in days (server default if omitted). |
+
+---
+
+## link_automated_test
+
+**Purpose**: Link ONE automated test to ONE manual test case so automation results surface on the case. Sets the case's automation status to Automated.
+
+### Parameters
+
+| Parameter      | Type   | Required | Description                                                     |
+| -------------- | ------ | -------- | --------------------------------------------------------------- |
+| `projectId`    | string | Yes      | Project ID.                                                     |
+| `caseId`       | string | Yes      | Internal `_id` or `TC-123`.                                     |
+| `pwTestId`     | string | Yes      | Stable Playwright test id.                                      |
+| `fullTitle`    | string | Yes      | Server join key from `list_automated_tests` — never hand-built. |
+| `displayTitle` | string | No       | Label shown on the case; defaults to the test title.            |
+
+### Errors
+
+| Status | Cause                                                                                          |
+| ------ | ---------------------------------------------------------------------------------------------- |
+| 400    | identity unknown to the project (wrong `fullTitle`), `pwTestId` already linked, or 50-link cap |
+| 403    | caller is a viewer, or the org's plan lacks automation linking — upgrade; do not retry         |
+| 404    | case not found                                                                                 |
+
+Do **not** pass `linkedTests` to `update_manual_test_case` — that call is rejected with a pointer here. The generic update path skips the plan gate, the link cap, identity validation and the audit trail.
+
+### Example Usage
+
+```json
+{
+  "name": "link_automated_test",
+  "arguments": {
+    "projectId": "project_…",
+    "caseId": "TC-42",
+    "pwTestId": "ce6bd97fa7eddacfd02b-e40800435f9eaeb6ef64",
+    "fullTitle": "e2e/cart-wishlist.spec.ts > Wishlist @wishlist @regression > with items > Add to Cart flips to In Cart and enables View Cart"
+  }
+}
+```
+
+---
+
+## unlink_automated_test
+
+**Purpose**: Remove one link by `linkId` (`linkedTests[]._id`, `tcm_link_…`). When the last link goes, the case's automation status reverts to Manual. Not plan-gated.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                 |
+| ----------- | ------ | -------- | --------------------------- |
+| `projectId` | string | Yes      | Project ID.                 |
+| `caseId`    | string | Yes      | Internal `_id` or `TC-123`. |
+| `linkId`    | string | Yes      | `linkedTests[]._id`.        |
+
+---
+
+## bulk_link_automated_tests
+
+**Purpose**: Link up to 500 case ↔ test pairs in one call.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                                                                                                                        |
+| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID.                                                                                                                                        |
+| `links`     | array  | Yes      | 1–500 of `{ manualTestCaseId, pwTestId, fullTitle, displayTitle? }`. `manualTestCaseId` is the case **internal `_id`** (`tcm_tc_…`), not `TC-123`. |
+
+### Response
+
+Per-item results: `[{ manualTestCaseId, fullTitle, success, error?, link? }]`. **One bad row never fails the batch** — a 200 is not "all linked"; scan every item's `success` and report the failures. Same 403 plan gate as `link_automated_test`.
+
+---
+
 ## list_releases
 
 **Purpose**: Browse the releases (a.k.a. milestones) in a project. Each release groups runs + sessions and can nest under a parent release up to 3 levels deep.
@@ -3649,6 +3851,11 @@ When adding new tools to the MCP server:
 ---
 
 ## Version History
+
+- **v2.0.3**:
+  - **Added**: Automation links — `list_automated_tests`, `get_test_case_links`, `link_automated_test`, `unlink_automated_test`, `bulk_link_automated_tests`.
+  - **Added**: Debug ladder — `get_debug_evidence`, `get_flake_verdict`, `verify_fix`, matching the hosted streaming server.
+  - **Changed**: `update_manual_test_case` rejects `updates.linkedTests` and points to the link tools.
 
 - **v2.0.1**:
   - **Changed**: Package renamed to `@testdino/mcp`. Update your MCP config to the new name; the old `testdino-mcp` package is no longer updated. No tool or behavior changes from 2.0.0.

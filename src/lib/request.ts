@@ -13,7 +13,7 @@ export interface RequestOptions {
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 const MAX_ERROR_BODY_LENGTH = 500;
 
-function formatApiErrorBody(errorText: string): string {
+export function formatApiErrorBody(errorText: string): string {
   const compactError = errorText.replace(/\s+/g, " ").trim();
   if (!compactError) {
     return "";

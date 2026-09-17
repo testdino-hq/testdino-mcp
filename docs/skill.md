@@ -15,6 +15,9 @@
      - [list_testcase](#list_testcase)
      - [get_testcase_details](#get_testcase_details)
      - [debug_testcase](#debug_testcase)
+     - [get_debug_evidence](#get_debug_evidence)
+     - [get_flake_verdict](#get_flake_verdict)
+     - [verify_fix](#verify_fix)
      - [get_run_error_clusters](#get_run_error_clusters)
      - [get_audit_report and submit_audit_report](#get_audit_report-and-submit_audit_report)
    - **Manual test cases**
@@ -24,6 +27,12 @@
      - [update_manual_test_case](#update_manual_test_case)
      - [list_manual_test_suites](#list_manual_test_suites)
      - [create_manual_test_suite](#create_manual_test_suite)
+   - **Automation links (manual case ↔ automated test)**
+     - [list_automated_tests](#list_automated_tests)
+     - [get_test_case_links](#get_test_case_links)
+     - [link_automated_test](#link_automated_test)
+     - [unlink_automated_test](#unlink_automated_test)
+     - [bulk_link_automated_tests](#bulk_link_automated_tests)
    - **Releases (a.k.a. milestones)**
      - [list_releases](#list_releases)
      - [get_release](#get_release)
@@ -361,6 +370,70 @@ debug_testcase(projectId, "Verify user login")
 
 ---
 
+### `get_debug_evidence`
+
+**Purpose**: The first call for any failing-test investigation. One response carries the flake verdict with per-attempt signatures, the regression boundary (last pass → first fail), every artifact link (trace, screenshots, visual diff images), and — by default — the debugging procedure and trace runbook.
+
+**Required parameters**: `projectId`, plus `testcase_name` or `testcase_id`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `testcase_name` | string | Full test title. Needed for the regression boundary — prefer it when known. |
+| `testcase_id` | string | The case's `pw_test_id`. |
+| `testrun_id` | string | Run scope. Omit for the most recently started run carrying this case. |
+| `suite_file_path` | string | Only when the title is shared across spec files. |
+| `format` | `"json"` \| `"md"` | Markdown is cheaper for the same content and comes back as raw text. |
+| `include_instructions` | boolean | Default `true`. Set `false` on repeat calls once you have read the procedure. |
+| `maxLength` | integer | Cap the markdown length (`md` only). Anything cut is announced in the output. |
+
+**How to use the response**:
+
+1. Read the whole thing before forming a hypothesis.
+2. The `verdict` says whether the failure repeats — never why. Use it to rule fixes out, not to pick one.
+3. The `regression_boundary` turns "why does this fail" into "what changed between these two runs".
+4. Artifact links expire in minutes: download immediately; re-call to mint fresh links.
+
+**Pattern**:
+
+```
+get_debug_evidence(projectId, testcase_name="Verify user login")
+→ read verdict + regression_boundary + artifacts
+→ download the trace; follow trace_runbook
+→ propose a fix
+→ after the next run: verify_fix(projectId, testcase_name, baseline_run_id=<the run you saw>)
+```
+
+---
+
+### `get_flake_verdict`
+
+**Purpose**: Compare a test's retry attempts within one run and say whether the failure repeats.
+
+**Required parameters**: `projectId`, `testcase_id`
+
+**Optional parameters**: `testrun_id` — run scope; omit for the most recently started run carrying this case.
+
+**Returns**: `"deterministic"` (same signature every attempt), `"flaky"` (an attempt passed on retry), or `"inconclusive"` (too few attempts, or differing failures). Needs retries enabled — a single attempt is always inconclusive.
+
+**When to call**: Only when you need the verdict on its own. If you are debugging, `get_debug_evidence` already includes it.
+
+---
+
+### `verify_fix`
+
+**Purpose**: After a fix has shipped and a new run has landed, check whether it held — against the run you saw when you proposed it.
+
+**Required parameters**: `projectId`, `testcase_name`, `baseline_run_id`
+
+**Optional parameters**: `suite_file_path` — only when the title is shared across spec files.
+
+**Returns**: `"fixed"`, `"not_fixed"` (same error), `"changed_failure"` (different, comparable error — a new investigation), `"still_failing"` (errors not comparable), `"unstable"` (passing only after retries — not fixed), `"no_runs_since_baseline"`, or `"baseline_not_found"` (the run id is not one this test executed in).
+
+**When to call**: The user asks "did my fix work?" or a new run has landed since you proposed a change. An unchanged error means the fix missed, not that the test is flaky.
+
+---
+
 ### `get_audit_report` and `submit_audit_report`
 
 **Purpose**: Run a single-pass audit of Playwright test quality using TestDino for prompt orchestration and your local AI agent for repository analysis. `get_audit_report` fetches context and browses past reports; `submit_audit_report` files the completed audit. Only triggered when the user explicitly names TestDino.
@@ -601,6 +674,72 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `parentSuiteId` | string | ID of parent suite for nesting |
+
+---
+
+### `list_automated_tests`
+
+**Purpose**: Search the automated (Playwright) test identities a project has recorded. This is where `pwTestId` + `fullTitle` — the pair every link call needs — come from.
+
+**Required parameters**: `projectId`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `search` | string | Substring match on the test title |
+| `linkStatus` | string | `"all"` (default), `"linked"`, `"unlinked"` |
+| `cursor` | string | `nextCursor` from the previous page; omit for the first page |
+| `limit` | int | Page size (default 20, max 100) |
+
+> **`fullTitle` is a server-reconstructed join key** (`"<spec file> > <describe…> > <test title>"`). Always copy it from this tool. A hand-built title — from `list_testcase`'s `title_path`, from a spec file, from memory — fails identity validation with `"Automated test not found in this project"`. `pwTestId` here equals `list_testcase`'s `pw_test_id`, so you can match rows across the two tools by that key.
+
+---
+
+### `get_test_case_links`
+
+**Purpose**: List the automated tests linked to one manual case, enriched with recent automation metrics (`successRate`, `lastExecution`, `platforms`). Also the way to find a `linkId` for `unlink_automated_test`.
+
+**Required parameters**: `projectId`, `caseId` (`_id` or `TC-123`)
+
+**Optional parameters**: `days` (metrics window).
+
+---
+
+### `link_automated_test`
+
+**Purpose**: Link ONE automated test to ONE manual case so automation results surface on the case. Sets the case's `automationStatus` to `Automated`.
+
+**Required parameters**: `projectId`, `caseId`, `pwTestId`, `fullTitle`
+
+**Optional parameters**: `displayTitle`.
+
+**Rejections**:
+| Status | Cause |
+|--------|-------|
+| 400 | identity unknown to the project (wrong/hand-built `fullTitle`), `pwTestId` already linked to this case, or the case already has 50 links |
+| 403 | caller is a viewer, or the org's plan lacks automation linking — tell the user to upgrade; do not retry |
+| 404 | case not found |
+
+**Do NOT** pass `linkedTests` to `update_manual_test_case` — that call is rejected with a pointer here.
+
+---
+
+### `unlink_automated_test`
+
+**Purpose**: Remove one link by `linkId` (`linkedTests[]._id`). When the last link goes, `automationStatus` reverts to `Manual`. Not plan-gated.
+
+**Required parameters**: `projectId`, `caseId`, `linkId`
+
+---
+
+### `bulk_link_automated_tests`
+
+**Purpose**: Link up to 500 case ↔ test pairs in one call.
+
+**Required parameters**: `projectId`, `links` — array of `{ manualTestCaseId, pwTestId, fullTitle, displayTitle? }`
+
+- `manualTestCaseId` is the case **internal `_id`** (`tcm_tc_…`), NOT `TC-123`.
+- Returns per-item results; **one bad row never fails the batch** — always scan `success` per item and report the failures.
 
 ---
 
@@ -1015,15 +1154,14 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
 ### Debug a Specific Test
 
 ```
-1. debug_testcase(projectId, "test case name")
-   → Get historical data + debugging_prompt
+1. get_debug_evidence(projectId, testcase_name="test case name")
+   → verdict + regression boundary + artifact links + debugging_prompt + trace_runbook
 2. Read the debugging_prompt — use it as analysis context
-3. Identify pattern from history (flaky? consistent? regression?)
-4. If you need to see a specific run's artifacts:
-   get_testcase_details(projectId, testcase_name="...", testrun_id=<latestFailRun>,
-     steps_filter="failed_only")
-   → The response includes error details, steps, and artifacts (screenshots, videos, traces)
-5. Provide root cause analysis and suggested fix
+3. Use the verdict to rule fixes out; use the boundary to narrow "what changed"
+4. Download the trace and follow trace_runbook (links expire in minutes)
+5. Need the long history across runs? debug_testcase(projectId, "test case name")
+6. Provide root cause analysis and suggested fix
+7. After the next run lands: verify_fix(projectId, testcase_name, baseline_run_id=<step-1 run>)
 ```
 
 ### Investigate a Recent Regression
@@ -1075,6 +1213,22 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
 3. create_manual_test_case(projectId, title="...", suiteName="Exact Suite Name",
      steps=[...], priority="high", type="functional")
 ```
+
+### Link Manual Cases to Automated Tests
+
+```
+1. list_manual_test_cases(projectId, limit=1000)
+   → each case's _id (tcm_tc_…) and title
+2. list_automated_tests(projectId, linkStatus="unlinked", limit=100)
+   → each test's pwTestId + fullTitle; repeat with cursor=nextCursor until nextCursor is null
+3. Match by title (a manual case mirroring an automated test usually shares its title);
+   when in doubt, show the proposed pairs and get a yes before writing.
+4. bulk_link_automated_tests(projectId, links=[{ manualTestCaseId, pwTestId, fullTitle }, …])
+   → inspect every item's success; retry or report the failed rows
+5. get_test_case_links(projectId, caseId) to confirm, or get_manual_test_case → linkedTests[]
+```
+
+For a single case use `link_automated_test`. Never fabricate `fullTitle`; never write links through `update_manual_test_case`.
 
 ### Update Test Case Steps
 
@@ -1167,11 +1321,17 @@ list_testruns(projectId, by_time_interval="weekly", limit=20)
 ### "Why is [test name] failing?"
 
 ```
-debug_testcase(projectId, "[test name]")
-→ Read debugging_prompt, analyze patterns
-→ If more detail needed:
-   get_testcase_details(projectId, testcase_name="[test name]",
-     testrun_id="<latest fail>", steps_filter="failed_only")
+get_debug_evidence(projectId, testcase_name="[test name]")
+→ Read verdict, regression_boundary, artifacts; follow debugging_prompt
+→ If you need the long history across runs:
+   debug_testcase(projectId, "[test name]")
+```
+
+### "Did my fix for [test name] work?"
+
+```
+verify_fix(projectId, testcase_name="[test name]", baseline_run_id="<run you saw the failure in>")
+→ "fixed" → done; "not_fixed" → the fix missed; "changed_failure" → new investigation
 ```
 
 ### "Show me all failed tests on main branch today"
@@ -1337,35 +1497,40 @@ Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for sec
 
 ### Required Parameters Summary
 
-| Tool                       | Required                                                                                 |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| `health`                   | —                                                                                        |
-| `list_testruns`            | `projectId`                                                                              |
-| `get_run_details`          | `projectId` + (`testrun_id` OR `counter`)                                                |
-| `list_testcase`            | `projectId` + (run ID or run filter)                                                     |
-| `get_testcase_details`     | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
-| `debug_testcase`           | `projectId`, `testcase_name`                                                             |
-| `test_audit`               | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
-| `list_manual_test_cases`   | `projectId`                                                                              |
-| `get_manual_test_case`     | `projectId`, `caseId`                                                                    |
-| `create_manual_test_case`  | `projectId`, `title`, `suiteName`                                                        |
-| `update_manual_test_case`  | `projectId`, `caseId`, `updates` (object)                                                |
-| `list_manual_test_suites`  | `projectId`                                                                              |
-| `create_manual_test_suite` | `projectId`, `name`                                                                      |
-| `list_releases`            | `projectId`                                                                              |
-| `get_release`              | `projectId`, `releaseId`                                                                 |
-| `create_release`           | `projectId`, `name`                                                                      |
-| `update_release`           | `projectId`, `releaseId`, `updates` (object)                                             |
-| `list_manual_runs`         | `projectId`                                                                              |
-| `get_manual_run`           | `projectId`, `runId`                                                                     |
-| `create_manual_run`        | `projectId`, `name`                                                                      |
-| `update_manual_run`        | `projectId`, `runId`, `updates` (object)                                                 |
-| `list_run_test_cases`      | `projectId`, `runId`                                                                     |
-| `update_run_test_case`     | `projectId`, `runId`, `rtcRef`, `updates` (object)                                       |
-| `list_sessions`            | `projectId`                                                                              |
-| `get_session`              | `projectId`, `sessionId`                                                                 |
-| `create_session`           | `projectId`, `name`                                                                      |
-| `update_session`           | `projectId`, `sessionId`, `updates` (object)                                             |
+| Tool                        | Required                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `health`                    | —                                                                                        |
+| `list_testruns`             | `projectId`                                                                              |
+| `get_run_details`           | `projectId` + (`testrun_id` OR `counter`)                                                |
+| `list_testcase`             | `projectId` + (run ID or run filter)                                                     |
+| `get_testcase_details`      | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
+| `debug_testcase`            | `projectId`, `testcase_name`                                                             |
+| `test_audit`                | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
+| `list_manual_test_cases`    | `projectId`                                                                              |
+| `get_manual_test_case`      | `projectId`, `caseId`                                                                    |
+| `create_manual_test_case`   | `projectId`, `title`, `suiteName`                                                        |
+| `update_manual_test_case`   | `projectId`, `caseId`, `updates` (object)                                                |
+| `list_manual_test_suites`   | `projectId`                                                                              |
+| `create_manual_test_suite`  | `projectId`, `name`                                                                      |
+| `list_automated_tests`      | `projectId`                                                                              |
+| `get_test_case_links`       | `projectId`, `caseId`                                                                    |
+| `link_automated_test`       | `projectId`, `caseId`, `pwTestId`, `fullTitle`                                           |
+| `unlink_automated_test`     | `projectId`, `caseId`, `linkId`                                                          |
+| `bulk_link_automated_tests` | `projectId`, `links` (array)                                                             |
+| `list_releases`             | `projectId`                                                                              |
+| `get_release`               | `projectId`, `releaseId`                                                                 |
+| `create_release`            | `projectId`, `name`                                                                      |
+| `update_release`            | `projectId`, `releaseId`, `updates` (object)                                             |
+| `list_manual_runs`          | `projectId`                                                                              |
+| `get_manual_run`            | `projectId`, `runId`                                                                     |
+| `create_manual_run`         | `projectId`, `name`                                                                      |
+| `update_manual_run`         | `projectId`, `runId`, `updates` (object)                                                 |
+| `list_run_test_cases`       | `projectId`, `runId`                                                                     |
+| `update_run_test_case`      | `projectId`, `runId`, `rtcRef`, `updates` (object)                                       |
+| `list_sessions`             | `projectId`                                                                              |
+| `get_session`               | `projectId`, `sessionId`                                                                 |
+| `create_session`            | `projectId`, `name`                                                                      |
+| `update_session`            | `projectId`, `sessionId`, `updates` (object)                                             |
 
 ---
 

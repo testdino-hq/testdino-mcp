@@ -46,6 +46,17 @@ import {
   handleListManualTestSuites,
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
+  // Automation links
+  listAutomatedTestsTool,
+  handleListAutomatedTests,
+  getTestCaseLinksTool,
+  handleGetTestCaseLinks,
+  linkAutomatedTestTool,
+  handleLinkAutomatedTest,
+  unlinkAutomatedTestTool,
+  handleUnlinkAutomatedTest,
+  bulkLinkAutomatedTestsTool,
+  handleBulkLinkAutomatedTests,
   // Releases
   listReleasesTool,
   handleListReleases,
@@ -94,6 +105,12 @@ import {
   handleGetAiInsights,
   getTraceAnalysisTool,
   handleGetTraceAnalysis,
+  getDebugEvidenceTool,
+  handleGetDebugEvidence,
+  getFlakeVerdictTool,
+  handleGetFlakeVerdict,
+  verifyFixTool,
+  handleVerifyFix,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -121,7 +138,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.0.2",
+      version: "2.0.3",
     },
     {
       capabilities: {
@@ -142,6 +159,10 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
+    // Debug ladder
+    getDebugEvidenceTool,
+    getFlakeVerdictTool,
+    verifyFixTool,
     getAuditReportTool,
     submitAuditReportTool,
     listManualTestCasesTool,
@@ -150,6 +171,12 @@ async function main() {
     updateManualTestCaseTool,
     listManualTestSuitesTool,
     createManualTestSuiteTool,
+    // Automation links
+    listAutomatedTestsTool,
+    getTestCaseLinksTool,
+    linkAutomatedTestTool,
+    unlinkAutomatedTestTool,
+    bulkLinkAutomatedTestsTool,
     // Releases
     listReleasesTool,
     getReleaseTool,
@@ -358,6 +385,36 @@ async function main() {
       );
     }
 
+    if (name === "list_automated_tests") {
+      return await handleListAutomatedTests(
+        args as Parameters<typeof handleListAutomatedTests>[0]
+      );
+    }
+
+    if (name === "get_test_case_links") {
+      return await handleGetTestCaseLinks(
+        args as Parameters<typeof handleGetTestCaseLinks>[0]
+      );
+    }
+
+    if (name === "link_automated_test") {
+      return await handleLinkAutomatedTest(
+        args as Parameters<typeof handleLinkAutomatedTest>[0]
+      );
+    }
+
+    if (name === "unlink_automated_test") {
+      return await handleUnlinkAutomatedTest(
+        args as Parameters<typeof handleUnlinkAutomatedTest>[0]
+      );
+    }
+
+    if (name === "bulk_link_automated_tests") {
+      return await handleBulkLinkAutomatedTests(
+        args as Parameters<typeof handleBulkLinkAutomatedTests>[0]
+      );
+    }
+
     if (name === "list_manual_test_suites") {
       return await handleListManualTestSuites(
         args as Parameters<typeof handleListManualTestSuites>[0]
@@ -472,6 +529,23 @@ async function main() {
     if (name === "get_external_issue") {
       return await handleGetExternalIssue(
         args as Parameters<typeof handleGetExternalIssue>[0]
+      );
+    }
+
+    // Debug ladder
+    if (name === "get_debug_evidence") {
+      return await handleGetDebugEvidence(
+        args as Parameters<typeof handleGetDebugEvidence>[0]
+      );
+    }
+    if (name === "get_flake_verdict") {
+      return await handleGetFlakeVerdict(
+        args as Parameters<typeof handleGetFlakeVerdict>[0]
+      );
+    }
+    if (name === "verify_fix") {
+      return await handleVerifyFix(
+        args as Parameters<typeof handleVerifyFix>[0]
       );
     }
 

@@ -33,6 +33,15 @@ export {
   handleDebugTestCase,
 } from "./testcases/debug-testcase.js";
 export {
+  getDebugEvidenceTool,
+  handleGetDebugEvidence,
+} from "./testcases/get-debug-evidence.js";
+export {
+  getFlakeVerdictTool,
+  handleGetFlakeVerdict,
+} from "./testcases/get-flake-verdict.js";
+export { verifyFixTool, handleVerifyFix } from "./testcases/verify-fix.js";
+export {
   getAuditReportTool,
   handleGetAuditReport,
 } from "./audits/get-audit-report.js";
@@ -68,6 +77,28 @@ export {
   createManualTestSuiteTool,
   handleCreateManualTestSuite,
 } from "./manual-testsuites/create-manual-test-suite.js";
+
+// Automation links (manual case ↔ automated test)
+export {
+  listAutomatedTestsTool,
+  handleListAutomatedTests,
+} from "./automation-links/list-automated-tests.js";
+export {
+  getTestCaseLinksTool,
+  handleGetTestCaseLinks,
+} from "./automation-links/get-test-case-links.js";
+export {
+  linkAutomatedTestTool,
+  handleLinkAutomatedTest,
+} from "./automation-links/link-automated-test.js";
+export {
+  unlinkAutomatedTestTool,
+  handleUnlinkAutomatedTest,
+} from "./automation-links/unlink-automated-test.js";
+export {
+  bulkLinkAutomatedTestsTool,
+  handleBulkLinkAutomatedTests,
+} from "./automation-links/bulk-link-automated-tests.js";
 
 // Releases (a.k.a. Milestones) tools
 export {
