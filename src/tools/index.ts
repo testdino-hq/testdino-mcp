@@ -33,6 +33,15 @@ export {
   handleDebugTestCase,
 } from "./testcases/debug-testcase.js";
 export {
+  getDebugEvidenceTool,
+  handleGetDebugEvidence,
+} from "./testcases/get-debug-evidence.js";
+export {
+  getFlakeVerdictTool,
+  handleGetFlakeVerdict,
+} from "./testcases/get-flake-verdict.js";
+export { verifyFixTool, handleVerifyFix } from "./testcases/verify-fix.js";
+export {
   getAuditReportTool,
   handleGetAuditReport,
 } from "./audits/get-audit-report.js";

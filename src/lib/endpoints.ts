@@ -728,4 +728,70 @@ export const endpoints = {
     const queryString = buildQueryString(queryParams);
     return `${baseUrl}/api/mcp/${projectId}/get-trace-analysis${queryString}`;
   },
+
+  /**
+   * Compare a failing test's retry attempts within one run and return a flake verdict.
+   * GET /api/mcp/:projectId/get-flake-verdict
+   * @param params.projectId - Required: Project ID
+   * @param params.testcase_id - Required: pw_test_id of the failing case
+   * @param params.testrun_id - Optional: run scope (default: most recently started run carrying the case)
+   */
+  getFlakeVerdict: (params: {
+    projectId: string;
+    testcase_id: string;
+    testrun_id?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/get-flake-verdict${queryString}`;
+  },
+
+  /**
+   * Check whether a fix held for one test against a baseline run.
+   * GET /api/mcp/:projectId/verify-fix
+   * @param params.projectId - Required: Project ID
+   * @param params.testcase_name - Required: full test title
+   * @param params.baseline_run_id - Required: the run the failure was seen in
+   * @param params.suite_file_path - Optional: spec file path when the title is shared across files
+   */
+  verifyFix: (params: {
+    projectId: string;
+    testcase_name: string;
+    baseline_run_id: string;
+    suite_file_path?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/verify-fix${queryString}`;
+  },
+
+  /**
+   * One-call debug bundle: flake verdict, regression boundary, artifact links.
+   * GET /api/mcp/:projectId/get-debug-evidence
+   * @param params.projectId - Required: Project ID
+   * @param params.testcase_name - Optional: full test title (needed for the regression boundary)
+   * @param params.testcase_id - Optional: pw_test_id
+   * @param params.testrun_id - Optional: run scope
+   * @param params.suite_file_path - Optional: spec file path when the title is shared across files
+   * @param params.format - Optional: "json" (default) or "md"
+   * @param params.include_instructions - Optional: string "true"/"false" (default true)
+   * @param params.maxLength - Optional: markdown cap, format="md" only
+   */
+  getDebugEvidence: (params: {
+    projectId: string;
+    testcase_name?: string;
+    testcase_id?: string;
+    testrun_id?: string;
+    suite_file_path?: string;
+    format?: "json" | "md";
+    include_instructions?: string;
+    maxLength?: number;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/get-debug-evidence${queryString}`;
+  },
 };

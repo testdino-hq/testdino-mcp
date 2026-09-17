@@ -105,6 +105,12 @@ import {
   handleGetAiInsights,
   getTraceAnalysisTool,
   handleGetTraceAnalysis,
+  getDebugEvidenceTool,
+  handleGetDebugEvidence,
+  getFlakeVerdictTool,
+  handleGetFlakeVerdict,
+  verifyFixTool,
+  handleVerifyFix,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -153,6 +159,10 @@ async function main() {
     listTestCasesTool,
     getTestCaseDetailsTool,
     debugTestCaseTool,
+    // Debug ladder
+    getDebugEvidenceTool,
+    getFlakeVerdictTool,
+    verifyFixTool,
     getAuditReportTool,
     submitAuditReportTool,
     listManualTestCasesTool,
@@ -519,6 +529,23 @@ async function main() {
     if (name === "get_external_issue") {
       return await handleGetExternalIssue(
         args as Parameters<typeof handleGetExternalIssue>[0]
+      );
+    }
+
+    // Debug ladder
+    if (name === "get_debug_evidence") {
+      return await handleGetDebugEvidence(
+        args as Parameters<typeof handleGetDebugEvidence>[0]
+      );
+    }
+    if (name === "get_flake_verdict") {
+      return await handleGetFlakeVerdict(
+        args as Parameters<typeof handleGetFlakeVerdict>[0]
+      );
+    }
+    if (name === "verify_fix") {
+      return await handleVerifyFix(
+        args as Parameters<typeof handleVerifyFix>[0]
       );
     }
 

@@ -12,6 +12,10 @@ All notable changes to `@testdino/mcp` are documented here.
   `get_test_case_links`, `link_automated_test`, `unlink_automated_test`, and
   `bulk_link_automated_tests` (up to 500 pairs, per-item results). Same plan
   gate, 50-link cap and audit trail as the UI's link dialog.
+- **Debug ladder.** Three tools already on the hosted streaming server now
+  ship here too: `get_debug_evidence` (one call — flake verdict, regression
+  boundary, every artifact link, JSON or markdown), `get_flake_verdict`, and
+  `verify_fix` (did the fix hold against the baseline run?).
 
 ### Changed
 

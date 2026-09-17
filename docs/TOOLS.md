@@ -24,6 +24,9 @@ This comprehensive guide covers all available tools in the `@testdino/mcp` MCP s
 - [list_testcase](#list_testcase)
 - [get_testcase_details](#get_testcase_details)
 - [debug_testcase](#debug_testcase)
+- [get_debug_evidence](#get_debug_evidence)
+- [get_flake_verdict](#get_flake_verdict)
+- [verify_fix](#verify_fix)
 - [get_run_error_clusters](#get_run_error_clusters)
 
 **Test Quality Audit:**
@@ -1598,6 +1601,79 @@ Error: Missing required parameter: testrun_id
 
 - [TestDino Documentation](https://docs.testdino.com)
 - [TestDino Support](mailto:support@testdino.com)
+
+---
+
+## get_debug_evidence
+
+**Purpose**: Start every failing-test investigation here. One call returns the cheap tier of the evidence ladder: the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for every stored artifact — trace, screenshots, and the expected/actual/diff images on a visual failure. Replaces the `debug_testcase` → `get_testcase_details` → `get_trace_analysis` round trips for the first pass.
+
+**Parameters**:
+
+| Parameter              | Type    | Required | Description                                                                                                                                          |
+| ---------------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`            | string  | Yes      | The TestDino project identifier.                                                                                                                     |
+| `testcase_name`        | string  | No       | Full test title. Required for the regression boundary — prefer it when known.                                                                        |
+| `testcase_id`          | string  | No       | The case's `pw_test_id`. Either this or `testcase_name` must identify the test.                                                                      |
+| `testrun_id`           | string  | No       | Run scope. Omit to use the most recently started run carrying this case.                                                                             |
+| `suite_file_path`      | string  | No       | Spec file path — only needed when the title is shared across files.                                                                                  |
+| `format`               | string  | No       | `"json"` (default) or `"md"`. Markdown is markedly cheaper for the same content and is returned as raw text.                                         |
+| `include_instructions` | boolean | No       | Default `true`. The debugging procedure and the trace runbook are identical on every call and about half the response — set `false` on repeat calls. |
+| `maxLength`            | integer | No       | Cap the markdown length (`format="md"` only); anything cut is announced in the output. JSON is never truncated.                                      |
+
+**Notes**: Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why. Artifact links are minutes-scale — download what you need immediately, and call this again to mint fresh links rather than treating an expired one as a missing artifact.
+
+**Example prompts**:
+
+- _"Why is the checkout test failing on main?"_
+- _"Give me everything you have on the login test in run test_run_123, as markdown."_
+
+**Returns**: `test` identity, `verdict` (see `get_flake_verdict`), `regression_boundary`, `artifacts[]` with `url` + `expires_at`, `environment`, and — unless `include_instructions=false` — `debugging_prompt` and `trace_runbook`.
+
+---
+
+## get_flake_verdict
+
+**Purpose**: Say whether a failing test behaves the same way every time, by comparing its retry attempts within one run. If you are debugging a failing test, call `get_debug_evidence` first — it already includes this verdict.
+
+**Parameters**:
+
+| Parameter     | Type   | Required | Description                                                              |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `projectId`   | string | Yes      | The TestDino project identifier.                                         |
+| `testcase_id` | string | Yes      | Playwright `pw_test_id` of the failing case.                             |
+| `testrun_id`  | string | No       | Run scope. Omit to use the most recently started run carrying this case. |
+
+**Notes**: Needs a test that ran with retries enabled; a single attempt is always inconclusive. The verdict describes the behaviour, not the cause — it tells you which fixes the evidence cannot support, not where the fix goes.
+
+**Example prompts**:
+
+- _"Is the login test flaky or does it fail every time?"_
+
+**Returns**: `verdict` — `"deterministic"` (every attempt failed with the same signature), `"flaky"` (an attempt passed on retry), or `"inconclusive"` (too few attempts, or the attempts failed differently) — plus the per-attempt signatures behind it.
+
+---
+
+## verify_fix
+
+**Purpose**: Check whether a fix actually held for one test, against the run you saw when you proposed it. Splits the test's run history at that baseline and compares after against before.
+
+**Parameters**:
+
+| Parameter         | Type   | Required | Description                                                         |
+| ----------------- | ------ | -------- | ------------------------------------------------------------------- |
+| `projectId`       | string | Yes      | The TestDino project identifier.                                    |
+| `testcase_name`   | string | Yes      | Full test title, same identifier `debug_testcase` takes.            |
+| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.           |
+| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files. |
+
+**Notes**: Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.
+
+**Example prompts**:
+
+- _"Did my fix for the checkout test hold? The failure was in run test_run_123."_
+
+**Returns**: `"fixed"` (passing with no retries since), `"not_fixed"` (still failing with the same error), `"changed_failure"` (still failing with a different, comparable error), `"still_failing"` (still failing, errors not comparable), `"unstable"` (passing only after retries), `"no_runs_since_baseline"`, or `"baseline_not_found"`.
 
 ---
 
@@ -3775,6 +3851,11 @@ When adding new tools to the MCP server:
 ---
 
 ## Version History
+
+- **v2.1.0**:
+  - **Added**: Automation links — `list_automated_tests`, `get_test_case_links`, `link_automated_test`, `unlink_automated_test`, `bulk_link_automated_tests`.
+  - **Added**: Debug ladder — `get_debug_evidence`, `get_flake_verdict`, `verify_fix`, matching the hosted streaming server.
+  - **Changed**: `update_manual_test_case` rejects `updates.linkedTests` and points to the link tools.
 
 - **v2.0.1**:
   - **Changed**: Package renamed to `@testdino/mcp`. Update your MCP config to the new name; the old `testdino-mcp` package is no longer updated. No tool or behavior changes from 2.0.0.

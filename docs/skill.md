@@ -15,6 +15,9 @@
      - [list_testcase](#list_testcase)
      - [get_testcase_details](#get_testcase_details)
      - [debug_testcase](#debug_testcase)
+     - [get_debug_evidence](#get_debug_evidence)
+     - [get_flake_verdict](#get_flake_verdict)
+     - [verify_fix](#verify_fix)
      - [get_run_error_clusters](#get_run_error_clusters)
      - [get_audit_report and submit_audit_report](#get_audit_report-and-submit_audit_report)
    - **Manual test cases**
@@ -364,6 +367,70 @@ debug_testcase(projectId, "Verify user login")
 → Optionally: get_testcase_details(...)
 → Provide root cause analysis and fix suggestions
 ```
+
+---
+
+### `get_debug_evidence`
+
+**Purpose**: The first call for any failing-test investigation. One response carries the flake verdict with per-attempt signatures, the regression boundary (last pass → first fail), every artifact link (trace, screenshots, visual diff images), and — by default — the debugging procedure and trace runbook.
+
+**Required parameters**: `projectId`, plus `testcase_name` or `testcase_id`
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `testcase_name` | string | Full test title. Needed for the regression boundary — prefer it when known. |
+| `testcase_id` | string | The case's `pw_test_id`. |
+| `testrun_id` | string | Run scope. Omit for the most recently started run carrying this case. |
+| `suite_file_path` | string | Only when the title is shared across spec files. |
+| `format` | `"json"` \| `"md"` | Markdown is cheaper for the same content and comes back as raw text. |
+| `include_instructions` | boolean | Default `true`. Set `false` on repeat calls once you have read the procedure. |
+| `maxLength` | integer | Cap the markdown length (`md` only). Anything cut is announced in the output. |
+
+**How to use the response**:
+
+1. Read the whole thing before forming a hypothesis.
+2. The `verdict` says whether the failure repeats — never why. Use it to rule fixes out, not to pick one.
+3. The `regression_boundary` turns "why does this fail" into "what changed between these two runs".
+4. Artifact links expire in minutes: download immediately; re-call to mint fresh links.
+
+**Pattern**:
+
+```
+get_debug_evidence(projectId, testcase_name="Verify user login")
+→ read verdict + regression_boundary + artifacts
+→ download the trace; follow trace_runbook
+→ propose a fix
+→ after the next run: verify_fix(projectId, testcase_name, baseline_run_id=<the run you saw>)
+```
+
+---
+
+### `get_flake_verdict`
+
+**Purpose**: Compare a test's retry attempts within one run and say whether the failure repeats.
+
+**Required parameters**: `projectId`, `testcase_id`
+
+**Optional parameters**: `testrun_id` — run scope; omit for the most recently started run carrying this case.
+
+**Returns**: `"deterministic"` (same signature every attempt), `"flaky"` (an attempt passed on retry), or `"inconclusive"` (too few attempts, or differing failures). Needs retries enabled — a single attempt is always inconclusive.
+
+**When to call**: Only when you need the verdict on its own. If you are debugging, `get_debug_evidence` already includes it.
+
+---
+
+### `verify_fix`
+
+**Purpose**: After a fix has shipped and a new run has landed, check whether it held — against the run you saw when you proposed it.
+
+**Required parameters**: `projectId`, `testcase_name`, `baseline_run_id`
+
+**Optional parameters**: `suite_file_path` — only when the title is shared across spec files.
+
+**Returns**: `"fixed"`, `"not_fixed"` (same error), `"changed_failure"` (different, comparable error — a new investigation), `"still_failing"` (errors not comparable), `"unstable"` (passing only after retries — not fixed), `"no_runs_since_baseline"`, or `"baseline_not_found"` (the run id is not one this test executed in).
+
+**When to call**: The user asks "did my fix work?" or a new run has landed since you proposed a change. An unchanged error means the fix missed, not that the test is flaky.
 
 ---
 
@@ -1087,15 +1154,14 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
 ### Debug a Specific Test
 
 ```
-1. debug_testcase(projectId, "test case name")
-   → Get historical data + debugging_prompt
+1. get_debug_evidence(projectId, testcase_name="test case name")
+   → verdict + regression boundary + artifact links + debugging_prompt + trace_runbook
 2. Read the debugging_prompt — use it as analysis context
-3. Identify pattern from history (flaky? consistent? regression?)
-4. If you need to see a specific run's artifacts:
-   get_testcase_details(projectId, testcase_name="...", testrun_id=<latestFailRun>,
-     steps_filter="failed_only")
-   → The response includes error details, steps, and artifacts (screenshots, videos, traces)
-5. Provide root cause analysis and suggested fix
+3. Use the verdict to rule fixes out; use the boundary to narrow "what changed"
+4. Download the trace and follow trace_runbook (links expire in minutes)
+5. Need the long history across runs? debug_testcase(projectId, "test case name")
+6. Provide root cause analysis and suggested fix
+7. After the next run lands: verify_fix(projectId, testcase_name, baseline_run_id=<step-1 run>)
 ```
 
 ### Investigate a Recent Regression
@@ -1255,11 +1321,17 @@ list_testruns(projectId, by_time_interval="weekly", limit=20)
 ### "Why is [test name] failing?"
 
 ```
-debug_testcase(projectId, "[test name]")
-→ Read debugging_prompt, analyze patterns
-→ If more detail needed:
-   get_testcase_details(projectId, testcase_name="[test name]",
-     testrun_id="<latest fail>", steps_filter="failed_only")
+get_debug_evidence(projectId, testcase_name="[test name]")
+→ Read verdict, regression_boundary, artifacts; follow debugging_prompt
+→ If you need the long history across runs:
+   debug_testcase(projectId, "[test name]")
+```
+
+### "Did my fix for [test name] work?"
+
+```
+verify_fix(projectId, testcase_name="[test name]", baseline_run_id="<run you saw the failure in>")
+→ "fixed" → done; "not_fixed" → the fix missed; "changed_failure" → new investigation
 ```
 
 ### "Show me all failed tests on main branch today"
