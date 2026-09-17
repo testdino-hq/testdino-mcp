@@ -26,6 +26,16 @@ describe("handleUpdateManualTestCase", () => {
     ).rejects.toThrow("updates object is required");
   });
 
+  it("rejects a stringified updates payload with the same error, not a TypeError", async () => {
+    // The low-level Server does not enforce inputSchema, so a client can send
+    // updates as a JSON string; the linkedTests guard must not run `in` on it.
+    await expect(
+      handleUpdateManualTestCase(
+        createArgs({ caseId: "TC-1", updates: '{"name":"New"}' }) as never
+      )
+    ).rejects.toThrow("updates object is required");
+  });
+
   it("rejects updates.linkedTests locally and never sends the PATCH", async () => {
     // Bug caught: the server strips linkedTests and answers 200, so a forwarded
     // call looked like success while linking nothing.

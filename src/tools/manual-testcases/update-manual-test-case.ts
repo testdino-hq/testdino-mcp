@@ -297,7 +297,7 @@ export async function handleUpdateManualTestCase(
   if (!args?.caseId) {
     throw new Error("caseId is required");
   }
-  if (!args?.updates) {
+  if (!args?.updates || typeof args.updates !== "object") {
     throw new Error("updates object is required");
   }
 

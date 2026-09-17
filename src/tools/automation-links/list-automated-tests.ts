@@ -40,11 +40,12 @@ export const listAutomatedTestsTool = {
       },
       cursor: {
         type: "string",
-        description: "Opaque cursor from a previous page.",
+        description:
+          "nextCursor from the previous page. Omit for the first page.",
       },
       limit: {
         type: "number",
-        description: "Page size (default 50, max 500).",
+        description: "Page size (default 20, max 100).",
       },
     },
     required: ["projectId"],

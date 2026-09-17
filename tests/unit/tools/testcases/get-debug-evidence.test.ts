@@ -129,6 +129,25 @@ describe("handleGetDebugEvidence", () => {
     );
   });
 
+  it("redacts and truncates a non-JSON error body on the markdown path", async () => {
+    const html = `<html>Bearer abc.def-123 ${"x".repeat(600)}</html>`;
+    mockFetchText(html, false, 502);
+
+    const err = await handleGetDebugEvidence(
+      createArgs({
+        projectId: "proj-1",
+        testcase_id: "pw-1",
+        format: "md",
+      }) as never
+    ).catch((e: Error) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toContain("Bearer [REDACTED]");
+    expect((err as Error).message).not.toContain("abc.def-123");
+    expect((err as Error).message).toContain("... [truncated]");
+    expect((err as Error).message.length).toBeLessThan(html.length);
+  });
+
   it("wraps an API failure on the JSON path with context", async () => {
     mockFetchError(500, "boom");
 

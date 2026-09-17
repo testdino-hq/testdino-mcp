@@ -3005,13 +3005,13 @@ TestDino reconstructs `fullTitle` server-side as `"<spec file> > <describe…> >
 
 ### Parameters
 
-| Parameter    | Type   | Required | Description                            |
-| ------------ | ------ | -------- | -------------------------------------- |
-| `projectId`  | string | Yes      | Project ID.                            |
-| `search`     | string | No       | Substring match on the test title.     |
-| `linkStatus` | string | No       | `all` (default), `linked`, `unlinked`. |
-| `cursor`     | string | No       | Opaque cursor from the previous page.  |
-| `limit`      | number | No       | Page size (default 50, max 500).       |
+| Parameter    | Type   | Required | Description                                                   |
+| ------------ | ------ | -------- | ------------------------------------------------------------- |
+| `projectId`  | string | Yes      | Project ID.                                                   |
+| `search`     | string | No       | Substring match on the test title.                            |
+| `linkStatus` | string | No       | `all` (default), `linked`, `unlinked`.                        |
+| `cursor`     | string | No       | `nextCursor` from the previous page; omit for the first page. |
+| `limit`      | number | No       | Page size (default 20, max 100).                              |
 
 ### Example Usage
 

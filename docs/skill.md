@@ -688,8 +688,8 @@ Step-level attachments are added by including `attachments` on a top-level step 
 |-----------|------|-------------|
 | `search` | string | Substring match on the test title |
 | `linkStatus` | string | `"all"` (default), `"linked"`, `"unlinked"` |
-| `cursor` | string | Opaque cursor from the previous page |
-| `limit` | int | Page size (default 50, max 500) |
+| `cursor` | string | `nextCursor` from the previous page; omit for the first page |
+| `limit` | int | Page size (default 20, max 100) |
 
 > **`fullTitle` is a server-reconstructed join key** (`"<spec file> > <describe…> > <test title>"`). Always copy it from this tool. A hand-built title — from `list_testcase`'s `title_path`, from a spec file, from memory — fails identity validation with `"Automated test not found in this project"`. `pwTestId` here equals `list_testcase`'s `pw_test_id`, so you can match rows across the two tools by that key.
 
@@ -1219,8 +1219,8 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
 ```
 1. list_manual_test_cases(projectId, limit=1000)
    → each case's _id (tcm_tc_…) and title
-2. list_automated_tests(projectId, linkStatus="unlinked", limit=500)
-   → each test's pwTestId + fullTitle (page with cursor until exhausted)
+2. list_automated_tests(projectId, linkStatus="unlinked", limit=100)
+   → each test's pwTestId + fullTitle; repeat with cursor=nextCursor until nextCursor is null
 3. Match by title (a manual case mirroring an automated test usually shares its title);
    when in doubt, show the proposed pairs and get a yes before writing.
 4. bulk_link_automated_tests(projectId, links=[{ manualTestCaseId, pwTestId, fullTitle }, …])

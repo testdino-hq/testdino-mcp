@@ -5,7 +5,11 @@
  */
 
 import { endpoints } from "../../lib/endpoints.js";
-import { apiRequest, apiRequestJson } from "../../lib/request.js";
+import {
+  apiRequest,
+  apiRequestJson,
+  formatApiErrorBody,
+} from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
 interface GetDebugEvidenceArgs {
@@ -115,9 +119,10 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
       const response = await apiRequest(url, { headers });
       const text = await response.text();
       if (!response.ok) {
+        const formattedErrorText = formatApiErrorBody(text);
         throw new Error(
           `API request failed: ${response.status} ${response.statusText}${
-            text ? `\n${text}` : ""
+            formattedErrorText ? `\n${formattedErrorText}` : ""
           }`
         );
       }
