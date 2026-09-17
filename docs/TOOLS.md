@@ -3852,7 +3852,7 @@ When adding new tools to the MCP server:
 
 ## Version History
 
-- **v2.1.0**:
+- **v2.0.3**:
   - **Added**: Automation links — `list_automated_tests`, `get_test_case_links`, `link_automated_test`, `unlink_automated_test`, `bulk_link_automated_tests`.
   - **Added**: Debug ladder — `get_debug_evidence`, `get_flake_verdict`, `verify_fix`, matching the hosted streaming server.
   - **Changed**: `update_manual_test_case` rejects `updates.linkedTests` and points to the link tools.
