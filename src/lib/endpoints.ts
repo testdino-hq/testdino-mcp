@@ -322,12 +322,14 @@ export const endpoints = {
    * Debug test case - returns aggregated debug data with debugging_prompt
    * GET /api/mcp/:projectId/debug-testcase
    * @param params.projectId - Required: Project ID or Project Name
-   * @param params.testcase_name - Required: Test case name/title
+   * @param params.testcase_id - The test's pw_test_id (exact); one of testcase_id / testcase_name is required
+   * @param params.testcase_name - Test case name/title
    * Note: The debugging_prompt is provided by the API endpoint as part of the structured response
    */
   debugTestCase: (params: {
     projectId: string;
-    testcase_name: string;
+    testcase_id?: string;
+    testcase_name?: string;
     suite_file_path?: string;
     include_ai_insights?: boolean;
     testrun_id?: string;
@@ -335,12 +337,19 @@ export const endpoints = {
     const baseUrl = getBaseUrl();
     const {
       projectId,
+      testcase_id,
       testcase_name,
       suite_file_path,
       include_ai_insights,
       testrun_id,
     } = params;
-    const queryParams = new URLSearchParams({ testcase_name });
+    const queryParams = new URLSearchParams();
+    if (testcase_id) {
+      queryParams.append("testcase_id", testcase_id);
+    }
+    if (testcase_name) {
+      queryParams.append("testcase_name", testcase_name);
+    }
     if (suite_file_path) {
       queryParams.append("suite_file_path", suite_file_path);
     }
@@ -751,13 +760,15 @@ export const endpoints = {
    * Check whether a fix held for one test against a baseline run.
    * GET /api/mcp/:projectId/verify-fix
    * @param params.projectId - Required: Project ID
-   * @param params.testcase_name - Required: full test title
+   * @param params.testcase_id - Optional: pw_test_id (exact, preferred)
+   * @param params.testcase_name - Optional: full test title; give this or testcase_id
    * @param params.baseline_run_id - Required: the run the failure was seen in
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
    */
   verifyFix: (params: {
     projectId: string;
-    testcase_name: string;
+    testcase_id?: string;
+    testcase_name?: string;
     baseline_run_id: string;
     suite_file_path?: string;
   }): string => {
@@ -771,8 +782,8 @@ export const endpoints = {
    * One-call debug bundle: flake verdict, regression boundary, artifact links.
    * GET /api/mcp/:projectId/get-debug-evidence
    * @param params.projectId - Required: Project ID
-   * @param params.testcase_name - Optional: full test title (needed for the regression boundary)
-   * @param params.testcase_id - Optional: pw_test_id
+   * @param params.testcase_name - Optional: full test title; give this or testcase_id
+   * @param params.testcase_id - Optional: pw_test_id (exact, preferred)
    * @param params.testrun_id - Optional: run scope
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
    * @param params.format - Optional: "json" (default) or "md"

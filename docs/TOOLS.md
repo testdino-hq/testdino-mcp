@@ -1029,7 +1029,8 @@ Unlike `get_testcase_details` which shows details for a single execution, `debug
 | Parameter             | Type    | Required | Description                                                                                                                                                                                                                                                                                                                    |
 | --------------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `projectId`           | string  | Yes      | Project ID (Required). The TestDino project identifier.                                                                                                                                                                                                                                                                        |
-| `testcase_name`       | string  | Yes      | Test case name/title to debug (Required). Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'.                                                                                                                                                    |
+| `testcase_name`       | string  | No       | Required unless `testcase_id` is given. Test case name/title to debug. Example: 'Verify user can logout and login' or 'Verify that User Can Complete the Journey from Login to Order Placement @webkit'.                                                                                                                       |
+| `testcase_id`         | string  | No       | The test's `pw_test_id` — exact, never ambiguous. Wins over `testcase_name` and `suite_file_path`. Use it when a title answers `409 AMBIGUOUS_IDENTITY` (the same test under several Playwright projects): each candidate names its `project`; call again with the `pw_test_id` of the one you mean.                           |
 | `suite_file_path`     | string  | No       | Optional spec file path to disambiguate when several tests share the same title. Example: 'tests/checkout.spec.ts'.                                                                                                                                                                                                            |
 | `include_ai_insights` | boolean | No       | Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless `testrun_id` is set). Returns `disabled` when AI is off for the project. If a section reports `in_progress`, poll `get_ai_insights(testrun_id=..., testcase_id=...)` instead of re-calling this tool. |
 | `testrun_id`          | string  | No       | Only with `include_ai_insights`: target the AI fixes at this specific run instead of the most recent failing execution.                                                                                                                                                                                                        |
@@ -1280,7 +1281,7 @@ Error: projectId is required
 ```
 
 ```
-Error: testcase_name is required
+Error: testcase_id or testcase_name is required
 ```
 
 **No Test Cases Found:**
@@ -1613,7 +1614,7 @@ Error: Missing required parameter: testrun_id
 | Parameter              | Type    | Required | Description                                                                                                                                          |
 | ---------------------- | ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projectId`            | string  | Yes      | The TestDino project identifier.                                                                                                                     |
-| `testcase_name`        | string  | No       | Full test title. Required for the regression boundary — prefer it when known.                                                                        |
+| `testcase_name`        | string  | No       | Full test title. Give this or `testcase_id`.                                                                                                         |
 | `testcase_id`          | string  | No       | The case's `pw_test_id`. Either this or `testcase_name` must identify the test.                                                                      |
 | `testrun_id`           | string  | No       | Run scope. Omit to use the most recently started run carrying this case.                                                                             |
 | `suite_file_path`      | string  | No       | Spec file path — only needed when the title is shared across files.                                                                                  |
@@ -1660,12 +1661,13 @@ Error: Missing required parameter: testrun_id
 
 **Parameters**:
 
-| Parameter         | Type   | Required | Description                                                         |
-| ----------------- | ------ | -------- | ------------------------------------------------------------------- |
-| `projectId`       | string | Yes      | The TestDino project identifier.                                    |
-| `testcase_name`   | string | Yes      | Full test title, same identifier `debug_testcase` takes.            |
-| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.           |
-| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files. |
+| Parameter         | Type   | Required | Description                                                                                      |
+| ----------------- | ------ | -------- | ------------------------------------------------------------------------------------------------ |
+| `projectId`       | string | Yes      | The TestDino project identifier.                                                                 |
+| `testcase_id`     | string | No       | The test's `pw_test_id` — exact, wins over `testcase_name`. Prefer it when you hold it.          |
+| `testcase_name`   | string | No       | Full test title, same identifier `debug_testcase` takes. Required unless `testcase_id` is given. |
+| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.                                        |
+| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files.                              |
 
 **Notes**: Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.
 

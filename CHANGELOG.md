@@ -2,6 +2,25 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.0.4 (2026-10-09)
+
+### Added
+
+- `debug_testcase` and `verify_fix` take `testcase_id` (the test's `pw_test_id`). A title that
+  matches the same test under several Playwright projects answers
+  `409 AMBIGUOUS_IDENTITY`; call again with the candidate's `pw_test_id`.
+
+### Changed
+
+- A read that fails on a dropped connection (`fetch failed`) is retried twice
+  with backoff (about 3 s in total) before the tool call fails. This rides out
+  a brief connection drop, not an outage of minutes. Writes are never retried.
+- A `429` error now says how long to wait (`Rate limited: retry after Ns.`),
+  from the server's `Retry-After` / `RateLimit-Reset` headers.
+- Requests carry a random per-process id (`mcp-session-id`) so the hosted
+  service can group a session's tool calls in its usage analytics. It contains
+  no user or machine data.
+
 ## 2.0.3 (2026-09-15)
 
 ### Added

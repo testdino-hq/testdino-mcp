@@ -10,7 +10,8 @@ import { getApiKey } from "../../lib/env.js";
 
 interface DebugTestCaseArgs {
   projectId: string;
-  testcase_name: string;
+  testcase_id?: string;
+  testcase_name?: string;
   suite_file_path?: string;
   include_ai_insights?: boolean;
   testrun_id?: string;
@@ -20,6 +21,7 @@ export const debugTestCaseTool = {
   name: "debug_testcase",
   description:
     "Fetch historical execution and failure data for a specific test case. Returns raw historical data with test run details (ID, counter, branch), test runs summary, and a debugging prompt from the API. Each execution includes its associated test run information (testRunId, testRunCounter, branch) to help correlate failures across different test runs and branches. The AI client will analyze the data to identify failure patterns, find root causes, and provide fix suggestions. Use this when you need to debug a failing test case. Example: 'Debug test case \"Verify user login\"'. " +
+    "Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. " +
     "Set include_ai_insights=true to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations (investigation/remediation steps + reasoning + historical insight) and quick fixes (concrete fixes, often with code snippets, plus long-term stabilization steps). By default they target the most recent failing execution; pass testrun_id to target a specific run. " +
     'AI payloads are generated lazily — if `ai_fixes` sections report status "in_progress", poll get_ai_insights(testrun_id=..., testcase_id=...) until they report "completed". An "unavailable" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights); a 4xx (bad ids) is terminal.',
   inputSchema: {
@@ -32,7 +34,12 @@ export const debugTestCaseTool = {
       testcase_name: {
         type: "string",
         description:
-          "Test case name/title to debug (Required). Example: 'Verify user can logout and login'.",
+          "Test case name/title to debug. Required unless testcase_id is given. Example: 'Verify user can logout and login'.",
+      },
+      testcase_id: {
+        type: "string",
+        description:
+          "The test's pw_test_id — exact, never ambiguous. Wins over testcase_name and suite_file_path.",
       },
       suite_file_path: {
         type: "string",
@@ -50,7 +57,7 @@ export const debugTestCaseTool = {
           "Only with include_ai_insights: target the AI fixes at this specific run instead of the most recent failure.",
       },
     },
-    required: ["projectId", "testcase_name"],
+    required: ["projectId"],
   },
 };
 
@@ -68,15 +75,18 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
     throw new Error("projectId is required");
   }
 
-  if (!args?.testcase_name) {
-    throw new Error("testcase_name is required");
+  if (!args?.testcase_id && !args?.testcase_name) {
+    throw new Error("testcase_id or testcase_name is required");
   }
 
   try {
     // Call the debug endpoint - API returns historical data and debugging_prompt
     const debugUrl = endpoints.debugTestCase({
       projectId: String(args.projectId),
-      testcase_name: String(args.testcase_name),
+      ...(args.testcase_id ? { testcase_id: String(args.testcase_id) } : {}),
+      ...(args.testcase_name
+        ? { testcase_name: String(args.testcase_name) }
+        : {}),
       ...(args.suite_file_path
         ? { suite_file_path: String(args.suite_file_path) }
         : {}),
