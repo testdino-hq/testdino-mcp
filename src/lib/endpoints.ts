@@ -760,13 +760,15 @@ export const endpoints = {
    * Check whether a fix held for one test against a baseline run.
    * GET /api/mcp/:projectId/verify-fix
    * @param params.projectId - Required: Project ID
-   * @param params.testcase_name - Required: full test title
+   * @param params.testcase_id - Optional: pw_test_id (exact, preferred)
+   * @param params.testcase_name - Optional: full test title; give this or testcase_id
    * @param params.baseline_run_id - Required: the run the failure was seen in
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
    */
   verifyFix: (params: {
     projectId: string;
-    testcase_name: string;
+    testcase_id?: string;
+    testcase_name?: string;
     baseline_run_id: string;
     suite_file_path?: string;
   }): string => {
@@ -780,8 +782,8 @@ export const endpoints = {
    * One-call debug bundle: flake verdict, regression boundary, artifact links.
    * GET /api/mcp/:projectId/get-debug-evidence
    * @param params.projectId - Required: Project ID
-   * @param params.testcase_name - Optional: full test title (needed for the regression boundary)
-   * @param params.testcase_id - Optional: pw_test_id
+   * @param params.testcase_name - Optional: full test title; give this or testcase_id
+   * @param params.testcase_id - Optional: pw_test_id (exact, preferred)
    * @param params.testrun_id - Optional: run scope
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
    * @param params.format - Optional: "json" (default) or "md"

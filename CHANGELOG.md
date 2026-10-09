@@ -6,7 +6,7 @@ All notable changes to `@testdino/mcp` are documented here.
 
 ### Added
 
-- `debug_testcase` takes `testcase_id` (the test's `pw_test_id`). A title that
+- `debug_testcase` and `verify_fix` take `testcase_id` (the test's `pw_test_id`). A title that
   matches the same test under several Playwright projects answers
   `409 AMBIGUOUS_IDENTITY`; call again with the candidate's `pw_test_id`.
 

@@ -402,7 +402,7 @@ get_debug_evidence(projectId, testcase_name="Verify user login")
 → read verdict + regression_boundary + artifacts
 → download the trace; follow trace_runbook
 → propose a fix
-→ after the next run: verify_fix(projectId, testcase_name, baseline_run_id=<the run you saw>)
+→ after the next run: verify_fix(projectId, testcase_id=<test.pw_test_id from the evidence>, baseline_run_id=<the run you saw>)
 ```
 
 ---
@@ -425,9 +425,9 @@ get_debug_evidence(projectId, testcase_name="Verify user login")
 
 **Purpose**: After a fix has shipped and a new run has landed, check whether it held — against the run you saw when you proposed it.
 
-**Required parameters**: `projectId`, `testcase_name`, `baseline_run_id`
+**Required parameters**: `projectId`, `baseline_run_id`, and `testcase_id` (the `pw_test_id`, exact — prefer it) or `testcase_name`
 
-**Optional parameters**: `suite_file_path` — only when the title is shared across spec files.
+**Optional parameters**: `suite_file_path` — only when the title is shared across spec files. A title shared by several Playwright projects returns `409 AMBIGUOUS_IDENTITY`; call again with `testcase_id`.
 
 **Returns**: `"fixed"`, `"not_fixed"` (same error), `"changed_failure"` (different, comparable error — a new investigation), `"still_failing"` (errors not comparable), `"unstable"` (passing only after retries — not fixed), `"no_runs_since_baseline"`, or `"baseline_not_found"` (the run id is not one this test executed in).
 
@@ -1162,7 +1162,7 @@ get_trace_analysis(projectId, testcase_id="<pw_test_id>", testrun_id="<the run>"
 4. Download the trace and follow trace_runbook (links expire in minutes)
 5. Need the long history across runs? debug_testcase(projectId, "test case name")
 6. Provide root cause analysis and suggested fix
-7. After the next run lands: verify_fix(projectId, testcase_name, baseline_run_id=<step-1 run>)
+7. After the next run lands: verify_fix(projectId, testcase_id=<step-1 test.pw_test_id>, baseline_run_id=<step-1 run>)
 ```
 
 ### Investigate a Recent Regression

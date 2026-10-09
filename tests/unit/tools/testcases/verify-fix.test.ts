@@ -31,7 +31,7 @@ describe("handleVerifyFix", () => {
       "projectId",
       { projectId: undefined, testcase_name: "t", baseline_run_id: "r" },
     ],
-    ["testcase_name", { projectId: "p", baseline_run_id: "r" }],
+    ["testcase_id or testcase_name", { projectId: "p", baseline_run_id: "r" }],
     ["baseline_run_id", { projectId: "p", testcase_name: "t" }],
   ])("throws when %s is missing", async (param, args) => {
     process.env.TESTDINO_PAT = "test-pat";
@@ -64,6 +64,24 @@ describe("handleVerifyFix", () => {
     );
 
     expect(getLastFetchUrl()).toContain("suite_file_path=e2e%2Flogin.spec.ts");
+  });
+
+  // A title shared by several Playwright projects answers 409; only the pw_test_id names one test.
+  it("verifies a test named by testcase_id alone", async () => {
+    mockFetchSuccess({ status: "fixed" });
+
+    await handleVerifyFix(
+      createArgs({
+        projectId: "proj-1",
+        testcase_id: "pw_chromium_1",
+        baseline_run_id: "run-9",
+      }) as never
+    );
+
+    const url = new URL(getLastFetchUrl());
+    expect(url.searchParams.get("testcase_id")).toBe("pw_chromium_1");
+    expect(url.searchParams.has("testcase_name")).toBe(false);
+    expect(url.searchParams.get("baseline_run_id")).toBe("run-9");
   });
 
   it("wraps an API failure with context", async () => {

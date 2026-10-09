@@ -1661,12 +1661,13 @@ Error: Missing required parameter: testrun_id
 
 **Parameters**:
 
-| Parameter         | Type   | Required | Description                                                         |
-| ----------------- | ------ | -------- | ------------------------------------------------------------------- |
-| `projectId`       | string | Yes      | The TestDino project identifier.                                    |
-| `testcase_name`   | string | Yes      | Full test title, same identifier `debug_testcase` takes.            |
-| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.           |
-| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files. |
+| Parameter         | Type   | Required | Description                                                                                      |
+| ----------------- | ------ | -------- | ------------------------------------------------------------------------------------------------ |
+| `projectId`       | string | Yes      | The TestDino project identifier.                                                                 |
+| `testcase_id`     | string | No       | The test's `pw_test_id` — exact, wins over `testcase_name`. Prefer it when you hold it.          |
+| `testcase_name`   | string | No       | Full test title, same identifier `debug_testcase` takes. Required unless `testcase_id` is given. |
+| `baseline_run_id` | string | Yes      | The run you saw the failure in when you proposed the fix.                                        |
+| `suite_file_path` | string | No       | Spec file path — only needed when the title is shared across files.                              |
 
 **Notes**: Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.
 

@@ -10,7 +10,8 @@ import { getApiKey } from "../../lib/env.js";
 
 interface VerifyFixArgs {
   projectId: string;
-  testcase_name: string;
+  testcase_id?: string;
+  testcase_name?: string;
   baseline_run_id: string;
   suite_file_path?: string;
 }
@@ -21,6 +22,7 @@ export const verifyFixTool = {
     "Check whether a fix actually held for one test, against the run you saw when you proposed it. " +
     'Splits the test\'s run history at that baseline and compares after against before, returning "fixed" (passing with no retries since), "not_fixed" (still failing with the same error), "changed_failure" (still failing, but a different error — a new investigation, and only when every failure since carried a comparable fingerprint), "still_failing" (still failing, but the errors cannot be compared, so neither same nor different can be claimed), "unstable" (passing only after retries, which is not fixed), "no_runs_since_baseline", or "baseline_not_found" (the run id is not one this test executed in). ' +
     "Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. " +
+    "Identify the test by testcase_id (its pw_test_id, exact) or testcase_name; a title shared by several Playwright projects returns 409 AMBIGUOUS_IDENTITY, so prefer testcase_id when you hold it. " +
     "The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.",
   inputSchema: {
     type: "object",
@@ -31,7 +33,13 @@ export const verifyFixTool = {
       },
       testcase_name: {
         type: "string",
-        description: "Full test title, same identifier debug_testcase takes",
+        description:
+          "Full test title, same identifier debug_testcase takes. Give this or testcase_id.",
+      },
+      testcase_id: {
+        type: "string",
+        description:
+          "The test's pw_test_id — exact, never ambiguous. Wins over testcase_name.",
       },
       baseline_run_id: {
         type: "string",
@@ -43,7 +51,7 @@ export const verifyFixTool = {
           "Spec file path — only needed when the title is shared across files",
       },
     },
-    required: ["projectId", "testcase_name", "baseline_run_id"],
+    required: ["projectId", "baseline_run_id"],
   },
 };
 
@@ -60,8 +68,8 @@ export async function handleVerifyFix(args?: VerifyFixArgs) {
   if (!args?.projectId) {
     throw new Error("projectId is required");
   }
-  if (!args.testcase_name) {
-    throw new Error("testcase_name is required");
+  if (!args.testcase_id && !args.testcase_name) {
+    throw new Error("testcase_id or testcase_name is required");
   }
   if (!args.baseline_run_id) {
     throw new Error("baseline_run_id is required");
@@ -70,7 +78,10 @@ export async function handleVerifyFix(args?: VerifyFixArgs) {
   try {
     const url = endpoints.verifyFix({
       projectId: String(args.projectId),
-      testcase_name: String(args.testcase_name),
+      ...(args.testcase_id ? { testcase_id: String(args.testcase_id) } : {}),
+      ...(args.testcase_name
+        ? { testcase_name: String(args.testcase_name) }
+        : {}),
       baseline_run_id: String(args.baseline_run_id),
       ...(args.suite_file_path
         ? { suite_file_path: String(args.suite_file_path) }
