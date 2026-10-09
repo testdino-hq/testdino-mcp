@@ -2,6 +2,8 @@
  * API request utilities
  */
 
+import { randomUUID } from "node:crypto";
+
 export interface RequestOptions {
   method?: string;
   headers?: Record<string, string>;
@@ -12,6 +14,8 @@ export interface RequestOptions {
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 const MAX_ERROR_BODY_LENGTH = 500;
+// One id per server process, so the gateway can tell this process's requests apart.
+const PROCESS_ID = randomUUID();
 
 export function formatApiErrorBody(errorText: string): string {
   const compactError = errorText.replace(/\s+/g, " ").trim();
@@ -112,6 +116,7 @@ async function fetchOnce(
       method,
       headers: {
         "Content-Type": "application/json",
+        "mcp-session-id": PROCESS_ID,
         ...headers,
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,

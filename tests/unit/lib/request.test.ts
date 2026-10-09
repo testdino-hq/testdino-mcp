@@ -32,6 +32,23 @@ describe("request", () => {
       expect(fetchMock.mock.calls[1][1].body).toBeUndefined();
     });
 
+    it("should send the same per-process id header on every request", async () => {
+      mockFetchSuccess({});
+      await apiRequest("https://api.testdino.com/a");
+      await apiRequest("https://api.testdino.com/b", {
+        method: "PATCH",
+        body: {},
+      });
+
+      const fetchMock = globalThis.fetch as ReturnType<
+        typeof import("vitest").vi.fn
+      >;
+      const first = fetchMock.mock.calls[0][1].headers["mcp-session-id"];
+      const second = fetchMock.mock.calls[1][1].headers["mcp-session-id"];
+      expect(first).toMatch(/^[A-Za-z0-9_-]{8,128}$/);
+      expect(second).toBe(first);
+    });
+
     it("should abort stalled requests after the default timeout", async () => {
       vi.useFakeTimers();
 
