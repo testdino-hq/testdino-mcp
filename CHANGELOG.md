@@ -13,7 +13,8 @@ All notable changes to `@testdino/mcp` are documented here.
 ### Changed
 
 - A read that fails on a dropped connection (`fetch failed`) is retried twice
-  with backoff before the tool call fails. Writes are never retried.
+  with backoff (about 3 s in total) before the tool call fails. This rides out
+  a brief connection drop, not an outage of minutes. Writes are never retried.
 - A `429` error now says how long to wait (`Rate limited: retry after Ns.`),
   from the server's `Retry-After` / `RateLimit-Reset` headers.
 

@@ -22,7 +22,7 @@ export const verifyFixTool = {
     "Check whether a fix actually held for one test, against the run you saw when you proposed it. " +
     'Splits the test\'s run history at that baseline and compares after against before, returning "fixed" (passing with no retries since), "not_fixed" (still failing with the same error), "changed_failure" (still failing, but a different error — a new investigation, and only when every failure since carried a comparable fingerprint), "still_failing" (still failing, but the errors cannot be compared, so neither same nor different can be claimed), "unstable" (passing only after retries, which is not fixed), "no_runs_since_baseline", or "baseline_not_found" (the run id is not one this test executed in). ' +
     "Call this after a new run lands. An unchanged error means the fix missed, not that the test is flaky. " +
-    "Identify the test by testcase_id (its pw_test_id, exact) or testcase_name; a title shared by several Playwright projects returns 409 AMBIGUOUS_IDENTITY, so prefer testcase_id when you hold it. " +
+    "Identify the test by testcase_id (its pw_test_id, exact) or testcase_name; a title shared by several Playwright projects returns 409 AMBIGUOUS_IDENTITY (candidates name each project), so prefer testcase_id when you hold it. " +
     "The baseline run must be one this test actually executed in — an id from another project or another test is rejected rather than answered.",
   inputSchema: {
     type: "object",

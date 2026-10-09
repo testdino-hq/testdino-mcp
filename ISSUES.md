@@ -328,7 +328,7 @@ if (!args?.projectId) {
 
 **Root cause:** `src/lib/request.ts` `apiRequest` made one `fetch` with no retry, so undici's `TypeError: fetch failed` went straight to the caller; `apiRequestJson` built the error from status + body only and dropped `Retry-After` / `RateLimit-Reset`, which the gateway sends.
 
-**Fix:** GET requests retry a network failure twice (500 ms then 1.5 s, ×0.5–1.5 jitter); writes, timeouts and caller aborts are never retried. A 429 error now ends with `Rate limited: retry after Ns.` from `Retry-After` (else `RateLimit-Reset`).
+**Fix:** GET requests retry a dropped connection (`fetch failed` only) twice (500 ms then 1.5 s, ×0.5–1.5 jitter, about 3 s in total); writes, timeouts, caller aborts and other TypeErrors are never retried. The budget rides out a brief drop; it would not have saved the 2.4-minute window above, where the client must retry with its own backoff. A 429 error now ends with `Rate limited: retry after Ns.` from `Retry-After` (else `RateLimit-Reset`).
 
 **Files:** `src/lib/request.ts`
 **Tests:** `tests/unit/lib/request.test.ts` — 429 names the wait; a read recovers after one network failure; three attempts then give up (all three failed before the fix); a write is not retried.
