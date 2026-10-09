@@ -2,7 +2,7 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
-## Unreleased
+## 2.0.4 (2026-10-09)
 
 ### Added
 
