@@ -2,6 +2,21 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## Unreleased
+
+### Added
+
+- `debug_testcase` takes `testcase_id` (the test's `pw_test_id`). A title that
+  matches the same test under several Playwright projects answers
+  `409 AMBIGUOUS_IDENTITY`; call again with the candidate's `pw_test_id`.
+
+### Changed
+
+- A read that fails on a dropped connection (`fetch failed`) is retried twice
+  with backoff before the tool call fails. Writes are never retried.
+- A `429` error now says how long to wait (`Rate limited: retry after Ns.`),
+  from the server's `Retry-After` / `RateLimit-Reset` headers.
+
 ## 2.0.3 (2026-09-15)
 
 ### Added

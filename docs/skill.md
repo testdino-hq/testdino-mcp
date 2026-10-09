@@ -328,11 +328,12 @@ list_testruns() → get run IDs → get_run_details() for the specific run
 
 **Purpose**: AI-assisted root cause analysis using historical failure data.
 
-**Required parameters**: `projectId`, `testcase_name`
+**Required parameters**: `projectId` + (`testcase_id` or `testcase_name`)
 
 **Optional parameters**:
 | Parameter | Type | Description |
 |-----------|------|-------------|
+| `testcase_id` | string | The test's `pw_test_id` — exact, wins over `testcase_name`. On `409 AMBIGUOUS_IDENTITY`, call again with the `pw_test_id` of the right entry in `candidates`. |
 | `suite_file_path` | string | Spec file path to disambiguate when several tests share the same title, e.g. `'tests/checkout.spec.ts'` |
 | `include_ai_insights` | boolean | Attach AI recommendations + quick fixes under `ai_fixes` (latest failing execution unless `testrun_id` is set). Poll `get_ai_insights(testrun_id, testcase_id)` if a section is `in_progress`. |
 | `testrun_id` | string | Only with `include_ai_insights`: target a specific run instead of the latest failure. |
@@ -1504,7 +1505,7 @@ Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for sec
 | `get_run_details`           | `projectId` + (`testrun_id` OR `counter`)                                                |
 | `list_testcase`             | `projectId` + (run ID or run filter)                                                     |
 | `get_testcase_details`      | `projectId` + (one of: `testcase_id`, `testcase_name` + `testrun_id`, or `by_fulltitle`) |
-| `debug_testcase`            | `projectId`, `testcase_name`                                                             |
+| `debug_testcase`            | `projectId` + (`testcase_id` or `testcase_name`)                                         |
 | `test_audit`                | `projectId`, `action` (+ `branch` for `analyze`, `reportId` for `get`)                   |
 | `list_manual_test_cases`    | `projectId`                                                                              |
 | `get_manual_test_case`      | `projectId`, `caseId`                                                                    |
@@ -1541,7 +1542,8 @@ Numbers are SECONDS by default; suffix with `ms` for milliseconds or `s` for sec
 | `"Missing TESTDINO_PAT"`                                | PAT not in environment                             | Tell user to add `TESTDINO_PAT` to the `env` section of `mcp.json` |
 | `"projectId is required"`                               | No projectId passed                                | Call `health()` to get it first                                    |
 | `"At least one of the following must be provided: ..."` | No search param for `get_testcase_details`         | Add `testcase_id`, `testcase_name`, or another search param        |
-| `"testcase_name is required"`                           | `debug_testcase` called without name               | Ask user for the test case name                                    |
+| `"testcase_id or testcase_name is required"`            | `debug_testcase` called without naming a test      | Pass the `pw_test_id` as `testcase_id`, or ask for the test name   |
+| `"AMBIGUOUS_IDENTITY"`                                  | `debug_testcase` title matches several tests       | Call again with `testcase_id` = the right candidate's `pw_test_id` |
 | `"No user found with email \"...\""`                    | Assignee email doesn't match a TestDino user       | Pass the User \_id directly, or invite the user to TestDino first  |
 | `"No test case \"X\" found in this project"`            | `rtcRef` doesn't resolve to a case in this project | Verify caseKey via `list_run_test_cases` first                     |
 | `"Cannot update a closed run"`                          | Trying to edit a closed run's metadata             | Only `releaseId` can be changed on closed runs                     |

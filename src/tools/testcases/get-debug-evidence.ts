@@ -38,12 +38,11 @@ export const getDebugEvidenceTool = {
       },
       testcase_name: {
         type: "string",
-        description:
-          "Full test title. Required for the regression boundary — prefer it when known.",
+        description: "Full test title. Give this or testcase_id.",
       },
       testcase_id: {
         type: "string",
-        description: "The case's pw_test_id.",
+        description: "The case's pw_test_id — exact, so prefer it when known.",
       },
       testrun_id: {
         type: "string",

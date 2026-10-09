@@ -25,6 +25,8 @@ Severity levels: `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
 | ISS-013 | MEDIUM    | FOUND  | Enum "Accessability" misspelled across 3 tool files                                                                        |
 | ISS-014 | HIGH      | FIXED  | list_testruns: by_status/search/by_test_case_tags/sort missing from schema — filters silently dropped (TDV2-105)           |
 | ISS-015 | HIGH      | FIXED  | Transport parity: 13 tools + resource/prompt drifted from the streaming MCP (phantom params, missing params, wrong shapes) |
+| ISS-016 | HIGH      | FIXED  | A dropped connection failed the tool call outright, and a 429 never said how long to wait                                  |
+| ISS-017 | MEDIUM    | FIXED  | debug_testcase could not name a test by id, so a title shared across Playwright projects 409'd with no way out             |
 
 ---
 
@@ -315,3 +317,33 @@ if (!args?.projectId) {
 **Not verified:** live MCP client run against the real backend (schema/handler-level only); the array-typed `type: ["number","string"]` fields typecheck but were not exercised through actual tool registration.
 
 **Known remaining gap (separate follow-up):** the integration tools (`get_integration_status`, `connect_integration`, `create_external_issue`, `get_external_issue`) have no dedicated section in `docs/skill.md` / `docs/TOOLS.md` — net-new documentation, not schema drift.
+
+---
+
+## ISS-016: Network Blips Failed Tool Calls; 429 Hid the Wait (HIGH)
+
+**Status:** FIXED (2026-10-09)
+
+**Symptoms:** a customer sync (2026-10-07) lost 9 of 27 `get_manual_test_case` calls to `fetch failed` during a ~2.4-minute window in which none of its requests reached the server; the same cases loaded on the next run. The customer also asked for the rate-limit headers, because a 429 surfaced only as `API request failed: 429` and their client guessed a 61 s wait.
+
+**Root cause:** `src/lib/request.ts` `apiRequest` made one `fetch` with no retry, so undici's `TypeError: fetch failed` went straight to the caller; `apiRequestJson` built the error from status + body only and dropped `Retry-After` / `RateLimit-Reset`, which the gateway sends.
+
+**Fix:** GET requests retry a network failure twice (500 ms then 1.5 s, ×0.5–1.5 jitter); writes, timeouts and caller aborts are never retried. A 429 error now ends with `Rate limited: retry after Ns.` from `Retry-After` (else `RateLimit-Reset`).
+
+**Files:** `src/lib/request.ts`
+**Tests:** `tests/unit/lib/request.test.ts` — 429 names the wait; a read recovers after one network failure; three attempts then give up (all three failed before the fix); a write is not retried.
+
+---
+
+## ISS-017: debug_testcase Could Not Name a Test by Id (MEDIUM)
+
+**Status:** FIXED (2026-10-09)
+
+**Symptoms:** one user's `debug_testcase` calls failed 48/48 on 2026-10-09 (43 × 409). The gateway's identity includes the Playwright project, so one test run under several projects shares its title and file; `suite_file_path` cannot split them, and the 409 asked for `title_path_hash`, which no tool accepts.
+
+**Root cause:** `src/tools/testcases/debug-testcase.ts` required `testcase_name` and offered no id; `src/lib/endpoints.ts` `debugTestCase` sent only the name.
+
+**Fix:** `debug_testcase` takes `testcase_id` (the `pw_test_id`); one of `testcase_id` / `testcase_name` is required. Mirrors the gateway change, which reads test-history by `pw_test_id` and rewrites the 409 into a retry-with-`testcase_id` instruction. `get_debug_evidence` parameter copy synced with the gateway.
+
+**Files:** `src/tools/testcases/debug-testcase.ts`, `src/tools/testcases/get-debug-evidence.ts`, `src/lib/endpoints.ts`, `docs/TOOLS.md`, `docs/skill.md`
+**Tests:** `tests/unit/tools/testcases/debug-testcase.test.ts` — an id-only call sends `testcase_id` and no name; a call naming neither is rejected (both failed before the fix).

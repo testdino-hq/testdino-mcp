@@ -13,10 +13,23 @@ describe("handleDebugTestCase", () => {
     restoreFetch();
   });
 
-  it("should throw when testcase_name is missing", async () => {
+  it("should throw when neither testcase_id nor testcase_name is given", async () => {
     await expect(handleDebugTestCase(createArgs() as never)).rejects.toThrow(
-      "testcase_name is required"
+      "testcase_id or testcase_name is required"
     );
+  });
+
+  // A title shared by several Playwright projects answers 409; the gateway then asks for testcase_id.
+  it("should debug a test named by testcase_id alone", async () => {
+    mockFetchSuccess({ debugging_prompt: "x" });
+
+    await handleDebugTestCase(
+      createArgs({ testcase_id: "pw_chromium_1" }) as never
+    );
+
+    const url = new URL(getLastFetchUrl());
+    expect(url.searchParams.get("testcase_id")).toBe("pw_chromium_1");
+    expect(url.searchParams.has("testcase_name")).toBe(false);
   });
 
   it("should throw when projectId is missing", async () => {
