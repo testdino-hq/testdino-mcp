@@ -68,11 +68,37 @@ function createRequestSignal(timeoutMs: number, upstreamSignal?: AbortSignal) {
   };
 }
 
+// Two retries with exponential backoff; jitter keeps parallel callers from retrying in lockstep.
+const NETWORK_RETRY_DELAYS_MS = [500, 1_500];
+
 export async function apiRequest(
   url: string,
   options: RequestOptions = {}
 ): Promise<Response> {
   const method = options.method ?? "GET";
+  // Only reads are retried: a write whose response was lost may already have applied.
+  const retryDelays = method === "GET" ? NETWORK_RETRY_DELAYS_MS : [];
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchOnce(url, method, options);
+    } catch (error) {
+      // undici reports a dropped connection as TypeError; timeouts and aborts are not retried.
+      const retryable = error instanceof TypeError && !options.signal?.aborted;
+      if (!retryable || attempt >= retryDelays.length) {
+        throw error;
+      }
+      const delay = retryDelays[attempt] * (0.5 + Math.random());
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
+async function fetchOnce(
+  url: string,
+  method: string,
+  options: RequestOptions
+): Promise<Response> {
   const headers = options.headers ?? {};
   const body = options.body;
   const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
@@ -111,9 +137,20 @@ export async function apiRequestJson<T = unknown>(
     throw new Error(
       `API request failed: ${response.status} ${response.statusText}${
         formattedErrorText ? `\n${formattedErrorText}` : ""
-      }`
+      }${rateLimitHint(response)}`
     );
   }
 
   return response.json() as T;
+}
+
+// The API sends Retry-After and RateLimit-Reset (seconds) on a 429; callers need the wait, not just the status.
+function rateLimitHint(response: Response): string {
+  if (response.status !== 429) {
+    return "";
+  }
+  const seconds =
+    response.headers?.get("retry-after") ??
+    response.headers?.get("ratelimit-reset");
+  return seconds ? `\nRate limited: retry after ${seconds}s.` : "";
 }

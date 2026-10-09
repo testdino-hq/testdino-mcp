@@ -96,5 +96,81 @@ describe("request", () => {
         apiRequestJson("https://api.testdino.com/test")
       ).rejects.toThrow("Connection refused");
     });
+
+    // A caller told only "429" cannot tell a one-second wait from a one-minute one.
+    it("should name the wait from Retry-After on a 429", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 429,
+          statusText: "Too Many Requests",
+          headers: new Headers({
+            "Retry-After": "42",
+            "RateLimit-Remaining": "0",
+          }),
+          text: () =>
+            Promise.resolve('{"error":{"message":"Too many MCP requests."}}'),
+        })
+      );
+
+      await expect(
+        apiRequestJson("https://api.testdino.com/test")
+      ).rejects.toThrow(
+        /API request failed: 429 Too Many Requests[\s\S]*retry after 42s/
+      );
+    });
+  });
+
+  // undici reports a dropped connection as TypeError("fetch failed").
+  describe("network failures", () => {
+    const networkFailure = () => Promise.reject(new TypeError("fetch failed"));
+    const okResponse = {
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    };
+
+    it("should retry a read and return the response once the network recovers", async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi
+        .fn()
+        .mockImplementationOnce(networkFailure)
+        .mockResolvedValue(okResponse);
+      vi.stubGlobal("fetch", fetchMock);
+
+      const pending = apiRequest("https://api.testdino.com/test");
+      await vi.runAllTimersAsync();
+
+      await expect(pending).resolves.toBe(okResponse);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("should give up after three attempts", async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi.fn().mockImplementation(networkFailure);
+      vi.stubGlobal("fetch", fetchMock);
+
+      const pending = apiRequest("https://api.testdino.com/test");
+      const expectation = expect(pending).rejects.toThrow("fetch failed");
+      await vi.runAllTimersAsync();
+
+      await expectation;
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    // A write whose response was lost may already have been applied.
+    it("should not retry a write", async () => {
+      const fetchMock = vi.fn().mockImplementation(networkFailure);
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        apiRequest("https://api.testdino.com/test", {
+          method: "PATCH",
+          body: {},
+        })
+      ).rejects.toThrow("fetch failed");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
   });
 });
