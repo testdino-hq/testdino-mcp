@@ -17,6 +17,9 @@ All notable changes to `@testdino/mcp` are documented here.
   a brief connection drop, not an outage of minutes. Writes are never retried.
 - A `429` error now says how long to wait (`Rate limited: retry after Ns.`),
   from the server's `Retry-After` / `RateLimit-Reset` headers.
+- Requests carry a random per-process id (`mcp-session-id`) so the hosted
+  service can group a session's tool calls in its usage analytics. It contains
+  no user or machine data.
 
 ## 2.0.3 (2026-09-15)
 
