@@ -172,5 +172,18 @@ describe("request", () => {
       ).rejects.toThrow("fetch failed");
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
+
+    // A malformed TESTDINO_API_URL also throws a TypeError; retrying it only delays the error.
+    it("should not retry a TypeError that is not a dropped connection", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockRejectedValue(new TypeError("Failed to parse URL from not a url"));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(apiRequest("not a url")).rejects.toThrow(
+        "Failed to parse URL"
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
   });
 });

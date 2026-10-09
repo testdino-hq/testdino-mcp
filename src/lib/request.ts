@@ -83,8 +83,11 @@ export async function apiRequest(
     try {
       return await fetchOnce(url, method, options);
     } catch (error) {
-      // undici reports a dropped connection as TypeError; timeouts and aborts are not retried.
-      const retryable = error instanceof TypeError && !options.signal?.aborted;
+      // undici's dropped-connection error; timeouts, aborts and other TypeErrors (bad URL) are not retried.
+      const retryable =
+        error instanceof TypeError &&
+        error.message === "fetch failed" &&
+        !options.signal?.aborted;
       if (!retryable || attempt >= retryDelays.length) {
         throw error;
       }

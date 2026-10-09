@@ -1281,7 +1281,7 @@ Error: projectId is required
 ```
 
 ```
-Error: testcase_name is required
+Error: testcase_id or testcase_name is required
 ```
 
 **No Test Cases Found:**
