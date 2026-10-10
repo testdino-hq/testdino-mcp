@@ -91,6 +91,11 @@ import {
   // Error clusters
   getRunErrorClustersTool,
   handleGetRunErrorClusters,
+  // Re-run
+  getRerunSelectionTool,
+  handleGetRerunSelection,
+  rerunTestTool,
+  handleRerunTest,
   // Integrations
   getIntegrationStatusTool,
   handleGetIntegrationStatus,
@@ -138,7 +143,7 @@ async function main() {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.0.4",
+      version: "2.1.0",
     },
     {
       capabilities: {
@@ -196,6 +201,9 @@ async function main() {
     updateSessionTool,
     // Error clusters
     getRunErrorClustersTool,
+    // Re-run
+    getRerunSelectionTool,
+    rerunTestTool,
     // Integrations
     getIntegrationStatusTool,
     connectIntegrationTool,
@@ -507,6 +515,19 @@ async function main() {
     if (name === "get_run_error_clusters") {
       return await handleGetRunErrorClusters(
         args as Parameters<typeof handleGetRunErrorClusters>[0]
+      );
+    }
+
+    // Re-run
+    if (name === "get_rerun_selection") {
+      return await handleGetRerunSelection(
+        args as Parameters<typeof handleGetRerunSelection>[0]
+      );
+    }
+
+    if (name === "rerun_test") {
+      return await handleRerunTest(
+        args as Parameters<typeof handleRerunTest>[0]
       );
     }
 

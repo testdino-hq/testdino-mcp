@@ -18,6 +18,11 @@ export {
   getRunErrorClustersTool,
   handleGetRunErrorClusters,
 } from "./testruns/get-run-error-clusters.js";
+export {
+  getRerunSelectionTool,
+  handleGetRerunSelection,
+} from "./testruns/get-rerun-selection.js";
+export { rerunTestTool, handleRerunTest } from "./testruns/rerun-test.js";
 
 // Test cases tools
 export {

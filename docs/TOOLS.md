@@ -29,6 +29,11 @@ This comprehensive guide covers all available tools in the `@testdino/mcp` MCP s
 - [verify_fix](#verify_fix)
 - [get_run_error_clusters](#get_run_error_clusters)
 
+**Re-run:**
+
+- [get_rerun_selection](#get_rerun_selection)
+- [rerun_test](#rerun_test)
+
 **Test Quality Audit:**
 
 - [get_audit_report](#get_audit_report)
@@ -3667,6 +3672,109 @@ update_session({
 
 - Missing `projectId` or `testrun_id` → specific "is required" message.
 - Missing PAT → `TESTDINO_PAT` configuration error.
+
+---
+
+## get_rerun_selection
+
+**Purpose**: Work out which of a finished run's tests a re-run would execute, and what starting one would actually do, without starting anything. Read-only. Call it before [`rerun_test`](#rerun_test) so you can show the user the selection and the consequence and let them decide.
+
+**Parameters**:
+
+| Parameter        | Type     | Required | Description                                                                                         |
+| ---------------- | -------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `projectId`      | string   | Yes      | The TestDino project identifier.                                                                    |
+| `runId`          | string   | Yes      | The finished run to re-run from, e.g. `test_run_abc123`.                                            |
+| `scope`          | string   | No       | `failed` (default, includes timed out), `flaky` (passed only on retry), or `failed-and-flaky`.      |
+| `testIds`        | string[] | No       | Exactly these Playwright test ids, overriding `scope`. Ids the run does not have are reported back. |
+| `excludeTestIds` | string[] | No       | Playwright test ids to drop from the scope.                                                         |
+
+**Returns**: `selected` / `in_scope` ("7 of 9"), the exact Playwright `--test-list` lines, any requested id the run does not have, any test whose title cannot be carried as a line, and `command` — the CLI invocation that runs the same selection locally (`null` when nothing is selected).
+
+It also returns `rerun_mechanism`, which is what makes an informed yes possible:
+
+| Field               | Meaning                                                                                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `same_commit`       | `in-run` — re-runs the failed jobs inside the run's own GitHub run, whose red check can turn green. `new-workflow` — starts a separate workflow run; the original stays red. |
+| `reason`            | Why `in-run` is unavailable. `flaky-only` and `hand-picked` change if the selection changes; `not-github-actions` and `environment` do not.                                  |
+| `github_run`        | The GitHub run id involved, when there is one.                                                                                                                               |
+| `only_failed_tests` | For `in-run`: whether each job runs just its failed tests, or repeats in full (needs CLI 2.7.8 or newer).                                                                    |
+
+`rerun_mechanism` is absent when nothing is selected, or when the answer could not be established — it is never guessed.
+
+**Example prompts**:
+
+- _"What would a re-run of the failed tests in test_run_abc123 actually run?"_
+- _"If I re-run this commit, will it turn the GitHub check green?"_
+- _"Show me the re-run selection for both failed and flaky, minus the flaky ones."_
+
+**Errors**:
+
+- Missing `projectId` or `runId` → specific "is required" message.
+- `409 RUN_NOT_FINALIZED` → the run is still going. `409 SELECTION_NOT_READY` → its results are still being processed; retry in a few seconds.
+- Missing PAT → `TESTDINO_PAT` configuration error.
+
+---
+
+## rerun_test
+
+**Purpose**: Start the re-run in CI. This spends CI minutes, so it refuses until the user has said yes, and it refuses until it has been told which code to run.
+
+**Ask before calling.** Call [`get_rerun_selection`](#get_rerun_selection) first, show the user the selection and what `rerun_mechanism` says, ask which mode they want, and only then call this with `confirm: true`.
+
+**Parameters**:
+
+| Parameter        | Type     | Required | Description                                                                                                                                   |
+| ---------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`      | string   | Yes      | The TestDino project identifier.                                                                                                              |
+| `runId`          | string   | Yes      | The finished run to re-run from, e.g. `test_run_abc123`.                                                                                      |
+| `confirm`        | boolean  | Yes      | Must be literally `true`, after the user said yes. A string or a number is refused, never coerced.                                            |
+| `mode`           | string   | No       | `same-commit` or `latest`. **No default** — an omitted one is refused with `MODE_REQUIRED`. Ask the user.                                     |
+| `workflow`       | string   | No       | Workflow path, file name, or name declaring a `testdino_rerun_from` input. Not needed when the re-run happens inside the original GitHub run. |
+| `ref`            | string   | No       | Branch to dispatch on. Defaults to the source run's branch.                                                                                   |
+| `scope`          | string   | No       | Same values as `get_rerun_selection`.                                                                                                         |
+| `testIds`        | string[] | No       | Exactly these Playwright test ids, overriding `scope`.                                                                                        |
+| `excludeTestIds` | string[] | No       | Playwright test ids to drop from the scope.                                                                                                   |
+| `tags`           | string[] | No       | Up to 10 run tags to add to the re-run, on top of the source run's. Needs a workflow declaring `testdino_rerun_tags`.                         |
+
+**The two modes answer different questions**, which is why there is no default:
+
+| `mode`        | Runs                   | Answers                                   |
+| ------------- | ---------------------- | ----------------------------------------- |
+| `same-commit` | the commit that failed | Are these failures real, or just flaky?   |
+| `latest`      | the branch tip         | Did the fix I pushed since actually work? |
+
+**Returns**: For a re-run inside the original GitHub run, `rerun_in_ci`, the pipeline id, the new attempt number, the Actions URL and `only_failed_tests`. For a dispatched workflow run, `dispatched`, the workflow and its path, the `ref` actually used, the mode, the commit pinned (or `null`), the repository and the Actions URL. Both also carry the selection fields.
+
+**Errors**: Every refusal happens **before** anything is dispatched, and where running it by hand is an option the refusal carries the CLI `command` as a fallback. The ones you will meet most:
+
+| Code                     | What to do                                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONFIRM_REQUIRED`       | Show the user the selection and ask. Then call again with `confirm: true`.                                                                   |
+| `MODE_REQUIRED`          | Ask the user which code to re-run. The refusal carries `rerun_mechanism` so you can explain both options.                                    |
+| `WORKFLOW_REQUIRED`      | Name a workflow. The refusal lists the dispatchable ones, and offers `same-commit` when that would work instead.                             |
+| `NOTHING_TO_RERUN`       | The selection is empty. Check the scope or the ids.                                                                                          |
+| `IN_RUN_CANNOT_TAG`      | A re-run inside the original GitHub run keeps that run's tags and cannot add more. Drop `tags`, or use `latest`.                             |
+| `GITHUB_NOT_CONNECTED`   | No repository is connected to the project. Run the `command` by hand instead.                                                                |
+| `DISPATCH_NOT_PERMITTED` | The GitHub App cannot start workflows for the repository. Run the `command` by hand instead.                                                 |
+| `UNKNOWN_MODE`           | `mode` was neither `same-commit` nor `latest`.                                                                                               |
+| `VALIDATION_ERROR`       | A malformed body: a bad run id, a test id outside `[A-Za-z0-9_-]`, over 10000 ids, over 10 tags, a non-boolean `confirm`, or an unknown key. |
+| `REF_REQUIRED`           | The run recorded no branch. Pass `ref`.                                                                                                      |
+| `AMBIGUOUS_WORKFLOW`     | The name matches 2 or more files. Pass the path; the refusal lists the matches.                                                              |
+| `UNKNOWN_WORKFLOW`       | No workflow of that name can receive a re-run. The refusal lists the dispatchable ones, and why the others cannot.                           |
+| `WORKFLOW_CANNOT_SELECT` | `testIds` / `excludeTestIds` on a workflow that declares no id inputs — dropping them would run the whole scope.                             |
+| `WORKFLOW_CANNOT_SCOPE`  | Any scope but `failed` on a workflow with no `testdino_rerun_scope` input.                                                                   |
+| `WORKFLOW_CANNOT_TAG`    | `tags` on a workflow with no `testdino_rerun_tags` input.                                                                                    |
+| `WORKFLOW_CANNOT_PIN`    | `same-commit` on a workflow with no `testdino_rerun_sha` input. Use `latest`, or run the `command`.                                          |
+| `COMMIT_UNKNOWN`         | The run recorded no commit, so `same-commit` has nothing to pin. Use `latest`.                                                               |
+
+Two 409s refuse the timing rather than the selection: `RUN_NOT_FINALIZED` (the run is still going) and `SELECTION_NOT_READY` (its results are still being processed — retry in a few seconds).
+
+**Example prompts**:
+
+- _"Re-run the failed tests from test_run_abc123 on the same commit."_
+- _"My fix is pushed — re-run just the failures against the branch tip using the CI workflow."_
+- _"Re-run both the failed and flaky tests and tag the run as nightly."_
 
 ---
 
