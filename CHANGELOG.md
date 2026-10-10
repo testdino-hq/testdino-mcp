@@ -2,6 +2,31 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.1.0 (2026-10-10)
+
+### Added
+
+- **Re-run a run's failures from your agent.** Two tools, and they work as a
+  pair: `get_rerun_selection` says what a re-run would execute and what
+  starting it would do, `rerun_test` starts it.
+  - `get_rerun_selection` returns the exact Playwright `--test-list` lines, how
+    many of the run's tests are selected, and the CLI command that runs the
+    same set locally. It is read-only.
+  - It also returns `rerun_mechanism`, which answers the question that actually
+    matters before you agree to a re-run: whether it happens **inside the run's
+    own GitHub run** — so that run's red check can turn green — or starts a
+    separate workflow run, and when it cannot be the former, why.
+  - `rerun_test` needs `confirm: true` after you say yes, and needs `mode`.
+    **There is no default mode**, because the two answer different questions:
+    `same-commit` re-runs the commit that failed (are these failures real, or
+    flaky?), `latest` runs the branch tip (did the fix work?). An omitted mode
+    is refused rather than guessed.
+  - Every refusal happens before anything is dispatched, and where running the
+    tests by hand is an option it hands you the CLI command instead.
+  - A same-commit re-run runs **only the failed tests** when the run was
+    recorded by `npx tdpw test` 2.7.8 or newer; older versions repeat each
+    failed job in full, and the result says which happened.
+
 ## 2.0.4 (2026-10-09)
 
 ### Added

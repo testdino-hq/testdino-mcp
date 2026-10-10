@@ -19,6 +19,7 @@
      - [get_flake_verdict](#get_flake_verdict)
      - [verify_fix](#verify_fix)
      - [get_run_error_clusters](#get_run_error_clusters)
+     - [get_rerun_selection and rerun_test](#get_rerun_selection-and-rerun_test)
      - [get_audit_report and submit_audit_report](#get_audit_report-and-submit_audit_report)
    - **Manual test cases**
      - [list_manual_test_cases](#list_manual_test_cases)
@@ -1011,6 +1012,47 @@ list_testruns() → pick a failed run → get_run_error_clusters(projectId, test
 ```
 
 **Good uses**: explaining _why_ a run failed, spotting a single root cause behind many reds, prioritizing fixes by cluster size.
+
+---
+
+### `get_rerun_selection` and `rerun_test`
+
+**Purpose**: Re-run a finished run's failures in CI. `get_rerun_selection` answers what would run and what starting it would do; `rerun_test` starts it.
+
+**Required parameters**: `projectId`, `runId` (both); `confirm` (rerun_test)
+
+**Optional parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `scope` | string | `'failed'` (default), `'flaky'`, `'failed-and-flaky'` |
+| `testIds` / `excludeTestIds` | string[] | Hand-pick or subtract specific Playwright test ids |
+| `mode` | string | `rerun_test` only. `'same-commit'` or `'latest'` — **no default** |
+| `workflow` / `ref` / `tags` | string, string, string[] | `rerun_test` only, for the dispatch path |
+
+**Workflow — do not skip a step, the server will refuse you anyway**:
+
+```
+get_rerun_selection(projectId, runId)
+→ show the user: how many tests, and what rerun_mechanism says
+→ ASK which code they want re-run:
+     same-commit → the commit that failed. "Are these failures real, or flaky?"
+     latest      → the branch tip.         "Did my fix work?"
+→ ASK for a yes
+→ rerun_test(projectId, runId, mode=<their answer>, confirm=true)
+```
+
+**Two things you cannot decide for the user**:
+
+1. **`mode`** has no default. Guessing is the one thing the tool will not let you do — an omitted mode comes back as `MODE_REQUIRED`, carrying both options and `rerun_mechanism` so you can put the choice to them properly.
+2. **`confirm`** must be literally `true`, and only after they said so. This costs CI minutes.
+
+**Reading `rerun_mechanism` out loud**: `same_commit: "in-run"` means the re-run happens inside the run's own GitHub run, so that red check can turn green — say so, it is usually what the user wants. `"new-workflow"` means a separate run starts and the original stays red; the `reason` tells you whether changing the selection would help (`flaky-only`, `hand-picked`) or not (`not-github-actions`, `environment`).
+
+**Every refusal is free**: nothing is dispatched before a refusal, and where running it locally is an option the refusal hands you the `command` to offer instead.
+
+**Good uses**: confirming a red run is genuinely broken before someone investigates, re-running just the failures after a fix lands, turning a flaky run's check green without a full re-run.
+
+**Not for**: re-running a run that is still going (`409 RUN_NOT_FINALIZED`), or picking the mode yourself.
 
 ---
 

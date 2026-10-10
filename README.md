@@ -147,6 +147,13 @@ The server provides 43 tools across nine domains:
 37. **`get_ai_insights`** - TestDino's AI analysis at three levels: project overview (per-category failure counts + top offenders over a date range), run (AI failure categorization, failure clusters, error-analysis table, LLM-written summary), and test case (recommendations + quick fixes). Returns a `disabled` status when AI features are turned off for the project (Settings → AI).
 38. **`get_trace_analysis`** - Resolve a failing test's hosted Playwright trace to a short-lived download URL and return a runbook for local trace-CLI debugging (open → actions → snapshot → close).
 
+**Re-run:**
+
+39. **`get_rerun_selection`** - Work out which of a finished run's tests a re-run would execute — failed, flaky, both, or a hand-picked list — as the exact Playwright `--test-list` lines plus the CLI command that runs them locally. Also returns `rerun_mechanism`: whether a same-commit re-run would happen **inside the run's own GitHub run** (so that red check can turn green) or start a separate workflow run, and why. Read-only; nothing runs.
+40. **`rerun_test`** - Start the re-run in CI. Needs `confirm: true` after the user says yes, and needs `mode` — `same-commit` (the commit that failed: are these failures real, or flaky?) or `latest` (the branch tip: did my fix work?). There is **no default mode**; an omitted one is refused so the choice reaches the user. Every refusal happens before anything is dispatched.
+
+> **Ask first.** Call `get_rerun_selection`, show the user what would run and what `rerun_mechanism` says, then ask which mode they want. Re-runs cost CI minutes.
+
 > AI Insights are also available inline: pass `include_ai_insights: true` to `get_run_details` (attaches the run's AI Insights under `ai_insights`) or `debug_testcase` (attaches recommendations + quick fixes under `ai_fixes`).
 
 ### Installation Options

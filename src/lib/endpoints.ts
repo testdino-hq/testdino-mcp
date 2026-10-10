@@ -79,6 +79,27 @@ export const endpoints = {
   },
 
   /**
+   * Resolve what a re-run would execute, and how — read-only
+   * POST /api/mcp/:projectId/get-rerun-selection
+   *
+   * POST, unlike the reads above: a selection can carry up to 10000 test ids,
+   * which does not fit in a query string. The body is the selection.
+   */
+  getRerunSelection: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/${projectId}/get-rerun-selection`;
+  },
+
+  /**
+   * Start a re-run in CI
+   * POST /api/mcp/:projectId/rerun-test
+   */
+  rerunTest: (projectId: string): string => {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/mcp/${projectId}/rerun-test`;
+  },
+
+  /**
    * List test cases with comprehensive filtering options
    * GET /api/mcp/:projectId/list-testcase
    * @param params.projectId - Required: Project ID

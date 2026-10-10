@@ -153,7 +153,7 @@ export async function apiRequestJson<T = unknown>(
 }
 
 // The API sends Retry-After and RateLimit-Reset (seconds) on a 429; callers need the wait, not just the status.
-function rateLimitHint(response: Response): string {
+export function rateLimitHint(response: Response): string {
   if (response.status !== 429) {
     return "";
   }

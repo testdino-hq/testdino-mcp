@@ -39,7 +39,7 @@ src/
 └── tools/
     ├── health.ts         ← PAT validation + account info
     ├── index.ts          ← Barrel export for all tools
-    ├── testruns/         ← list-testruns, get-run-details
+    ├── testruns/         ← list, details, error clusters, re-run
     ├── testcases/        ← list-testcase, get-testcase-details, debug-testcase
     ├── manual-testcases/ ← CRUD for manual test cases
     ├── manual-testsuites/← list + create test suites
@@ -188,7 +188,7 @@ tests/
 ├── helpers/            ← Mock factories, shared types
 ├── unit/               ← Unit tests (mirror src/ structure)
 │   ├── lib/            ← env, endpoints, request, file-utils
-│   └── tools/          ← All 33 tool handlers
+│   └── tools/          ← All 45 tool handlers
 └── integration/        ← End-to-end MCP server tests
 ```
 
@@ -410,6 +410,6 @@ When the same lesson pattern appears 3+ times in auto-memory:
 - Not an HTTP server (it's stdio)
 - Not a CLI tool for end users (it's a server that AI tools spawn)
 - Not a monorepo (single package, single concern)
-- Not a framework (it's a concrete implementation with 33 specific tools)
+- Not a framework (it's a concrete implementation with 45 specific tools)
 
 Keep it simple. Every tool follows the same pattern. Consistency is more important than cleverness.
