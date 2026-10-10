@@ -3,7 +3,25 @@
 // answer, so it has to reach the agent intact rather than as a thrown string.
 // The no-retry-on-write rule and the 429 hint are covered in lib/request.test.ts.
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
+
+// apiRequest is wrapped, not replaced: the timeout it is handed is consumed
+// before fetch sees it, so it cannot be read off the fetch stub.
+const requestCalls = vi.hoisted(() => ({
+  options: [] as Record<string, unknown>[],
+}));
+vi.mock("../../../../src/lib/request.js", async (importOriginal) => {
+  const orig =
+    await importOriginal<typeof import("../../../../src/lib/request.js")>();
+  return {
+    ...orig,
+    apiRequest: (url: string, options: Record<string, unknown>) => {
+      requestCalls.options.push(options);
+      return orig.apiRequest(url, options as never);
+    },
+  };
+});
+
 import {
   mockFetchSuccess,
   mockFetchError,
@@ -23,6 +41,7 @@ const bodyOf = (): Record<string, unknown> =>
 
 afterEach(() => {
   restoreFetch();
+  requestCalls.options.length = 0;
   delete process.env.TESTDINO_PAT;
 });
 
@@ -285,6 +304,25 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
     ).rejects.toThrow(
       /timed out after 30000ms\. The re-run may already have started/
     );
+  });
+
+  // The warning above is only honest if the request is given room to finish.
+  // Removing the override silently drops it to the 15s library default.
+  it.each([
+    [
+      "the selection",
+      () => handleGetRerunSelection(createArgs({ runId: RUN }) as never),
+    ],
+    [
+      "the dispatch",
+      () => handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never),
+    ],
+  ])("gives %s longer than the default timeout", async (_name, call) => {
+    mockFetchSuccess({ ok: true });
+
+    await call();
+
+    expect(requestCalls.options.at(-1)?.timeoutMs).toBe(30_000);
   });
 
   // Any other transport failure keeps its message untouched.
