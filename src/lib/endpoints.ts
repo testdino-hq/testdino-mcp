@@ -80,10 +80,8 @@ export const endpoints = {
 
   /**
    * Resolve what a re-run would execute, and how — read-only
-   * POST /api/mcp/:projectId/get-rerun-selection
-   *
-   * POST, unlike the reads above: a selection can carry up to 10000 test ids,
-   * which does not fit in a query string. The body is the selection.
+   * POST /api/mcp/:projectId/get-rerun-selection — POST, unlike the reads
+   * above, because a selection can carry up to 10000 test ids. Body = selection.
    */
   getRerunSelection: (projectId: string): string => {
     const baseUrl = getBaseUrl();

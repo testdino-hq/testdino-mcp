@@ -1,14 +1,6 @@
 /**
- * Shared POST helper for the two re-run tools.
- *
- * Why these two do not use `apiRequestJson`: a re-run endpoint answers a
- * refusal as a 400 whose body IS the answer — the question to put to the user,
- * what a same-commit re-run would do, and the CLI command to fall back to.
- * `apiRequestJson` turns any non-2xx into a thrown Error with the body
- * truncated to 500 characters, which would throw that away and leave the agent
- * with nothing to act on. So a refusal that matches the documented envelope is
- * passed through as tool output; everything else (401, 403, 404, 429, 5xx, or a
- * body that is not that envelope) still throws, so nothing else changes.
+ * Shared POST helper for the two re-run tools. Not `apiRequestJson`: a refusal
+ * is a 400 whose body is the answer, and that throws it as a 500-char string.
  */
 
 import {
@@ -17,22 +9,27 @@ import {
   rateLimitHint,
 } from "../../lib/request.js";
 
-// The dispatch path makes several upstream calls (selection, run detail, the
-// GitHub targets read and its workflow files, then the dispatch itself), and a
-// timeout here is NOT retried, so the caller cannot tell whether CI started.
-// Longer than the 15s default for that reason.
+// A timed-out write is never retried, so 15s would leave CI's state unknown.
 const RERUN_TIMEOUT_MS = 30_000;
 
 export interface RerunToolOutput {
   content: Array<{ type: "text"; text: string }>;
+  isError?: boolean;
 }
 
-/** A refusal in the documented envelope: `{success:false, error:{code, message}, …}`. */
+/**
+ * A refusal the caller can act on. Two envelopes reach here: the gateway's
+ * `{error: {code, message}}`, and integration's `{error: "<CODE>", message}`
+ * passed through unchanged when GitHub refuses the dispatch.
+ */
 function isContractRefusal(status: number, body: unknown): boolean {
   if (status !== 400 || typeof body !== "object" || body === null) {
     return false;
   }
   const error = (body as { error?: unknown }).error;
+  if (typeof error === "string") {
+    return error.length > 0;
+  }
   return (
     typeof error === "object" &&
     error !== null &&
@@ -45,12 +42,26 @@ export async function postRerun(
   token: string,
   body: Record<string, unknown>
 ): Promise<RerunToolOutput> {
-  const response = await apiRequest(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body,
-    timeoutMs: RERUN_TIMEOUT_MS,
-  });
+  let response: Response;
+  try {
+    response = await apiRequest(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+      timeoutMs: RERUN_TIMEOUT_MS,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // A timeout is the one failure where the write may still have landed: say so
+    // instead of letting the agent read it as "nothing happened" and try again.
+    if (message.includes("timed out")) {
+      throw new Error(
+        `${message}. The re-run may already have started — check list_testruns ` +
+          `or the repository's GitHub Actions before calling this again.`
+      );
+    }
+    throw error;
+  }
 
   const text = await response.text();
   let parsed: unknown;
@@ -60,7 +71,7 @@ export async function postRerun(
     parsed = undefined;
   }
 
-  if (response.ok || isContractRefusal(response.status, parsed)) {
+  if (response.ok) {
     return {
       content: [
         {
@@ -68,6 +79,17 @@ export async function postRerun(
           text: parsed === undefined ? text : JSON.stringify(parsed, null, 2),
         },
       ],
+    };
+  }
+
+  if (isContractRefusal(response.status, parsed)) {
+    // statusCode first and isError set, exactly as the hosted server shapes a
+    // failed tool result, so a client that branches on either behaves the same
+    // on both surfaces.
+    const shaped = { statusCode: response.status, ...(parsed as object) };
+    return {
+      content: [{ type: "text", text: JSON.stringify(shaped, null, 2) }],
+      isError: true,
     };
   }
 

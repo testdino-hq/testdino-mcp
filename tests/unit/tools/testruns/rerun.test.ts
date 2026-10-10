@@ -1,18 +1,13 @@
-// The two re-run tools. What is specific to them, and what these cover:
-//
-//  1. They POST a JSON body, where every other read tool here builds a query
-//     string — a selection can carry up to 10000 test ids.
-//  2. A refusal arrives as a 400 whose body IS the answer (what to ask the
-//     user, what a same-commit re-run would do, the CLI fallback). It has to
-//     reach the agent intact instead of being thrown as a truncated string.
-//
-// The no-retry-on-write rule and the 429 hint are covered in
-// tests/unit/lib/request.test.ts; they apply here through apiRequest.
+// The two re-run tools. What is specific to them: they POST a JSON body (a
+// selection carries up to 10000 ids), and a refusal is a 400 whose body is the
+// answer, so it has to reach the agent intact rather than as a thrown string.
+// The no-retry-on-write rule and the 429 hint are covered in lib/request.test.ts.
 
 import { describe, it, expect, afterEach } from "vitest";
 import {
   mockFetchSuccess,
   mockFetchError,
+  mockFetchNetworkError,
   restoreFetch,
   getLastFetchUrl,
   getLastFetchOptions,
@@ -139,6 +134,23 @@ describe("handleRerunTest", () => {
     });
   });
 
+  // The rule this release exists for. A mutation to `args.mode ?? "same-commit"`
+  // passed every other test here: the server would then dispatch a re-run
+  // instead of answering MODE_REQUIRED, and nobody would have been asked.
+  it("sends no mode when the caller did not give one", async () => {
+    mockFetchError(
+      400,
+      JSON.stringify({
+        success: false,
+        error: { code: "MODE_REQUIRED", message: "ask the user" },
+      })
+    );
+
+    await handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never);
+
+    expect(Object.keys(bodyOf()).sort()).toEqual(["confirm", "runId"]);
+  });
+
   // `false` must survive as `false`: dropping it would read as "not sent" and
   // sending it as a string would be coerced somewhere into a yes.
   it("forwards confirm: false rather than dropping it", async () => {
@@ -209,6 +221,79 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
     expect(parseToolResponse(res)).toMatchObject({
       error: { code: "VALIDATION_ERROR" },
     });
+  });
+
+  // The hosted server sets isError and puts statusCode first on every result
+  // over 400; a client branching on either must not see a refusal as a success.
+  it("marks a refusal as an error and carries the status, like the hosted server", async () => {
+    mockFetchError(
+      400,
+      JSON.stringify({
+        success: false,
+        error: { code: "CONFIRM_REQUIRED", message: "ask first" },
+      })
+    );
+
+    const res = await handleRerunTest(
+      createArgs({ runId: RUN, confirm: true }) as never
+    );
+
+    expect(res.isError).toBe(true);
+    expect(parseToolResponse(res)).toMatchObject({
+      statusCode: 400,
+      error: { code: "CONFIRM_REQUIRED" },
+    });
+  });
+
+  // Integration passes its own 400s through the gateway unchanged, and its
+  // envelope is `error: "<CODE>"` as a string. Treating only the object form as
+  // a refusal threw every GitHub refusal as a truncated string.
+  it("accepts integration's string error envelope as a refusal", async () => {
+    mockFetchError(
+      400,
+      JSON.stringify({
+        success: false,
+        error: "GITHUB_DISPATCH_FAILED",
+        message: "GitHub rejected the workflow_dispatch",
+      })
+    );
+
+    const res = await handleRerunTest(
+      createArgs({
+        runId: RUN,
+        confirm: true,
+        mode: "latest",
+        workflow: "CI",
+      }) as never
+    );
+
+    expect(res.isError).toBe(true);
+    expect(parseToolResponse(res)).toMatchObject({
+      error: "GITHUB_DISPATCH_FAILED",
+    });
+  });
+
+  // A timed-out write is never retried, so the agent cannot tell whether CI
+  // started. Saying "may already have started" is the difference between one
+  // re-run and two. The timer itself is request.ts's; this is what postRerun
+  // adds on top of it, so the stub throws exactly what fetchOnce throws.
+  it("tells the agent a timeout may still have started the re-run", async () => {
+    mockFetchNetworkError("API request timed out after 30000ms");
+
+    await expect(
+      handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never)
+    ).rejects.toThrow(
+      /timed out after 30000ms\. The re-run may already have started/
+    );
+  });
+
+  // Any other transport failure keeps its message untouched.
+  it("does not add the timeout warning to an unrelated network error", async () => {
+    mockFetchNetworkError("fetch failed");
+
+    await expect(
+      handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never)
+    ).rejects.not.toThrow(/may already have started/);
   });
 
   it.each([

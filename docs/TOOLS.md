@@ -3748,15 +3748,27 @@ It also returns `rerun_mechanism`, which is what makes an informed yes possible:
 
 **Errors**: Every refusal happens **before** anything is dispatched, and where running it by hand is an option the refusal carries the CLI `command` as a fallback. The ones you will meet most:
 
-| Code                     | What to do                                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `CONFIRM_REQUIRED`       | Show the user the selection and ask. Then call again with `confirm: true`.                                       |
-| `MODE_REQUIRED`          | Ask the user which code to re-run. The refusal carries `rerun_mechanism` so you can explain both options.        |
-| `WORKFLOW_REQUIRED`      | Name a workflow. The refusal lists the dispatchable ones, and offers `same-commit` when that would work instead. |
-| `NOTHING_TO_RERUN`       | The selection is empty. Check the scope or the ids.                                                              |
-| `IN_RUN_CANNOT_TAG`      | A re-run inside the original GitHub run keeps that run's tags and cannot add more. Drop `tags`, or use `latest`. |
-| `GITHUB_NOT_CONNECTED`   | No repository is connected to the project. Run the `command` by hand instead.                                    |
-| `DISPATCH_NOT_PERMITTED` | The GitHub App cannot start workflows for the repository. Run the `command` by hand instead.                     |
+| Code                     | What to do                                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONFIRM_REQUIRED`       | Show the user the selection and ask. Then call again with `confirm: true`.                                                                   |
+| `MODE_REQUIRED`          | Ask the user which code to re-run. The refusal carries `rerun_mechanism` so you can explain both options.                                    |
+| `WORKFLOW_REQUIRED`      | Name a workflow. The refusal lists the dispatchable ones, and offers `same-commit` when that would work instead.                             |
+| `NOTHING_TO_RERUN`       | The selection is empty. Check the scope or the ids.                                                                                          |
+| `IN_RUN_CANNOT_TAG`      | A re-run inside the original GitHub run keeps that run's tags and cannot add more. Drop `tags`, or use `latest`.                             |
+| `GITHUB_NOT_CONNECTED`   | No repository is connected to the project. Run the `command` by hand instead.                                                                |
+| `DISPATCH_NOT_PERMITTED` | The GitHub App cannot start workflows for the repository. Run the `command` by hand instead.                                                 |
+| `UNKNOWN_MODE`           | `mode` was neither `same-commit` nor `latest`.                                                                                               |
+| `VALIDATION_ERROR`       | A malformed body: a bad run id, a test id outside `[A-Za-z0-9_-]`, over 10000 ids, over 10 tags, a non-boolean `confirm`, or an unknown key. |
+| `REF_REQUIRED`           | The run recorded no branch. Pass `ref`.                                                                                                      |
+| `AMBIGUOUS_WORKFLOW`     | The name matches 2 or more files. Pass the path; the refusal lists the matches.                                                              |
+| `UNKNOWN_WORKFLOW`       | No workflow of that name can receive a re-run. The refusal lists the dispatchable ones, and why the others cannot.                           |
+| `WORKFLOW_CANNOT_SELECT` | `testIds` / `excludeTestIds` on a workflow that declares no id inputs — dropping them would run the whole scope.                             |
+| `WORKFLOW_CANNOT_SCOPE`  | Any scope but `failed` on a workflow with no `testdino_rerun_scope` input.                                                                   |
+| `WORKFLOW_CANNOT_TAG`    | `tags` on a workflow with no `testdino_rerun_tags` input.                                                                                    |
+| `WORKFLOW_CANNOT_PIN`    | `same-commit` on a workflow with no `testdino_rerun_sha` input. Use `latest`, or run the `command`.                                          |
+| `COMMIT_UNKNOWN`         | The run recorded no commit, so `same-commit` has nothing to pin. Use `latest`.                                                               |
+
+Two 409s refuse the timing rather than the selection: `RUN_NOT_FINALIZED` (the run is still going) and `SELECTION_NOT_READY` (its results are still being processed — retry in a few seconds).
 
 **Example prompts**:
 

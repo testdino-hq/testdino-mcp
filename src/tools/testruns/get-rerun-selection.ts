@@ -1,7 +1,6 @@
 /**
- * Get re-run selection tool — what a re-run would execute, and how.
- *
- * Read-only. Pairs with rerun_test: this one answers, that one acts.
+ * Get re-run selection tool — read-only. Pairs with rerun_test: this one
+ * answers what would run and how, that one acts.
  */
 
 import { endpoints } from "../../lib/endpoints.js";
@@ -51,7 +50,8 @@ export const getRerunSelectionTool = {
       excludeTestIds: {
         type: "array",
         items: { type: "string" },
-        description: "Playwright test ids to drop from the scope.",
+        description:
+          "Playwright test ids to drop from the scope. Ignored when testIds is set.",
       },
     },
     required: ["projectId", "runId"],
@@ -80,8 +80,7 @@ export async function handleGetRerunSelection(args?: GetRerunSelectionArgs) {
     return await postRerun(
       endpoints.getRerunSelection(String(args.projectId)),
       token,
-      // JSON.stringify drops an undefined value, so an unset field is simply
-      // absent — which the gateway's `.strict()` schema requires.
+      // An unset field is absent from the JSON, not null.
       {
         runId: String(args.runId),
         scope: args.scope,

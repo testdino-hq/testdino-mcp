@@ -1,10 +1,6 @@
 /**
- * Re-run tests in CI.
- *
- * Writes: this is the tool that spends CI minutes. Every refusal is returned by
- * the gateway before anything is dispatched, and arrives here as the body of a
- * 400 rather than an exception, because that body carries what to ask the user
- * and the CLI command to fall back to.
+ * Re-run tests in CI — the tool that spends CI minutes. Refusals arrive as a
+ * 400 body, not an exception; see _rerun.ts.
  */
 
 import { endpoints } from "../../lib/endpoints.js";
@@ -74,7 +70,8 @@ export const rerunTestTool = {
       excludeTestIds: {
         type: "array",
         items: { type: "string" },
-        description: "Playwright test ids to drop from the scope.",
+        description:
+          "Playwright test ids to drop from the scope. Ignored when testIds is set.",
       },
       tags: {
         type: "array",
@@ -114,8 +111,7 @@ export async function handleRerunTest(args?: RerunTestArgs) {
     return await postRerun(
       endpoints.rerunTest(String(args.projectId)),
       token,
-      // JSON.stringify drops an undefined value, so an unset field is simply
-      // absent — which the gateway's `.strict()` schema requires.
+      // An unset field is absent from the JSON, not null.
       {
         runId: String(args.runId),
         workflow: args.workflow,
