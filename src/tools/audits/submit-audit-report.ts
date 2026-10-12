@@ -301,7 +301,8 @@ export async function handleSubmitAuditReport(args?: SubmitAuditReportArgs) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Failed to submit audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+      `Failed to submit audit report: ${normalizeAuditErrorMessage(errorMessage)}`,
+      { cause: error }
     );
   }
 }

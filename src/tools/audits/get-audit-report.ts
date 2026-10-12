@@ -205,7 +205,8 @@ export async function handleGetAuditReport(args?: GetAuditReportArgs) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Failed to get audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+      `Failed to get audit report: ${normalizeAuditErrorMessage(errorMessage)}`,
+      { cause: error }
     );
   }
 }

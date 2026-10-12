@@ -12,7 +12,11 @@ import {
 import { readFileSync } from "fs";
 import { ApiError } from "./lib/request.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
-import { compileValidators, validationErrorResult } from "./lib/validate.js";
+import {
+  compileValidators,
+  strictObjectIssues,
+  validationErrorResult,
+} from "./lib/validate.js";
 import { prepareLocalFiles } from "./lib/local-files.js";
 import { FIX_PROMPT_TEXT, PROMPTS } from "./prompts/index.js";
 import { join, dirname } from "path";
@@ -668,9 +672,13 @@ export function createServer(): Server {
     }
     const args = { ...(request.params.arguments ?? {}) };
     try {
-      prepareLocalFiles(args);
+      prepareLocalFiles(name, args);
     } catch (error) {
       return errorResult(error);
+    }
+    const strictIssues = strictObjectIssues(name, args);
+    if (strictIssues.length > 0) {
+      return validationErrorResult(name, strictIssues);
     }
     if (!validate(args)) {
       return validationErrorResult(name, validate.errors ?? []);
