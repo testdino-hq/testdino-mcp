@@ -30,9 +30,9 @@ Every tool answers the same way.
 
 - **Success**: the result's text is the server's JSON body (compact), and `structuredContent` carries the same object; `isError` is `false`. The examples below pretty-print the body.
 - **Refused or failed on the server** (4xx/5xx): `isError` is `true`, and the body is the server's JSON with `statusCode` added first, for example `{"statusCode": 404, "success": false, "message": "Release not found"}`. A token without access to the project gets `403 FORBIDDEN` ("Token is not scoped to project …"). The tool sections list the refusals specific to each tool.
-- **Invalid arguments**: refused before any request is made — `isError` is `true` and the text starts with `MCP error -32602: Input validation error: Invalid arguments for tool <name>:` followed by the problems (wrong type, missing required argument, value out of range or not allowed). Arguments a tool does not declare are ignored.
+- **Invalid arguments**: refused before any request is made — `isError` is `true` and the text starts with `MCP error -32602: Input validation error: Invalid arguments for tool <name>:` followed by the problems (wrong type, missing required argument, value out of range or not allowed), in the same words and order as the hosted MCP. Arguments a tool does not declare are ignored.
 - **Unknown tool**: the call fails with `Tool <name> not found`.
-- **No PAT, a local file that cannot be read, or the network failing**: `isError` is `true` with a message saying what went wrong. A read that fails on a dropped connection is retried twice first.
+- **No PAT, an audit report file that cannot be read, or the network failing**: `isError` is `true` with a message saying what went wrong. A read that fails on a dropped connection is retried twice first.
 - **Destructive tools** carry `destructiveHint`, so clients that honour it ask before running them: `update_manual_test_case`, `unlink_automated_test`, `update_release`, `update_manual_run`, `update_run_test_case`, `update_session`, `quarantine_tests`, `release_quarantine`, `set_test_critical`. Read-only tools carry `readOnlyHint`.
 
 ## Table of Contents
@@ -2514,12 +2514,9 @@ A step key the schema does not declare is dropped before the request.
 
 #### Attachments
 
-Top-level `attachments` belong to the whole case; `steps[].attachments` belong to one step. Each item is either:
+Top-level `attachments` belong to the whole case; `steps[].attachments` belong to one step. Each item must be an attachment object (fields such as `fileName`, `originalFileName`, `fileSize`, `mimeType`, `fileContent`, `url`, `blobUrl`), as on the hosted MCP; a string, URL or local path, is refused with `Input validation error`.
 
-- **a local file path** (local package only), such as `"./screenshots/login.png"`: the package reads the file and sends a file object (`fileName`, `originalFileName`, `fileSize`, `mimeType`, `fileContent` as base64). A string counts as a path when it contains `/` or `\` (or starts with a drive letter) and is not an `http://`, `https://`, `blob:` or `data:` URL. A path that cannot be read refuses the call before any request.
-- **an attachment object** with fields such as `fileName`, `originalFileName`, `fileSize`, `mimeType`, `fileContent`, `url`, `blobUrl`. This is what the hosted schema takes.
-
-Any other string, such as a URL, is refused with `Input validation error`.
+The TestDino server does not store attachments sent through MCP yet: a case-level attachment is refused with `400` ("Attachment uploads via MCP are not yet supported…") after the case is created, and step attachments are accepted but not stored. Add files in the TestDino UI.
 
 ### Parameters
 
@@ -2644,7 +2641,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
 
 ### Error Handling
 
-- **`Input validation error`** before any request: `projectId`, `title` or `suiteName` missing, a `flags` or `testStepsDeclarationType` value outside its list, a step `event` outside Given/When/And/Then/But, or an attachment that is a plain string and not a local path.
+- **`Input validation error`** before any request: `projectId`, `title` or `suiteName` missing, a `flags` or `testStepsDeclarationType` value outside its list, a step `event` outside Given/When/And/Then/But, or an attachment that is a string instead of an object.
 - **A `suiteName` that matches no suite**: call `list_manual_test_suites` and use the exact name.
 - **A classification value the project does not define**: the server rejects it. Use a value from Project Settings → Test Case Properties.
 - **A required custom field missing**: the error names the missing fields; set them in `customFields`.
@@ -2691,7 +2688,7 @@ Put only the fields you want to change inside `updates`; everything else stays a
 
 **Issues.** Every key is looked up in the project's connected trackers (Jira and/or Linear) and must resolve in exactly one. Nothing is written unless all keys resolve. A key that exists in both trackers must be sent as `{ "provider": "jira" | "linear", "displayId": "KEY" }` instead of a bare string. A key already linked to the case is skipped.
 
-**Local files (local package only).** Local file paths in `updates.attachments.add` and in `updates.steps[].attachments` are read and sent as file objects (`fileName`, `originalFileName`, `fileSize`, `mimeType`, base64 `fileContent`). A string counts as a path when it contains `/` or `\` and is not an `http(s)://`, `blob:` or `data:` URL; other strings are sent unchanged.
+**Attachments.** `updates.attachments` and `updates.steps[].attachments` are sent as given. The TestDino server does not store attachments sent through MCP yet: `attachments.add` is refused with `400`, and step attachments are accepted but not stored. Add files in the TestDino UI.
 
 ### Parameters
 
@@ -4105,7 +4102,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Only `name` is required. `selectionMode` decides which cases the run includes: `"all"` (default, every case in the project) or `"selected"` (scope with `testCaseIds`, `suiteIds`, and `includeUnsorted` for cases with no suite). `releaseId` attaches the run to a release. `state` defaults to `"new"` and accepts the canonical (`"in_progress"`) or display (`"In Progress"`) form. `note` accepts rich HTML; `forecast` is a number. `tags` must be a JSON array of strings (`["smoke","regression"]`), not the comma-separated form `list_manual_runs` takes as a filter. Requires write permission. Writes data; not marked destructive.
 
-**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation. Uploading a file from your machine is supported only for manual test cases (`create_manual_test_case`).
+**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation.
 
 ### Parameters
 
@@ -4185,11 +4182,11 @@ The tool returns the body below as JSON text and as `structuredContent`:
 
 ### Error Handling
 
-| Status | Message                                     | What to do                                                                                                                                                         |
-| ------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| —      | `Input validation error`                    | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects or local paths. |
-| 404    | `Release "<id>" not found in this project.` | Check `releaseId`, or find it with `list_releases`.                                                                                                                |
-| 409    | code `INTEGRATION_NOT_CONNECTED`            | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                                 |
+| Status | Message                                     | What to do                                                                                                                                          |
+| ------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| —      | `Input validation error`                    | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects. |
+| 404    | `Release "<id>" not found in this project.` | Check `releaseId`, or find it with `list_releases`.                                                                                                 |
+| 409    | code `INTEGRATION_NOT_CONNECTED`            | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                  |
 
 Other failures follow [Responses and errors](#responses-and-errors).
 
@@ -4680,7 +4677,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Only `name` is required. `mission` is the charter, in rich HTML. `assigneeUserId` accepts a User `_id` or an email address, which the server looks up. `estimate` is in minutes. `state` defaults to `"new"` and accepts the canonical (`"under_review"`) or display (`"Under review"`) form. `releaseId` attaches the session to a release. `tags` must be a JSON array of strings (`["exploratory","auth"]`), not the comma-separated form `list_sessions` takes as a filter. Findings cannot be added through MCP — add them in the UI. Requires write permission. Writes data; not marked destructive.
 
-**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation. Uploading a file from your machine is supported only for manual test cases (`create_manual_test_case`).
+**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation.
 
 ### Parameters
 
@@ -4762,12 +4759,12 @@ The tool returns the body below as JSON text and as `structuredContent`:
 
 ### Error Handling
 
-| Status | Message                                                                 | What to do                                                                                                                                                         |
-| ------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| —      | `Input validation error`                                                | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects or local paths. |
-| 400    | `No user found with email "<email>"…` / `No user found with id "<id>"…` | Check `assigneeUserId`.                                                                                                                                            |
-| 404    | `Release "<id>" not found in this project.`                             | Check `releaseId`, or find it with `list_releases`.                                                                                                                |
-| 409    | code `INTEGRATION_NOT_CONNECTED`                                        | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                                 |
+| Status | Message                                                                 | What to do                                                                                                                                          |
+| ------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| —      | `Input validation error`                                                | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects. |
+| 400    | `No user found with email "<email>"…` / `No user found with id "<id>"…` | Check `assigneeUserId`.                                                                                                                             |
+| 404    | `Release "<id>" not found in this project.`                             | Check `releaseId`, or find it with `list_releases`.                                                                                                 |
+| 409    | code `INTEGRATION_NOT_CONNECTED`                                        | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                  |
 
 Other failures follow [Responses and errors](#responses-and-errors).
 

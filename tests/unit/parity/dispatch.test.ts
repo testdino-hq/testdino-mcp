@@ -1,9 +1,6 @@
 // A tool call through the server answers as the hosted MCP does: the same
 // result shape, the same error shape, and the same input validation.
 
-import { mkdtempSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import {
   afterAll,
   afterEach,
@@ -177,53 +174,37 @@ describe("strict objects", () => {
   });
 });
 
-describe("local files", () => {
-  it("sends an attachment given as a local path as file content", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "td-mcp-"));
-    const file = join(dir, "note.txt");
-    writeFileSync(file, "hello");
+describe("attachments", () => {
+  it("refuses a local file path, as the hosted schema does", async () => {
+    const fetchMock = respond(201, {});
+    for (const [name, extra] of [
+      ["create_manual_test_case", { title: "t", suiteName: "s" }],
+      ["create_manual_run", { name: "r" }],
+    ] as const) {
+      const result = await client.callTool({
+        name,
+        arguments: { projectId: P, ...extra, attachments: ["/tmp/a.png"] },
+      });
+      expect(result.isError).toBe(true);
+      expect((result.content as { text: string }[])[0].text).toMatch(
+        /Expected object, received string/
+      );
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards attachment objects unchanged", async () => {
     const fetchMock = respond(201, { success: true });
-    const result = await client.callTool({
+    const attachment = { url: "https://example.com/a.png", fileName: "a.png" };
+    await client.callTool({
       name: "create_manual_test_case",
       arguments: {
         projectId: P,
         title: "t",
         suiteName: "s",
-        attachments: [file],
+        attachments: [attachment],
       },
     });
-    expect(result.isError).toBe(false);
-    expect(sentBody(fetchMock).attachments[0]).toMatchObject({
-      fileName: "note.txt",
-      fileContent: Buffer.from("hello").toString("base64"),
-    });
-  });
-
-  it("leaves other attachment fields as the hosted schema has them", async () => {
-    const fetchMock = respond(201, {});
-    const result = await client.callTool({
-      name: "create_manual_run",
-      arguments: { projectId: P, name: "r", attachments: ["/tmp/a.png"] },
-    });
-    expect(result.isError).toBe(true);
-    expect((result.content as { text: string }[])[0].text).toMatch(
-      /Input validation error/
-    );
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("reports a local path that cannot be read", async () => {
-    const fetchMock = respond(201, {});
-    const result = await client.callTool({
-      name: "create_manual_test_case",
-      arguments: {
-        projectId: P,
-        title: "t",
-        suiteName: "s",
-        attachments: ["/no/such/file.png"],
-      },
-    });
-    expect(result.isError).toBe(true);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(sentBody(fetchMock).attachments).toEqual([attachment]);
   });
 });

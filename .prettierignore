@@ -10,3 +10,4 @@ package-lock.json
 docs/skill.md
 # Copied from the hosted MCP on sync day.
 tests/fixtures/hosted-catalogue.json
+tests/fixtures/hosted-validation.json

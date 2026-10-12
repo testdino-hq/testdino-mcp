@@ -5,12 +5,9 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { ApiError, apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
-import {
-  processAttachments,
-  processStepAttachments,
-  FileData,
-} from "../../lib/file-utils.js";
-import type { TestStep } from "../../lib/file-utils.js";
+
+type TestStep = Record<string, unknown>;
+type FileData = Record<string, unknown>;
 
 interface ManualTestCaseUpdates {
   name?: string; // Updated test case name/title
@@ -51,7 +48,7 @@ interface ManualTestCaseUpdates {
   tags?: string;
   flags?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: {
-    add?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
+    add?: FileData[];
     remove?: string[]; // Array of attachment IDs or URLs to remove
   };
   customFields?: Record<string, string>; // Custom fields as key-value pairs
@@ -134,18 +131,7 @@ export async function handleUpdateManualTestCase(
   }
 
   try {
-    // Process attachments if present: convert local file paths to file data objects (same format as UI)
-    const processedUpdates = { ...args.updates };
-    if (processedUpdates.steps && Array.isArray(processedUpdates.steps)) {
-      processedUpdates.steps = processStepAttachments(processedUpdates.steps);
-    }
-    if (processedUpdates.attachments?.add) {
-      processedUpdates.attachments.add = processAttachments(
-        processedUpdates.attachments.add
-      );
-    }
-
-    const body = { updates: processedUpdates };
+    const body = { updates: args.updates };
 
     const updateManualTestCaseUrl = endpoints.updateManualTestCase(
       String(args.projectId),

@@ -6,10 +6,9 @@ All notable changes to `@testdino/mcp` are documented here.
 
 The package now exposes exactly what the hosted TestDino MCP exposes — the same
 tools, descriptions, parameters, prompts and skills guide — and answers every
-call the way the hosted server does. Only local-file handling the hosted server
-cannot do stays package-only: manual test case attachments given as local
-paths, and the
-`markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
+call the way the hosted server does. Only the audit report file arguments
+(`markdownReportPath` / `writeMarkdown` / `outputPath`), which need the local
+disk, stay package-only.
 
 ### Breaking
 
@@ -19,8 +18,13 @@ paths, and the
   caught the thrown error should read `isError` instead.
 - **Arguments are validated before any request.** A wrong type, a missing
   required argument or an out-of-range value is refused with
-  `Input validation error`; an argument a tool does not declare is ignored.
-  Before, some of these were sent anyway — `limit: "ten"` was silently dropped.
+  `Input validation error`, in the hosted server's words and order; an argument
+  a tool does not declare is ignored. Before, some of these were sent anyway —
+  `limit: "ten"` was silently dropped.
+- **Attachments are no longer read from local paths.** Manual test case
+  attachments must be objects, as on the hosted server; a path is refused. The
+  server never stored files sent this way (a case-level attachment is refused
+  with `400`, a step attachment is dropped), so add files in the TestDino UI.
 - **`health` returns JSON** (user, organizations, projects, token expiry), not a
   Markdown summary.
 - **Results are compact JSON** with `structuredContent`, as on the hosted server.

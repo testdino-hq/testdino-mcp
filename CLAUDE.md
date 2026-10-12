@@ -34,11 +34,11 @@ The package must expose exactly what the hosted MCP exposes and answer every cal
 - **Tool definitions** (`name`, `title`, `description`, `inputSchema`, `annotations`, `execution`) are copied from the hosted `tools/list`, in the hosted order. Never write or edit one by hand here; change it in microservices, then copy it.
 - **Prompts** (`src/prompts/`) are the hosted builders and approval gate, copied. **`docs/skill.md`** is the hosted `skill.md` verbatim (excluded from prettier).
 - **Results** go through `toolResultFromCaptured` (`src/lib/tool-result.ts`, a copy of the gateway's): compact JSON + `structuredContent`; a 4xx/5xx is `isError` with the body and `statusCode`. Handlers throw `ApiError` (or an `Error` whose `cause` is one); the dispatcher in `src/server.ts` shapes it. A refusal the hosted tool raises itself (not the route) is thrown as `ApiError` with the hosted status and body, word for word.
-- **Validation** is `ajv` against the copied schema (`src/lib/validate.ts`), before any request; unknown arguments are dropped, as hosted zod does. Don't add local checks the hosted tool doesn't make.
-- **Only package additions:** manual test case attachments given as local paths (`create_manual_test_case`, converted before validation in `src/lib/local-files.ts`; `update_manual_test_case`, in its handler) and the audit `markdownReportPath` / `writeMarkdown` / `outputPath` arguments.
+- **Validation** is `ajv` against the copied schema (`src/lib/validate.ts`), before any request; unknown arguments are dropped, as hosted zod does. Refusal text matches zod's word for word (`tests/fixtures/hosted-validation.json`); hosted transforms (rerun `tags` trim) are applied first. Don't add local checks the hosted tool doesn't make.
+- **Only package additions:** the audit `markdownReportPath` / `writeMarkdown` / `outputPath` arguments.
 - **Guard:** `tests/fixtures/hosted-catalogue.json` is the hosted catalogue on sync day; `tests/unit/parity/` fails on any difference from it, on any declared argument that does not reach the request, and on the result / error / validation shapes.
 
-**To re-sync:** in microservices, dump the hosted `tools/list`, `prompts/list`, the prompt samples and the guide from `buildMcpServer()` over an in-memory client; replace the changed tool definitions, copy `skill.md` and any changed prompt file, refresh `tests/fixtures/hosted-catalogue.json`, add handlers for new tools (and route support in microservices if a stdio route is missing), then run the full gate. Publish only after the microservices change is in production.
+**To re-sync:** in microservices, dump the hosted `tools/list`, `prompts/list`, the prompt samples and the guide from `buildMcpServer()` over an in-memory client; replace the changed tool definitions, copy `skill.md` and any changed prompt file, refresh `tests/fixtures/hosted-catalogue.json` (and `hosted-validation.json` for a new refusal shape), add handlers for new tools (and route support in microservices if a stdio route is missing), then run the full gate. Publish only after the microservices change is in production.
 
 ---
 
@@ -54,9 +54,7 @@ src/
 │   ├── endpoints.ts      ← All API endpoint URL builders (centralized)
 │   ├── request.ts        ← HTTP fetch wrapper (apiRequest / apiRequestJson, ApiError)
 │   ├── tool-result.ts    ← toolResultFromCaptured (copy of the gateway's)
-│   ├── validate.ts       ← ajv validation against each tool's schema
-│   ├── local-files.ts    ← local attachment paths → file objects
-│   └── file-utils.ts     ← Local file reading, base64 encoding, step validation
+│   └── validate.ts       ← ajv validation against each tool's schema, zod-worded refusals
 └── tools/
     ├── health.ts         ← PAT validation + account info
     ├── index.ts          ← Barrel export for all tools
@@ -76,7 +74,7 @@ src/
 **Data flow for every tool call:**
 
 ```
-AI agent calls tool → server.ts converts local attachment paths → ajv validates
+AI agent calls tool → server.ts applies hosted transforms → ajv validates
 → routes by name → handler: getApiKey() → endpoints.X() → apiRequestJson()
 → dispatcher shapes the body or ApiError with toolResultFromCaptured
 ```
@@ -110,7 +108,7 @@ Every tool file exports exactly two things:
 2. Add the endpoint URL builder in `src/lib/endpoints.ts`
 3. Create the tool file in `src/tools/<category>/` with the hosted definition copied in
 4. Export from `src/tools/index.ts`; register in `src/server.ts` (tools array in hosted order + routing if-block)
-5. Refresh `tests/fixtures/hosted-catalogue.json` and copy the hosted `skill.md`
+5. Refresh `tests/fixtures/hosted-catalogue.json` and copy the hosted `skill.md`; a new zod refusal shape (new keyword, custom message, transform) also goes in `tests/fixtures/hosted-validation.json`, captured from hosted
 6. Run full verify: `npm run typecheck && npm run lint && npm run test`
 
 ---
@@ -145,7 +143,6 @@ Every tool file exports exactly two things:
 - Don't add new dependencies without strong justification
 - Don't use `console.log` — MCP uses stdio. Use `console.error` or `logError`/`logInfo` for debug output
 - Don't change the response shape (`{ content: [{ type: "text", text }] }`) — it's the MCP protocol
-- Don't duplicate utility code — if `file-utils.ts` has what you need, import it
 
 ---
 
@@ -206,7 +203,7 @@ tests/
 ├── setup.ts            ← Global setup (env cleanup between tests)
 ├── helpers/            ← Mock factories, shared types
 ├── unit/               ← Unit tests (mirror src/ structure)
-│   ├── lib/            ← env, endpoints, request, file-utils
+│   ├── lib/            ← env, endpoints, request
 │   ├── tools/          ← All 54 tool handlers
 │   └── parity/         ← Same catalogue, arguments, results and validation as hosted
 ├── fixtures/           ← hosted-catalogue.json (the hosted catalogue on sync day)
@@ -316,7 +313,6 @@ This is a public npm package. Before publishing:
 | PAT resolution          | `getApiKey()` checks `args.token` first, then `process.env.TESTDINO_PAT`. Both paths must work                                 |
 | Endpoint centralization | All API URLs live in `endpoints.ts`. Tool handlers never build URLs. This makes API changes a single-file edit                 |
 | Query param filtering   | `buildQueryString()` in endpoints.ts skips `undefined`/`null` values automatically                                             |
-| File attachments        | Only manual test case tools use file attachments. `file-utils.ts` handles base64 encoding. Max 10MB per file                   |
 | Response wrapping       | The TestDino API sometimes wraps responses in `{ success, data }`. Health tool handles this — check if new endpoints do too    |
 | Boolean params          | Some API params expect string `"true"`/`"false"`, not boolean. Use `String()` when passing to query params                     |
 | Version sync            | Version in 3 places. Forgetting one causes confusion. Always update all three                                                  |

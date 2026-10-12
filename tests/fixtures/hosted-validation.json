@@ -1,0 +1,425 @@
+{
+  "source": "hosted MCP on staging, tools whose schema matches hosted-catalogue.json",
+  "cases": [
+    {
+      "label": "required string",
+      "tool": "get_manual_test_case",
+      "arguments": {
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"caseId\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    },
+    {
+      "label": "required object",
+      "tool": "update_release",
+      "arguments": {
+        "releaseId": "r",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool update_release: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"updates\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    },
+    {
+      "label": "two required",
+      "tool": "link_automated_test",
+      "arguments": {
+        "caseId": "c",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool link_automated_test: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"pwTestId\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"fullTitle\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    },
+    {
+      "label": "string for integer",
+      "tool": "list_testruns",
+      "arguments": {
+        "limit": "ten",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool list_testruns: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"number\",\n    \"received\": \"string\",\n    \"path\": [\n      \"limit\"\n    ],\n    \"message\": \"Expected number, received string\"\n  }\n]"
+    },
+    {
+      "label": "float for integer",
+      "tool": "list_testruns",
+      "arguments": {
+        "limit": 1.5,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool list_testruns: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"integer\",\n    \"received\": \"float\",\n    \"message\": \"Expected integer, received float\",\n    \"path\": [\n      \"limit\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "number for string",
+      "tool": "get_manual_test_case",
+      "arguments": {
+        "caseId": 5,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"number\",\n    \"path\": [\n      \"caseId\"\n    ],\n    \"message\": \"Expected string, received number\"\n  }\n]"
+    },
+    {
+      "label": "null for string",
+      "tool": "get_manual_test_case",
+      "arguments": {
+        "caseId": null,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"null\",\n    \"path\": [\n      \"caseId\"\n    ],\n    \"message\": \"Expected string, received null\"\n  }\n]"
+    },
+    {
+      "label": "array for string",
+      "tool": "get_manual_test_case",
+      "arguments": {
+        "caseId": [],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"array\",\n    \"path\": [\n      \"caseId\"\n    ],\n    \"message\": \"Expected string, received array\"\n  }\n]"
+    },
+    {
+      "label": "object for string",
+      "tool": "get_manual_test_case",
+      "arguments": {
+        "caseId": {},
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"object\",\n    \"path\": [\n      \"caseId\"\n    ],\n    \"message\": \"Expected string, received object\"\n  }\n]"
+    },
+    {
+      "label": "string for boolean",
+      "tool": "rerun_test",
+      "arguments": {
+        "runId": "test_run_3df04a42e6f8d354e4ed775c",
+        "confirm": "yes",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool rerun_test: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"confirm\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    },
+    {
+      "label": "string for array",
+      "tool": "quarantine_tests",
+      "arguments": {
+        "testcase_ids": "x",
+        "reason": "r",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool quarantine_tests: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"array\",\n    \"received\": \"string\",\n    \"path\": [\n      \"testcase_ids\"\n    ],\n    \"message\": \"Expected array, received string\"\n  }\n]"
+    },
+    {
+      "label": "string for object",
+      "tool": "update_release",
+      "arguments": {
+        "releaseId": "r",
+        "updates": "x",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool update_release: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"string\",\n    \"path\": [\n      \"updates\"\n    ],\n    \"message\": \"Expected object, received string\"\n  }\n]"
+    },
+    {
+      "label": "enum number",
+      "tool": "get_integration_status",
+      "arguments": {
+        "provider": 3,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_integration_status: [\n  {\n    \"expected\": \"'jira' | 'linear' | 'asana' | 'monday' | 'github'\",\n    \"received\": \"number\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"provider\"\n    ],\n    \"message\": \"Expected 'jira' | 'linear' | 'asana' | 'monday' | 'github', received number\"\n  }\n]"
+    },
+    {
+      "label": "minimum",
+      "tool": "list_manual_runs",
+      "arguments": {
+        "limit": 0,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool list_manual_runs: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be greater than or equal to 1\",\n    \"path\": [\n      \"limit\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "maximum",
+      "tool": "list_releases",
+      "arguments": {
+        "limit": 100000,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool list_releases: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 200,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 200\",\n    \"path\": [\n      \"limit\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "exclusiveMinimum",
+      "tool": "list_testruns",
+      "arguments": {
+        "page": 0,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool list_testruns: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 0,\n    \"type\": \"number\",\n    \"inclusive\": false,\n    \"exact\": false,\n    \"message\": \"Number must be greater than 0\",\n    \"path\": [\n      \"page\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "minLength in array",
+      "tool": "get_external_issue",
+      "arguments": {
+        "provider": "jira",
+        "issueIds": [
+          ""
+        ],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_external_issue: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"issueIds\",\n      0\n    ]\n  }\n]"
+    },
+    {
+      "label": "maxLength",
+      "tool": "get_quarantine",
+      "arguments": {
+        "quarantine_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_quarantine: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 128,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 128 character(s)\",\n    \"path\": [\n      \"quarantine_id\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "minLength string",
+      "tool": "quarantine_tests",
+      "arguments": {
+        "testcase_ids": [
+          "t"
+        ],
+        "reason": "",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool quarantine_tests: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"reason\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "minItems",
+      "tool": "get_external_issue",
+      "arguments": {
+        "provider": "jira",
+        "issueIds": [],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_external_issue: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"issueIds\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "maxItems",
+      "tool": "quarantine_tests",
+      "arguments": {
+        "testcase_ids": [
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t",
+          "t"
+        ],
+        "reason": "r",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool quarantine_tests: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 100,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at most 100 element(s)\",\n    \"path\": [\n      \"testcase_ids\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "pattern",
+      "tool": "get_rerun_selection",
+      "arguments": {
+        "runId": "bad",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_rerun_selection: [\n  {\n    \"validation\": \"regex\",\n    \"code\": \"invalid_string\",\n    \"message\": \"a TestDino run id (test_run_<hex>)\",\n    \"path\": [\n      \"runId\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "pattern via $ref",
+      "tool": "rerun_test",
+      "arguments": {
+        "runId": "test_run_3df04a42e6f8d354e4ed775c",
+        "confirm": true,
+        "excludeTestIds": [
+          "bad id!"
+        ],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool rerun_test: [\n  {\n    \"validation\": \"regex\",\n    \"code\": \"invalid_string\",\n    \"message\": \"a Playwright test id\",\n    \"path\": [\n      \"excludeTestIds\",\n      0\n    ]\n  }\n]"
+    },
+    {
+      "label": "anyOf",
+      "tool": "assign_test",
+      "arguments": {
+        "testcase_id": "t",
+        "assignee": 5,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool assign_test: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"number\",\n    \"path\": [\n      \"assignee\"\n    ],\n    \"message\": \"Expected string, received number\"\n  }\n]"
+    },
+    {
+      "label": "anyOf maxLength",
+      "tool": "assign_test",
+      "arguments": {
+        "testcase_id": "t",
+        "assignee": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool assign_test: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 254,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 254 character(s)\",\n    \"path\": [\n      \"assignee\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "nested anyOf enum",
+      "tool": "create_release",
+      "arguments": {
+        "name": "x",
+        "buildTarget": {
+          "platform": "windows"
+        },
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool create_release: [\n  {\n    \"received\": \"windows\",\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      \"web\",\n      \"ios\",\n      \"android\",\n      \"api\"\n    ],\n    \"path\": [\n      \"buildTarget\",\n      \"platform\"\n    ],\n    \"message\": \"Invalid enum value. Expected 'web' | 'ios' | 'android' | 'api', received 'windows'\"\n  }\n]"
+    },
+    {
+      "label": "array item object",
+      "tool": "bulk_link_automated_tests",
+      "arguments": {
+        "links": [
+          {}
+        ],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool bulk_link_automated_tests: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"links\",\n      0,\n      \"manualTestCaseId\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"links\",\n      0,\n      \"pwTestId\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"links\",\n      0,\n      \"fullTitle\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    },
+    {
+      "label": "unrecognized key",
+      "tool": "submit_audit_report",
+      "arguments": {
+        "markdownReport": "# r",
+        "target": {
+          "value": "x",
+          "a": 1,
+          "b": 2
+        },
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool submit_audit_report: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"a\",\n      \"b\"\n    ],\n    \"path\": [\n      \"target\"\n    ],\n    \"message\": \"Unrecognized key(s) in object: 'a', 'b'\"\n  }\n]"
+    },
+    {
+      "label": "missing + bad, order",
+      "tool": "quarantine_tests",
+      "arguments": {
+        "testcase_ids": "x",
+        "ends_in_days": 0,
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool quarantine_tests: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"array\",\n    \"received\": \"string\",\n    \"path\": [\n      \"testcase_ids\"\n    ],\n    \"message\": \"Expected array, received string\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"reason\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be greater than or equal to 1\",\n    \"path\": [\n      \"ends_in_days\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "step attachments item",
+      "tool": "create_manual_test_case",
+      "arguments": {
+        "title": "t",
+        "suiteName": "s",
+        "attachments": [
+          "/tmp/a.png"
+        ],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool create_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"string\",\n    \"path\": [\n      \"attachments\",\n      0\n    ],\n    \"message\": \"Expected object, received string\"\n  }\n]"
+    },
+    {
+      "label": "union",
+      "tool": "submit_audit_report",
+      "arguments": {
+        "markdownReport": "# r",
+        "findings": [
+          {
+            "title": "t",
+            "evidence": [
+              5
+            ]
+          }
+        ],
+        "projectId": "project_x"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool submit_audit_report: [\n  {\n    \"expected\": \"'low' | 'medium' | 'high' | 'critical'\",\n    \"received\": \"undefined\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"findings\",\n      0,\n      \"severity\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"findings\",\n      0,\n      \"summary\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_union\",\n    \"unionErrors\": [\n      {\n        \"issues\": [\n          {\n            \"code\": \"invalid_type\",\n            \"expected\": \"string\",\n            \"received\": \"number\",\n            \"path\": [\n              \"findings\",\n              0,\n              \"evidence\",\n              0\n            ],\n            \"message\": \"Expected string, received number\"\n          }\n        ],\n        \"name\": \"ZodError\"\n      },\n      {\n        \"issues\": [\n          {\n            \"code\": \"invalid_type\",\n            \"expected\": \"object\",\n            \"received\": \"number\",\n            \"path\": [\n              \"findings\",\n              0,\n              \"evidence\",\n              0\n            ],\n            \"message\": \"Expected object, received number\"\n          }\n        ],\n        \"name\": \"ZodError\"\n      }\n    ],\n    \"path\": [\n      \"findings\",\n      0,\n      \"evidence\",\n      0\n    ],\n    \"message\": \"Invalid input\"\n  }\n]"
+    }
+  ]
+}

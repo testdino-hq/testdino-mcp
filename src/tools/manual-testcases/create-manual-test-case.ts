@@ -5,12 +5,9 @@
 import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
-import {
-  processAttachments,
-  processStepAttachments,
-  FileData,
-} from "../../lib/file-utils.js";
-import type { TestStep } from "../../lib/file-utils.js";
+
+type TestStep = Record<string, unknown>;
+type FileData = Record<string, unknown>;
 
 interface CreateManualTestCaseArgs {
   projectId: string;
@@ -52,7 +49,7 @@ interface CreateManualTestCaseArgs {
   automationStatus?: "Manual" | "Automated" | "To be automated";
   tags?: string;
   flags?: ("To be Automated" | "Is flaky" | "Muted")[];
-  attachments?: string[]; // Array of attachment URLs or file paths (up to 10MB) - will be processed to FileData objects
+  attachments?: FileData[];
   customFields?: Record<string, string>; // Custom fields as key-value pairs
 }
 
@@ -307,7 +304,7 @@ export async function handleCreateManualTestCase(
       body.postconditions = String(args.postconditions);
     }
     if (args?.steps) {
-      body.steps = processStepAttachments(args.steps);
+      body.steps = args.steps;
     }
     if (args?.priority) {
       body.priority = String(args.priority);
@@ -334,8 +331,7 @@ export async function handleCreateManualTestCase(
       body.flags = args.flags.map(String);
     }
     if (args?.attachments) {
-      // Process attachments: convert local file paths to file data objects (same format as UI)
-      body.attachments = processAttachments(args.attachments);
+      body.attachments = args.attachments;
     }
     if (args?.customFields) {
       body.customFields = args.customFields;

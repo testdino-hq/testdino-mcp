@@ -13,11 +13,11 @@ import { readFileSync } from "fs";
 import { ApiError } from "./lib/request.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
 import {
+  applyHostedTransforms,
   compileValidators,
   strictObjectIssues,
   validationErrorResult,
 } from "./lib/validate.js";
-import { prepareLocalFiles } from "./lib/local-files.js";
 import { FIX_PROMPT_TEXT, PROMPTS } from "./prompts/index.js";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -671,17 +671,14 @@ export function createServer(): Server {
       throw new McpError(ErrorCode.InvalidParams, `Tool ${name} not found`);
     }
     const args = { ...(request.params.arguments ?? {}) };
-    try {
-      prepareLocalFiles(name, args);
-    } catch (error) {
-      return errorResult(error);
-    }
+    applyHostedTransforms(name, args);
     const strictIssues = strictObjectIssues(name, args);
-    if (strictIssues.length > 0) {
-      return validationErrorResult(name, strictIssues);
-    }
-    if (!validate(args)) {
-      return validationErrorResult(name, validate.errors ?? []);
+    const valid = validate(args);
+    if (!valid || strictIssues.length > 0) {
+      return validationErrorResult(name, [
+        ...(validate.errors ?? []),
+        ...strictIssues,
+      ]);
     }
     try {
       return asHostedResult(await dispatch(name, args));
