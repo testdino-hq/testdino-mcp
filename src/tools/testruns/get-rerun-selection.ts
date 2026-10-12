@@ -90,6 +90,8 @@ export async function handleGetRerunSelection(args?: GetRerunSelectionArgs) {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to resolve the re-run selection: ${errorMessage}`);
+    throw new Error(`Failed to resolve the re-run selection: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

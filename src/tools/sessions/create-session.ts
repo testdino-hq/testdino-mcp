@@ -97,6 +97,6 @@ export async function handleCreateSession(args?: CreateSessionArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create session: ${msg}`);
+    throw new Error(`Failed to create session: ${msg}`, { cause: error });
   }
 }

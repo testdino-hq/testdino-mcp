@@ -77,6 +77,6 @@ export async function handleListReleases(args?: ListReleasesArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list releases: ${msg}`);
+    throw new Error(`Failed to list releases: ${msg}`, { cause: error });
   }
 }

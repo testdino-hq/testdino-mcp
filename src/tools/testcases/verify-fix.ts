@@ -99,6 +99,6 @@ export async function handleVerifyFix(args?: VerifyFixArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to verify fix: ${errorMessage}`);
+    throw new Error(`Failed to verify fix: ${errorMessage}`, { cause: error });
   }
 }

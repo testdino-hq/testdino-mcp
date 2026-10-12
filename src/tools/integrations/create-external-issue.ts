@@ -200,6 +200,8 @@ export async function handleCreateExternalIssue(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create external issue: ${errorMessage}`);
+    throw new Error(`Failed to create external issue: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

@@ -82,6 +82,6 @@ export async function handleListSessions(args?: ListSessionsArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list sessions: ${msg}`);
+    throw new Error(`Failed to list sessions: ${msg}`, { cause: error });
   }
 }

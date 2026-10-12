@@ -51,6 +51,6 @@ export async function handleGetRelease(args?: GetReleaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get release: ${msg}`);
+    throw new Error(`Failed to get release: ${msg}`, { cause: error });
   }
 }

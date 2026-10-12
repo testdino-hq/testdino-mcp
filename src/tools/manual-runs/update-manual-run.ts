@@ -62,6 +62,6 @@ export async function handleUpdateManualRun(args?: UpdateManualRunArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update manual run: ${msg}`);
+    throw new Error(`Failed to update manual run: ${msg}`, { cause: error });
   }
 }

@@ -37,7 +37,8 @@
   ],
   "author": "TestDino",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1"
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "ajv": "^8.18.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

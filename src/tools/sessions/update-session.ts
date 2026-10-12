@@ -62,6 +62,6 @@ export async function handleUpdateSession(args?: UpdateSessionArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update session: ${msg}`);
+    throw new Error(`Failed to update session: ${msg}`, { cause: error });
   }
 }

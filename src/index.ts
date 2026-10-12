@@ -13,6 +13,9 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync } from "fs";
+import { ApiError } from "./lib/request.js";
+import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
+import { compileValidators, validationErrorResult } from "./lib/validate.js";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -137,6 +140,33 @@ const SKILLS_DESCRIPTION =
 function readSkillsGuide(): string {
   const skillPath = join(__dirname, "..", "docs", "skill.md");
   return readFileSync(skillPath, "utf-8");
+}
+
+// Handlers return the API body as JSON text; re-shaping it here gives the
+// hosted server's result (compact text plus structuredContent) for every tool.
+function asHostedResult(result: {
+  content: { type: string; text?: string }[];
+  isError?: boolean;
+}): ToolResult {
+  const text = result.content[0]?.text;
+  if (result.isError || typeof text !== "string") {
+    return result as ToolResult;
+  }
+  try {
+    return toolResultFromCaptured(200, JSON.parse(text));
+  } catch {
+    return toolResultFromCaptured(200, text);
+  }
+}
+
+function errorResult(error: unknown): ToolResult {
+  for (let e: unknown = error; e instanceof Error; e = e.cause) {
+    if (e instanceof ApiError) {
+      return toolResultFromCaptured(e.statusCode, e.body);
+    }
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return { content: [{ type: "text", text: message }], isError: true };
 }
 
 async function main() {
@@ -319,9 +349,10 @@ async function main() {
   /**
    * Handle tool calls
    */
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-
+  const dispatch = async (
+    name: string,
+    args: Record<string, unknown> | undefined
+  ) => {
     // Route to appropriate tool handler
     if (name === "health") {
       return await handleHealth(args);
@@ -583,6 +614,25 @@ async function main() {
     }
 
     throw new Error(`Unknown tool: ${name}`);
+  };
+
+  const validators = compileValidators(tools);
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name } = request.params;
+    const validate = validators.get(name);
+    if (!validate) {
+      throw new McpError(ErrorCode.InvalidParams, `Tool ${name} not found`);
+    }
+    const args = { ...(request.params.arguments ?? {}) };
+    if (!validate(args)) {
+      return validationErrorResult(name, validate.errors ?? []);
+    }
+    try {
+      return asHostedResult(await dispatch(name, args));
+    } catch (error) {
+      return errorResult(error);
+    }
   });
 
   // Connect to stdio transport

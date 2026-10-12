@@ -75,6 +75,8 @@ export async function handleListAutomatedTests(args?: ListAutomatedTestsArgs) {
     return toolResult(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list automated tests: ${errorMessage}`);
+    throw new Error(`Failed to list automated tests: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

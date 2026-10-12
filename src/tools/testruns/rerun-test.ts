@@ -128,6 +128,8 @@ export async function handleRerunTest(args?: RerunTestArgs) {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to re-run the tests: ${errorMessage}`);
+    throw new Error(`Failed to re-run the tests: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

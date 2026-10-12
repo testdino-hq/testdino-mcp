@@ -129,6 +129,8 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to debug test case: ${errorMessage}`);
+    throw new Error(`Failed to debug test case: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

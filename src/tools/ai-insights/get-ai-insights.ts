@@ -110,6 +110,8 @@ export async function handleGetAiInsights(args?: GetAiInsightsArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve AI insights: ${errorMessage}`);
+    throw new Error(`Failed to retrieve AI insights: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

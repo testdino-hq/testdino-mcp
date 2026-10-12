@@ -80,6 +80,6 @@ export async function handleListRunTestCases(args?: ListRunTestCasesArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list run test cases: ${msg}`);
+    throw new Error(`Failed to list run test cases: ${msg}`, { cause: error });
   }
 }

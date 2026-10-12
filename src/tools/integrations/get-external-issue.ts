@@ -113,6 +113,8 @@ export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get external issue: ${errorMessage}`);
+    throw new Error(`Failed to get external issue: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

@@ -51,6 +51,6 @@ export async function handleGetSession(args?: GetSessionArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get session: ${msg}`);
+    throw new Error(`Failed to get session: ${msg}`, { cause: error });
   }
 }

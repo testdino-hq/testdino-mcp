@@ -51,6 +51,6 @@ export async function handleGetManualRun(args?: GetManualRunArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get manual run: ${msg}`);
+    throw new Error(`Failed to get manual run: ${msg}`, { cause: error });
   }
 }

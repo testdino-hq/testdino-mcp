@@ -75,6 +75,6 @@ export async function handleListManualRuns(args?: ListManualRunsArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list manual runs: ${msg}`);
+    throw new Error(`Failed to list manual runs: ${msg}`, { cause: error });
   }
 }

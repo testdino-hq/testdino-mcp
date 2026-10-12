@@ -64,6 +64,8 @@ export async function handleGetTestCaseLinks(args?: GetTestCaseLinksArgs) {
     return toolResult(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get test case links: ${errorMessage}`);
+    throw new Error(`Failed to get test case links: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

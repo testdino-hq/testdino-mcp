@@ -74,6 +74,8 @@ export async function handleGetRunErrorClusters(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get run error clusters: ${errorMessage}`);
+    throw new Error(`Failed to get run error clusters: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

@@ -120,6 +120,6 @@ export async function handleCreateRelease(args?: CreateReleaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create release: ${msg}`);
+    throw new Error(`Failed to create release: ${msg}`, { cause: error });
   }
 }

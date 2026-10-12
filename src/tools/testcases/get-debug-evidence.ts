@@ -134,6 +134,8 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get debug evidence: ${errorMessage}`);
+    throw new Error(`Failed to get debug evidence: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

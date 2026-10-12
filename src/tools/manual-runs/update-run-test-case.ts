@@ -72,6 +72,6 @@ export async function handleUpdateRunTestCase(args?: UpdateRunTestCaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update run test case: ${msg}`);
+    throw new Error(`Failed to update run test case: ${msg}`, { cause: error });
   }
 }

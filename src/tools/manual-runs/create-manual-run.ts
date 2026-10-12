@@ -103,6 +103,6 @@ export async function handleCreateManualRun(args?: CreateManualRunArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create manual run: ${msg}`);
+    throw new Error(`Failed to create manual run: ${msg}`, { cause: error });
   }
 }

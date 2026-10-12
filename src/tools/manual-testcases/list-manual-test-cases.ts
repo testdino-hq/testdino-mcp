@@ -242,6 +242,8 @@ export async function handleListManualTestCases(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list manual test cases: ${errorMessage}`);
+    throw new Error(`Failed to list manual test cases: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

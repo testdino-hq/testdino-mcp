@@ -62,6 +62,6 @@ export async function handleUpdateRelease(args?: UpdateReleaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update release: ${msg}`);
+    throw new Error(`Failed to update release: ${msg}`, { cause: error });
   }
 }

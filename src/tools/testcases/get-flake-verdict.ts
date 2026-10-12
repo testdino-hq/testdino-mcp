@@ -78,6 +78,8 @@ export async function handleGetFlakeVerdict(args?: GetFlakeVerdictArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get flake verdict: ${errorMessage}`);
+    throw new Error(`Failed to get flake verdict: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

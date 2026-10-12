@@ -91,6 +91,8 @@ export async function handleLinkAutomatedTest(args?: LinkAutomatedTestArgs) {
     return toolResult(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to link automated test: ${errorMessage}`);
+    throw new Error(`Failed to link automated test: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

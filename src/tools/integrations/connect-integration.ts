@@ -72,6 +72,8 @@ export async function handleConnectIntegration(args?: ConnectIntegrationArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to connect integration: ${errorMessage}`);
+    throw new Error(`Failed to connect integration: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

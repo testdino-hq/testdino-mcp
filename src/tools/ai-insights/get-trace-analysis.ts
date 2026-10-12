@@ -80,6 +80,8 @@ export async function handleGetTraceAnalysis(args?: GetTraceAnalysisArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve trace analysis: ${errorMessage}`);
+    throw new Error(`Failed to retrieve trace analysis: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }
