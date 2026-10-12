@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This guide covers every tool and prompt in the `@testdino/mcp` server. From 3.0.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
+This guide covers every tool and prompt in the `@testdino/mcp` server. From 2.2.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
 
 > **Platform Support**: The tools work with any MCP-compatible client. Setup is verified on **Cursor**, **Claude Desktop**, **VS Code**, and **JetBrains** IDEs. Paths below use Cursor's `.cursor/mcp.json` — substitute the equivalent file for your client.
 
@@ -6511,7 +6511,7 @@ A tool is added to the hosted MCP first (`testdino-hq/microservices`, `services/
 
 ## Version History
 
-- **v3.0.0**:
+- **v2.2.0**:
   - **Changed**: The package now exposes exactly what the hosted TestDino MCP exposes — tools, descriptions, parameters, annotations, prompts and the skills guide — and answers every call the same way. See [Responses and errors](#responses-and-errors).
   - **Breaking**: Failures are `isError` results carrying the server's body and `statusCode`, not thrown errors. Arguments are validated before any request. `health` returns JSON. Results are compact JSON with `structuredContent`. `debug_testcase` and `get_testcase_details` no longer add `_agent_guidance`. `get_external_issue` reads all ids in one call. `submit_audit_report` no longer requires `score`. The legacy guide URI `testdino://docs/skill.md` is gone.
   - **Added**: Test Controls — `list_test_controls`, `get_test_controls`, `get_quarantine`, `quarantine_tests`, `update_quarantine`, `release_quarantine`, `set_test_critical`, `assign_test`, `watch_test` — and `by_test_controls` on `list_testruns` and `list_testcase`.
