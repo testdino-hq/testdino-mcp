@@ -7,7 +7,8 @@ All notable changes to `@testdino/mcp` are documented here.
 The package now exposes exactly what the hosted TestDino MCP exposes — the same
 tools, descriptions, parameters, prompts and skills guide — and answers every
 call the way the hosted server does. Only local-file handling the hosted server
-cannot do stays package-only: attachments given as local paths, and the
+cannot do stays package-only: manual test case attachments given as local
+paths, and the
 `markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
 
 ### Breaking
