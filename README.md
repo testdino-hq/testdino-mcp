@@ -81,7 +81,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 45 tools across ten domains:
+The server provides 54 tools across eleven domains, the same tools, prompts and skills guide as the hosted TestDino MCP:
 
 **Test Execution & Results:**
 
@@ -161,6 +161,22 @@ The server provides 45 tools across ten domains:
 45. **`rerun_test`** - Start the re-run in CI. Needs `confirm: true` after the user says yes, and needs `mode` — `same-commit` (the commit that failed: are these failures real, or flaky?) or `latest` (the branch tip: did my fix work?). There is **no default mode**; an omitted one is refused so the choice reaches the user. Every refusal happens before anything is dispatched.
 
 > **Ask first.** Call `get_rerun_selection`, show the user what would run and what `rerun_mechanism` says, then ask which mode they want. Re-runs cost CI minutes.
+
+**Test Controls (quarantine, critical, assignee, watch):**
+
+46. **`list_test_controls`** - List the tests under Test Controls as the Test Controls page shows them: quarantined (active, ending soon, released), critical, the tests you watch, or flaky candidates for quarantine.
+47. **`get_test_controls`** - One test's assignee, critical flag, watch state and active quarantine, plus the runs a quarantine kept from failing in the last 90 days.
+48. **`get_quarantine`** - One quarantine with its full history and the runs it covered.
+49. **`quarantine_tests`** - Quarantine 1–100 tests until an end date, with a required reason; `dry_run` shows what would happen first.
+50. **`update_quarantine`** - Extend a quarantine, change its assignee or note, or link a ticket.
+51. **`release_quarantine`** - End a quarantine now; the test's failures fail the build again.
+52. **`set_test_critical`** - Mark or unmark a test critical (owners and admins).
+53. **`assign_test`** - Assign a test by email, user id or `"me"`, or unassign it.
+54. **`watch_test`** - Watch or stop watching a test.
+
+> **Ask first.** Quarantining, releasing and marking critical change what fails the build; the tools are flagged destructive so your client asks before running them.
+
+**Prompts:** `testdino_guide` (the skills guide), `fix_run` (triage a failing run into a fix plan), `fix_case` (root-cause one failing test) and `fix_flake` (route a retried failure to the right kind of fix).
 
 > AI Insights are also available inline: pass `include_ai_insights: true` to `get_run_details` (attaches the run's AI Insights under `ai_insights`) or `debug_testcase` (attaches recommendations + quick fixes under `ai_fixes`).
 
@@ -380,7 +396,7 @@ Try these natural language commands in Cursor or Claude Desktop (or other MCP-co
 ## Documentation
 
 - **[Installation Guide](./docs/INSTALLATION.md)**: Detailed setup instructions for Cursor, Claude Desktop, and other MCP-compatible clients
-- **[Tools Documentation](./docs/TOOLS.md)**: Comprehensive guide to all 43 available tools with examples, parameters, and use cases
+- **[Tools Documentation](./docs/TOOLS.md)**: Per-tool reference with examples, parameters, and use cases
 - **[AI Agent Skills Guide](./docs/skill.md)**: Guide for AI agents on tool selection patterns, decision trees, and best practices
 
 ## Requirements
