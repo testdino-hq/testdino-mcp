@@ -13,18 +13,30 @@ interface GetReleaseArgs {
 
 export const getReleaseTool = {
   name: "get_release",
+  title: "Get Release",
   description:
-    "Get the full details of one release: dates, status, linked issues, parent/root, and rolled-up progress stats (run counts, test status breakdown). releaseId accepts either the internal _id or a counter-style ID like 'MS-12'.",
+    'Get the full details of one release: dates, status, linked issues, parent/root, and rolled-up progress stats (run counts, test status breakdown across all runs in this release and its descendants). releaseId accepts either the internal _id or a counter-style ID like "MS-12".',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       releaseId: {
         type: "string",
-        description: "Internal _id or counter-style ID (required).",
+        description: "Internal _id or counter-style ID",
       },
     },
     required: ["projectId", "releaseId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -51,6 +63,6 @@ export async function handleGetRelease(args?: GetReleaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get release: ${msg}`);
+    throw new Error(`Failed to get release: ${msg}`, { cause: error });
   }
 }

@@ -13,18 +13,30 @@ interface GetSessionArgs {
 
 export const getSessionTool = {
   name: "get_session",
+  title: "Get Exploratory Session",
   description:
-    "Get the full details of one exploratory session: name, mission, status, assignee, linked release, attachments, linked issues, findings. sessionId accepts either the internal _id or a counter-style ID like 'SES-12'.",
+    'Get the full details of one exploratory session: name, mission, status, assignee, linked release, attachments, linked issues, findings. sessionId accepts either the internal _id or a counter-style ID like "SES-12".',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       sessionId: {
         type: "string",
-        description: "Internal _id or counter-style ID (required).",
+        description: "Internal _id or counter-style ID",
       },
     },
     required: ["projectId", "sessionId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -51,6 +63,6 @@ export async function handleGetSession(args?: GetSessionArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get session: ${msg}`);
+    throw new Error(`Failed to get session: ${msg}`, { cause: error });
   }
 }

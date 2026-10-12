@@ -47,6 +47,7 @@ export const endpoints = {
     by_environment?: string;
     by_status?: string;
     by_test_case_tags?: string;
+    by_test_controls?: string;
     search?: string;
     sort?: string;
     limit?: number;
@@ -128,9 +129,11 @@ export const endpoints = {
     by_status?: string;
     by_testsuite_id?: string;
     by_shard?: number;
+    by_machine?: string;
     search?: string;
     sort?: string;
     by_tag?: string;
+    by_test_controls?: string;
     by_total_runtime?: string;
     by_artifacts?: string | boolean;
     by_attempt_number?: number;
@@ -696,19 +699,12 @@ export const endpoints = {
    * Get a previously created external issue by ID
    * GET /api/mcp/integrations/:projectId/:provider/issues/:issueId
    */
-  getExternalIssue: (params: {
+  lookupExternalIssues: (params: {
     projectId: string;
     provider: string;
-    issueId: string;
-    // Provider-specific read context (e.g. Jira `defaultApp`). Flattened to query.
-    target?: Record<string, string | number | boolean>;
   }): string => {
     const baseUrl = getBaseUrl();
-    const { projectId, provider, issueId, target } = params;
-    const queryString = buildQueryString({ ...(target ?? {}) });
-    return `${baseUrl}/api/mcp/integrations/${projectId}/${provider}/issues/${encodeURIComponent(
-      issueId
-    )}${queryString}`;
+    return `${baseUrl}/api/mcp/integrations/${encodeURIComponent(params.projectId)}/${encodeURIComponent(params.provider)}/issues/lookup`;
   },
 
   // ─── AI Insights ─────────────────────────────────────────────────────────
@@ -824,4 +820,16 @@ export const endpoints = {
     const queryString = buildQueryString(queryParams);
     return `${baseUrl}/api/mcp/${projectId}/get-debug-evidence${queryString}`;
   },
+
+  // Test Controls (`/api/mcp/test-controls/*`)
+  listTestControls: (params: Record<string, unknown>): string => {
+    const { projectId, token: _token, ...query } = params;
+    return `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(String(projectId))}${buildQueryString(query as Record<string, string | number | boolean | undefined>)}`;
+  },
+  quarantines: (projectId: string): string =>
+    `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(projectId)}/quarantines`,
+  quarantine: (projectId: string, quarantineId: string): string =>
+    `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(projectId)}/quarantines/${encodeURIComponent(quarantineId)}`,
+  testControl: (projectId: string, testcaseId: string): string =>
+    `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(projectId)}/tests/${encodeURIComponent(testcaseId)}`,
 };

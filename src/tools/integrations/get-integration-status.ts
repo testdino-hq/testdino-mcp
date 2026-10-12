@@ -12,35 +12,42 @@ interface GetIntegrationStatusArgs {
 
 export const getIntegrationStatusTool = {
   name: "get_integration_status",
+  title: "Get Integration Status",
   description:
-    "Reports whether a third-party integration (Jira, Linear, Asana, monday.com, GitHub) is connected for a project. " +
-    "Call this before create_external_issue or connect_integration to check whether the provider is already active. " +
-    "Set includeCreateOptions to true to also fetch the fields available for issue creation (provider projects, issue types, required/optional/custom fields).",
+    "Check whether Jira, Linear, Asana, monday.com, or GitHub is connected for a TestDino project. Call this before connect_integration or create_external_issue.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "TestDino project ID",
       },
       provider: {
         type: "string",
         enum: ["jira", "linear", "asana", "monday", "github"],
-        description: "Integration provider to check (Required).",
+        description: "Integration provider connected to this TestDino project.",
       },
       includeCreateOptions: {
         type: "boolean",
         description:
-          "When true, the response also includes createOptions: provider projects, issue types, and required/optional/custom fields for create_external_issue.",
+          "When true, include provider create metadata (createOptions: projects, issue types, required/optional fields). Resolved against the provider default target when no target is supplied.",
       },
       target: {
         type: "object",
-        additionalProperties: true,
+        additionalProperties: {},
         description:
-          "Provider-specific target/field values (optional) used to resolve createOptions against a specific target instead of the provider default. Examples: Jira { jiraProjectKey, issueType }, Linear { teamId }, Asana { workspaceId, projectId }, monday { boardId }.",
+          'Provider-specific target/field values. Jira accepts human-readable aliases such as { jiraProjectKey: "TRX", issueType: "Bug" } or { jiraProjectName, issueTypeName }; raw { jiraProjectId, issueTypeId } also works. Linear { teamId }, Asana { workspaceId, projectId }, monday.com { boardId }.',
       },
     },
     required: ["projectId", "provider"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -83,6 +90,8 @@ export async function handleGetIntegrationStatus(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get integration status: ${errorMessage}`);
+    throw new Error(`Failed to get integration status: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

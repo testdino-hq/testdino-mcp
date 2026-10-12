@@ -2,6 +2,57 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 3.0.0
+
+The package now exposes exactly what the hosted TestDino MCP exposes — the same
+tools, descriptions, parameters, prompts and skills guide — and answers every
+call the way the hosted server does. Only the audit report file arguments
+(`markdownReportPath` / `writeMarkdown` / `outputPath`), which need the local
+disk, stay package-only.
+
+### Breaking
+
+- **Errors are tool results, not protocol errors.** A refused or failed call
+  returns `isError: true` with the server's JSON body and its `statusCode`,
+  instead of throwing `Failed to …: API request failed: 404 …`. Clients that
+  caught the thrown error should read `isError` instead.
+- **Arguments are validated before any request.** A wrong type, a missing
+  required argument or an out-of-range value is refused with
+  `Input validation error`, in the hosted server's words and order; an argument
+  a tool does not declare is ignored. Before, some of these were sent anyway —
+  `limit: "ten"` was silently dropped.
+- **Attachments are no longer read from local paths.** Manual test case
+  attachments must be objects, as on the hosted server; a path is refused. The
+  server never stored files sent this way (a case-level attachment is refused
+  with `400`, a step attachment is dropped), so add files in the TestDino UI.
+- **`health` returns JSON** (user, organizations, projects, token expiry), not a
+  Markdown summary.
+- **Results are compact JSON** with `structuredContent`, as on the hosted server.
+- `debug_testcase` and `get_testcase_details` no longer add `_agent_guidance`.
+- `get_external_issue` reads all ids in one call and returns the provider's
+  answer; it no longer wraps each id's error in a successful `issues` list.
+- `submit_audit_report` no longer requires `score` (TestDino computes it) and
+  sends `findings` as given; the server checks `orgId` and normalizes categories.
+- `list_testcase` without a run scope returns the server's warning instead of
+  refusing locally.
+- The legacy guide URI `testdino://docs/skill.md` is gone; use
+  `testdino://skills/guide`.
+
+### Added
+
+- **Test Controls**: `list_test_controls`, `get_test_controls`,
+  `get_quarantine`, `quarantine_tests`, `update_quarantine`,
+  `release_quarantine`, `set_test_critical`, `assign_test`, `watch_test`, and a
+  `by_test_controls` filter on `list_testruns` and `list_testcase`.
+- **Prompts** `fix_run`, `fix_case`, `fix_flake` and `optimize_swarm`, beside `testdino_guide`.
+- **Swarm runs**: `list_testcase` takes `by_machine` (one machine's cases); `get_run_details` describes the per-machine fields.
+- Every tool carries the hosted `title` and its read-only / destructive
+  annotations, so clients that honour them ask before a destructive call.
+
+### Changed
+
+- The skills guide is the hosted guide, word for word.
+
 ## 2.1.0 (2026-10-10)
 
 ### Added

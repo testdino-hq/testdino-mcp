@@ -14,6 +14,7 @@ Read this file fully before doing anything. Follow it without deviation.
 - **Published to**: npm (`@testdino/mcp`)
 - **API**: Talks to `https://mcp.testdino.com` using Bearer token auth (PAT)
 - **Users**: Developers and QA engineers using AI coding tools
+- **Source of truth**: the hosted TestDino MCP (`testdino-hq/microservices`, `services/mcp/node`). This package copies it — never the other way round
 
 ---
 
@@ -26,16 +27,34 @@ Read this file fully before doing anything. Follow it without deviation.
 
 ---
 
+## Staying Identical to the Hosted MCP
+
+The package must expose exactly what the hosted MCP exposes and answer every call the same way:
+
+- **Tool definitions** (`name`, `title`, `description`, `inputSchema`, `annotations`, `execution`) are copied from the hosted `tools/list`, in the hosted order. Never write or edit one by hand here; change it in microservices, then copy it.
+- **Prompts** (`src/prompts/`) are the hosted builders and approval gate, copied. **`docs/skill.md`** is the hosted `skill.md` verbatim (excluded from prettier).
+- **Results** go through `toolResultFromCaptured` (`src/lib/tool-result.ts`, a copy of the gateway's): compact JSON + `structuredContent`; a 4xx/5xx is `isError` with the body and `statusCode`. Handlers throw `ApiError` (or an `Error` whose `cause` is one); the dispatcher in `src/server.ts` shapes it. A refusal the hosted tool raises itself (not the route) is thrown as `ApiError` with the hosted status and body, word for word.
+- **Validation** is `ajv` against the copied schema (`src/lib/validate.ts`), before any request; unknown arguments are dropped, as hosted zod does. Refusal text matches zod's word for word (`tests/fixtures/hosted-validation.json`); hosted transforms (rerun `tags` trim) are applied first. Don't add local checks the hosted tool doesn't make.
+- **Only package additions:** the audit `markdownReportPath` / `writeMarkdown` / `outputPath` arguments.
+- **Guard:** `tests/fixtures/hosted-catalogue.json` is the hosted catalogue on sync day; `tests/unit/parity/` fails on any difference from it, on any declared argument that does not reach the request, and on the result / error / validation shapes.
+
+**To re-sync:** in microservices, dump the hosted `tools/list`, `prompts/list`, the prompt samples and the guide from `buildMcpServer()` over an in-memory client; replace the changed tool definitions, copy `skill.md` and any changed prompt file, refresh `tests/fixtures/hosted-catalogue.json` (and `hosted-validation.json` for a new refusal shape), add handlers for new tools (and route support in microservices if a stdio route is missing), then run the full gate. Publish only after the microservices change is in production.
+
+---
+
 ## Architecture
 
 ```
 src/
-├── index.ts              ← Server entry point (registers tools + resources)
+├── index.ts              ← Stdio entry point (connects the server)
+├── server.ts             ← Builds the server: tools, prompts, resources, the validating dispatcher
+├── prompts/              ← fix_run / fix_case / fix_flake builders + approval gate (copied from hosted)
 ├── lib/
 │   ├── env.ts            ← API URL + PAT resolution
 │   ├── endpoints.ts      ← All API endpoint URL builders (centralized)
-│   ├── request.ts        ← HTTP fetch wrapper (apiRequest / apiRequestJson)
-│   └── file-utils.ts     ← Local file reading, base64 encoding, step validation
+│   ├── request.ts        ← HTTP fetch wrapper (apiRequest / apiRequestJson, ApiError)
+│   ├── tool-result.ts    ← toolResultFromCaptured (copy of the gateway's)
+│   └── validate.ts       ← ajv validation against each tool's schema, zod-worded refusals
 └── tools/
     ├── health.ts         ← PAT validation + account info
     ├── index.ts          ← Barrel export for all tools
@@ -48,15 +67,16 @@ src/
     ├── sessions/         ← CRUD for exploratory sessions
     ├── audits/           ← get + submit audit reports
     ├── integrations/     ← connect + issue tracker tools (Jira/Linear/Asana/monday)
+    ├── test-controls/    ← quarantine, critical, assignee, watch
     └── testruns/         ← list, details, error clusters
 ```
 
 **Data flow for every tool call:**
 
 ```
-AI agent calls tool → index.ts routes by name → handler validates args
-→ getApiKey() resolves PAT → endpoints.X() builds URL → apiRequestJson() fetches
-→ handler formats response → returns { content: [{ type: "text", text: ... }] }
+AI agent calls tool → server.ts applies hosted transforms → ajv validates
+→ routes by name → handler: getApiKey() → endpoints.X() → apiRequestJson()
+→ dispatcher shapes the body or ApiError with toolResultFromCaptured
 ```
 
 ---
@@ -71,9 +91,7 @@ Every tool file exports exactly two things:
 ### Tool Definition Rules
 
 - `name`: snake_case (e.g., `list_testruns`, `get_run_details`)
-- `description`: Write for AI agents, not humans. Be specific about what the tool returns and when to use it. Include usage hints
-- `inputSchema`: JSON Schema format. Every property MUST have a `description`. Use `enum` for known values. Mark `required` fields accurately
-- Descriptions are the AI's only guide — vague descriptions = wrong tool usage
+- The whole definition is the hosted tool's, copied from the hosted `tools/list` — see Staying Identical. Don't reword a description or add a property here
 
 ### Handler Rules
 
@@ -86,13 +104,12 @@ Every tool file exports exactly two things:
 
 ### Adding a New Tool — Checklist
 
-1. Add endpoint URL builder in `src/lib/endpoints.ts`
-2. Create tool file in the appropriate `src/tools/<category>/` directory
-3. Export from `src/tools/index.ts`
-4. Register in `src/index.ts` (add to tools array + add routing if-block)
-5. Update `docs/TOOLS.md` with full documentation
-6. Update `docs/skill.md` if it affects AI agent workflows
-7. Run full verify: `npm run typecheck && npm run lint && npm run test`
+1. The tool must exist on the hosted MCP first, with a stdio route under `/api/mcp/*`
+2. Add the endpoint URL builder in `src/lib/endpoints.ts`
+3. Create the tool file in `src/tools/<category>/` with the hosted definition copied in
+4. Export from `src/tools/index.ts`; register in `src/server.ts` (tools array in hosted order + routing if-block)
+5. Refresh `tests/fixtures/hosted-catalogue.json` and copy the hosted `skill.md`; a new zod refusal shape (new keyword, custom message, transform) also goes in `tests/fixtures/hosted-validation.json`, captured from hosted
+6. Run full verify: `npm run typecheck && npm run lint && npm run test`
 
 ---
 
@@ -126,7 +143,6 @@ Every tool file exports exactly two things:
 - Don't add new dependencies without strong justification
 - Don't use `console.log` — MCP uses stdio. Use `console.error` or `logError`/`logInfo` for debug output
 - Don't change the response shape (`{ content: [{ type: "text", text }] }`) — it's the MCP protocol
-- Don't duplicate utility code — if `file-utils.ts` has what you need, import it
 
 ---
 
@@ -136,7 +152,7 @@ Version appears in THREE places and must stay in sync:
 
 1. `package.json` → `version`
 2. `server.json` → `version` (and `packages[0].version`)
-3. `src/index.ts` → server constructor `version`
+3. `src/server.ts` → server constructor `version`
 
 When bumping version, update all three. Use `/bump-version` command.
 
@@ -187,8 +203,10 @@ tests/
 ├── setup.ts            ← Global setup (env cleanup between tests)
 ├── helpers/            ← Mock factories, shared types
 ├── unit/               ← Unit tests (mirror src/ structure)
-│   ├── lib/            ← env, endpoints, request, file-utils
-│   └── tools/          ← All 45 tool handlers
+│   ├── lib/            ← env, endpoints, request
+│   ├── tools/          ← All 54 tool handlers
+│   └── parity/         ← Same catalogue, arguments, results and validation as hosted
+├── fixtures/           ← hosted-catalogue.json (the hosted catalogue on sync day)
 └── integration/        ← End-to-end MCP server tests
 ```
 
@@ -244,7 +262,7 @@ Three docs files serve different purposes:
 | `docs/skill.md`        | AI agents   | Patterns, workflows, decision trees for tool usage |
 | `docs/INSTALLATION.md` | Human users | Setup instructions for different AI tools          |
 
-When modifying tools, update `docs/TOOLS.md`. If the change affects how an AI agent should choose or use tools, also update `docs/skill.md`.
+`docs/skill.md` is the hosted guide verbatim — never edit it here; change it in microservices and copy it. When modifying tools, update `docs/TOOLS.md`.
 
 ---
 
@@ -295,7 +313,6 @@ This is a public npm package. Before publishing:
 | PAT resolution          | `getApiKey()` checks `args.token` first, then `process.env.TESTDINO_PAT`. Both paths must work                                 |
 | Endpoint centralization | All API URLs live in `endpoints.ts`. Tool handlers never build URLs. This makes API changes a single-file edit                 |
 | Query param filtering   | `buildQueryString()` in endpoints.ts skips `undefined`/`null` values automatically                                             |
-| File attachments        | Only manual test case tools use file attachments. `file-utils.ts` handles base64 encoding. Max 10MB per file                   |
 | Response wrapping       | The TestDino API sometimes wraps responses in `{ success, data }`. Health tool handles this — check if new endpoints do too    |
 | Boolean params          | Some API params expect string `"true"`/`"false"`, not boolean. Use `String()` when passing to query params                     |
 | Version sync            | Version in 3 places. Forgetting one causes confusion. Always update all three                                                  |

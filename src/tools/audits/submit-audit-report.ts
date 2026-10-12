@@ -13,12 +13,10 @@ import { endpoints } from "../../lib/endpoints.js";
 import { apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 import {
-  AUDIT_CATEGORY_LIST,
   detectBranch,
   normalizeAuditErrorMessage,
   normalizeMarkdownReport,
   readMarkdownFromPath,
-  sanitizeAuditFindings,
   writeLocalReport,
 } from "./shared.js";
 
@@ -41,77 +39,144 @@ interface SubmitAuditReportArgs {
 
 export const submitAuditReportTool = {
   name: "submit_audit_report",
+  title: "Submit TestDino Audit Report",
   description:
-    "FINAL STEP of the TestDino Playwright audit flow — submits a completed audit report. Requires write permission. " +
-    "Call this only AFTER get_audit_report(action='context') and after you have analyzed the local Playwright code and produced findings. " +
-    "score (0-100) and either markdownReport or markdownReportPath are required. Include findings, recommendations, reportName, branch, scope, and target as available. " +
-    "Every finding MUST include title, summary, and severity (low|medium|high|critical) — incomplete findings are rejected, not stored. target, if sent, accepts only { value, path }. " +
-    "orgId is required — resolve it via health() if you do not already have it. " +
-    "Use the same branch/scope/target you passed to get_audit_report(action='context') so the report attaches to the right audit context.",
+    "FINAL STEP of the TestDino Playwright audit flow — submits a completed audit report. Requires write permission. Call this only AFTER get_audit_report(action='context') and after you have analyzed the local Playwright code and produced findings. markdownReport is required; include findings, recommendations, reportName, branch, scope, and target as available. Do NOT compute a score — TestDino derives it from the findings you submit and returns it with a per-category breakdown. orgId is required — resolve it via health() if you do not have it. Every finding MUST include title, summary, and severity (low|medium|high|critical) — incomplete findings are rejected, not stored. category is normalized to a known bucket. target, if sent, accepts only { value, path } as non-empty strings. Use the same branch/scope/target you passed to get_audit_report(action='context') so the report attaches to the right context.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID (required)",
       },
       orgId: {
         type: "string",
         description:
-          "Organization ID (Required to submit). Resolve via health() if you don't have it.",
+          "Organization ID (required to submit). Resolve via health() if you don't have it.",
       },
       branch: {
         type: "string",
-        description:
-          "Git branch that was audited. Optional — auto-detected via git if omitted.",
+        description: "Git branch that was audited.",
       },
       scope: {
         type: "string",
         enum: ["testcase", "feature", "spec_file", "suite"],
-        description:
-          "Audit scope. Defaults to 'suite'. Use 'feature' or 'spec_file' when the user names a slice such as auth/login, dashboards, or a specific spec.",
+        description: "Audit scope. Defaults to 'suite'.",
       },
       target: {
         type: "object",
-        description:
-          "Optional scoped-audit target. Only { value, path } (non-empty strings) are stored — the dashboard reads these; any other key is rejected.",
         properties: {
           value: {
             type: "string",
-            description: "Human-readable target, e.g. a feature area.",
+            minLength: 1,
           },
           path: {
             type: "string",
-            description: "File or spec path the audit was scoped to.",
+            minLength: 1,
           },
         },
         additionalProperties: false,
+        description:
+          "Optional scoped-audit target. Only { value, path } (non-empty strings) are stored — the dashboard reads these; any other key is rejected.",
       },
       reportName: {
         type: "string",
-        description:
-          "Short human-readable title for the saved report (e.g. 'Login Flow Tests', 'API Integration Suite').",
+        description: "Short human-readable title for the saved report",
       },
       score: {
         type: "number",
-        minimum: 0,
-        maximum: 100,
-        description: "Final audit score (0-100). Required.",
+        description:
+          "Ignored. TestDino computes the score from findings; kept so older clients still submit.",
       },
       findings: {
         type: "array",
-        description: `Array of findings. Each finding REQUIRES title, summary, and severity (critical/high/medium/low) — a finding missing any of these is rejected, not stored. category must be one of: ${AUDIT_CATEGORY_LIST}. Optional: subCategory, recommendation, and evidence (file, lineStart, lineEnd, observation).`,
-        items: { type: "object", additionalProperties: true },
+        items: {
+          type: "object",
+          properties: {
+            category: {
+              type: "string",
+              description:
+                'Audit category. Prefer one of: surface_level_tests, missing_validation, stability_issues, hard_to_maintain, coverage_gaps, organization_ownership, setup_configuration, duplication_overlap, other. Unknown or missing values normalize to "other".',
+            },
+            subCategory: {
+              type: "string",
+            },
+            severity: {
+              type: "string",
+              enum: ["low", "medium", "high", "critical"],
+              description:
+                "Required. Impact level: low, medium, high, or critical.",
+            },
+            title: {
+              type: "string",
+              minLength: 1,
+              description: "Required. Short issue label.",
+            },
+            summary: {
+              type: "string",
+              minLength: 1,
+              description:
+                "Required. Why confidence is lost — rendered as the finding summary.",
+            },
+            recommendation: {
+              type: "string",
+              description:
+                "What to change, where, and the stronger pattern to use.",
+            },
+            prevalence: {
+              type: "string",
+              description:
+                'Counts, ratios, or scope, e.g. "7 call sites across 2 files".',
+            },
+            evidence: {
+              type: "array",
+              items: {
+                anyOf: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "object",
+                    properties: {
+                      file: {
+                        type: "string",
+                      },
+                      lineStart: {
+                        type: "number",
+                      },
+                      lineEnd: {
+                        type: "number",
+                      },
+                      label: {
+                        type: "string",
+                      },
+                      observation: {
+                        type: "string",
+                      },
+                    },
+                    additionalProperties: true,
+                  },
+                ],
+              },
+              description:
+                "Concrete file:line examples, as strings or {file, lineStart, lineEnd, observation} objects.",
+            },
+          },
+          required: ["severity", "title", "summary"],
+          additionalProperties: true,
+        },
+        description: "Structured findings for the completed report",
       },
       recommendations: {
         type: "array",
-        description: "Array of recommendation strings.",
-        items: { type: "string" },
+        items: {
+          type: "string",
+        },
+        description: "Recommendation strings for the completed report",
       },
       markdownReport: {
         type: "string",
-        description:
-          "The complete markdown report content. Prefer markdownReportPath to avoid large tool calls.",
+        description: "Completed markdown report (required).",
       },
       markdownReportPath: {
         type: "string",
@@ -129,7 +194,16 @@ export const submitAuditReportTool = {
           "Relative file path for the local save (see writeMarkdown). Resolved from TESTDINO_MCP_WORKSPACE. Defaults to TEST-AUDIT.md.",
       },
     },
-    required: ["projectId", "orgId", "score"],
+    required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -145,16 +219,6 @@ export async function handleSubmitAuditReport(args?: SubmitAuditReportArgs) {
 
   if (!args?.projectId) {
     throw new Error("projectId is required");
-  }
-
-  if (!args?.orgId) {
-    throw new Error(
-      "orgId is required to submit an audit report. Resolve it via health() and retry."
-    );
-  }
-
-  if (typeof args.score !== "number") {
-    throw new Error("score is required (0-100)");
   }
 
   const explicitBranch =
@@ -184,25 +248,18 @@ export async function handleSubmitAuditReport(args?: SubmitAuditReportArgs) {
       projectId: String(args.projectId),
     });
 
-    const scope = args.scope || "suite";
-    const hasExplicitTarget =
-      args.target &&
-      Object.values(args.target).some((v) => typeof v === "string" && v.trim());
-    const target = hasExplicitTarget ? args.target! : {};
-    const sanitizedFindings = sanitizeAuditFindings(args.findings || []);
-
     let response = await apiRequestJson(submitUrl, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: {
-        orgId: String(args.orgId),
+        orgId: args.orgId,
         ...(inferredBranch ? { branch: inferredBranch } : {}),
-        scope,
-        target,
-        reportName: args.reportName || undefined,
+        scope: args.scope,
+        target: args.target,
+        reportName: args.reportName,
         score: args.score,
-        findings: sanitizedFindings,
-        recommendations: args.recommendations || [],
+        findings: args.findings,
+        recommendations: args.recommendations,
         markdownReport: normalizedMarkdownReport,
       },
     });
@@ -244,7 +301,8 @@ export async function handleSubmitAuditReport(args?: SubmitAuditReportArgs) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Failed to submit audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+      `Failed to submit audit report: ${normalizeAuditErrorMessage(errorMessage)}`,
+      { cause: error }
     );
   }
 }

@@ -8,6 +8,14 @@ import {
 } from "../../helpers/mockFetch.js";
 import { createArgs } from "../../helpers/mockTypes.js";
 import { handleHealth } from "../../../src/tools/health.js";
+import { ApiError } from "../../../src/lib/request.js";
+
+const BODY = {
+  userId: "user_1",
+  tokenType: "pat",
+  patValid: true,
+  orgs: [{ orgId: "org_1", orgName: "Org", role: "owner", projects: [] }],
+};
 
 describe("handleHealth", () => {
   afterEach(() => {
@@ -15,228 +23,42 @@ describe("handleHealth", () => {
     delete process.env.TESTDINO_PAT;
   });
 
-  it("returns error content (not throw) when PAT is missing", async () => {
-    const result = await handleHealth({});
-
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Missing TESTDINO_PAT");
+  it("refuses without a PAT", async () => {
+    await expect(handleHealth({})).rejects.toThrow("Missing TESTDINO_PAT");
   });
 
-  it("returns Connection Successful on valid API response", async () => {
-    const apiResponse = {
-      success: true,
-      data: {
-        user: {
-          id: "user-1",
-          email: "test@example.com",
-          firstName: "Test",
-          lastName: "User",
-          fullName: "Test User",
-        },
-        pat: {
-          id: "pat-1",
-          name: "My PAT",
-        },
-        access: [
-          {
-            organizationId: "org-1",
-            organizationName: "Test Org",
-            projects: [
-              {
-                projectId: "proj-1",
-                projectName: "Test Project",
-                modules: {
-                  testRuns: true,
-                  manualTestCases: false,
-                },
-                permissions: {
-                  canRead: true,
-                  canWrite: true,
-                  role: "admin",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    };
+  it("returns the hello body unchanged, as the hosted health tool does", async () => {
+    mockFetchSuccess(BODY);
 
-    mockFetchSuccess(apiResponse);
-
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Connection Successful");
-    expect(result.content[0].text).toContain("Test User");
-    expect(result.content[0].text).toContain("My PAT");
-  });
-
-  it("calls the hello endpoint with Bearer token", async () => {
-    const apiResponse = {
-      success: true,
-      data: {
-        user: {
-          id: "user-1",
-          email: "test@example.com",
-          fullName: "Test User",
-        },
-        pat: { id: "pat-1", name: "My PAT" },
-        access: [],
-      },
-    };
-
-    mockFetchSuccess(apiResponse);
-
-    await handleHealth({ token: "my-secret-token" });
+    const result = await handleHealth(createArgs());
 
     expect(getLastFetchUrl()).toContain("/api/mcp/hello");
-    const options = getLastFetchOptions();
-    expect(options?.headers).toEqual(
-      expect.objectContaining({
-        Authorization: "Bearer my-secret-token",
-      })
-    );
+    expect(
+      (getLastFetchOptions()?.headers as Record<string, string>).Authorization
+    ).toBe("Bearer test-pat-token");
+    expect(JSON.parse(result.content[0].text)).toEqual(BODY);
   });
 
-  it("returns error content when API returns an error", async () => {
-    mockFetchError(401, "Unauthorized", "Unauthorized");
+  it("reads the PAT from TESTDINO_PAT", async () => {
+    process.env.TESTDINO_PAT = "env-token";
+    mockFetchSuccess(BODY);
 
-    const result = await handleHealth({ token: "bad-token" });
+    await handleHealth({});
 
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Error");
+    expect(
+      (getLastFetchOptions()?.headers as Record<string, string>).Authorization
+    ).toBe("Bearer env-token");
   });
 
-  it("shows no organizations warning when access array is empty", async () => {
-    const apiResponse = {
-      success: true,
-      data: {
-        user: {
-          id: "user-1",
-          email: "test@example.com",
-          fullName: "Test User",
-        },
-        pat: { id: "pat-1", name: "My PAT" },
-        access: [],
-      },
-    };
+  it("keeps the server's status and body for the tool result", async () => {
+    mockFetchError(401, JSON.stringify({ error: { code: "UNAUTHORIZED" } }));
 
-    mockFetchSuccess(apiResponse);
+    const error = await handleHealth(createArgs()).catch((e: Error) => e);
 
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content[0].text).toContain("No Organizations Found");
-  });
-
-  it("formats the MCP service flat shape (orgs, no user envelope)", async () => {
-    // Regression: the MCP microservice hello returns {userId, orgs, ...} with
-    // no data/user/pat envelope; the old guard rejected it as "Unexpected
-    // response" even though auth succeeded.
-    const apiResponse = {
-      userId: "user_abc123",
-      tokenType: "pat",
-      patValid: true,
-      authSource: "pat",
-      orgs: [
-        {
-          orgId: "org_1",
-          orgName: "ABC-XYZ",
-          role: "member",
-          projects: [{ projectId: "project_1", projectName: "TCM - TESTING" }],
-        },
-      ],
-      expiresAt: "2026-10-11T10:40:29.775Z",
-    };
-
-    mockFetchSuccess(apiResponse);
-
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content[0].text).toContain("Connection Successful");
-    expect(result.content[0].text).toContain("ABC-XYZ");
-    expect(result.content[0].text).toContain("project_1");
-    expect(result.content[0].text).toContain("Your role: member");
-    expect(result.content[0].text).toContain("expires 2026-10-11");
-    expect(result.content[0].text).not.toContain("Unexpected response");
-  });
-
-  it("omits the role line when the server does not supply role (pre-enrichment server)", async () => {
-    // The role field ships in npm before the gateway/user-svc enrichment
-    // reaches prod, so the renderer must stay clean when role is absent —
-    // no empty "Your role:" line.
-    mockFetchSuccess({
-      userId: "user_abc123",
-      patValid: true,
-      orgs: [
-        {
-          orgId: "org_1",
-          orgName: "No Role Org",
-          projects: { allProjects: true },
-        },
-      ],
+    expect((error as Error).cause).toBeInstanceOf(ApiError);
+    expect(((error as Error).cause as ApiError).statusCode).toBe(401);
+    expect(((error as Error).cause as ApiError).body).toEqual({
+      error: { code: "UNAUTHORIZED" },
     });
-
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content[0].text).toContain("No Role Org");
-    expect(result.content[0].text).not.toContain("Your role");
-  });
-
-  it("describes wildcard scopes in the MCP service shape", async () => {
-    mockFetchSuccess({
-      userId: "user_abc123",
-      patValid: true,
-      orgs: [
-        {
-          orgId: "org_1",
-          orgName: "Wild Org",
-          projects: { allProjects: true },
-        },
-      ],
-    });
-
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content[0].text).toContain("all projects (wildcard scope)");
-  });
-
-  it("shows no organizations warning for the MCP service shape with empty orgs", async () => {
-    mockFetchSuccess({ userId: "user_abc123", patValid: true, orgs: [] });
-
-    const result = await handleHealth({ token: "test-pat-token" });
-
-    expect(result.content[0].text).toContain("No Organizations Found");
-  });
-
-  it("reads PAT from process.env.TESTDINO_PAT when no args token", async () => {
-    process.env.TESTDINO_PAT = "env-pat-token";
-
-    const apiResponse = {
-      success: true,
-      data: {
-        user: {
-          id: "user-1",
-          email: "test@example.com",
-          fullName: "Env User",
-        },
-        pat: { id: "pat-1", name: "Env PAT" },
-        access: [],
-      },
-    };
-
-    mockFetchSuccess(apiResponse);
-
-    const result = await handleHealth({});
-
-    expect(result.content[0].text).toContain("Connection Successful");
-    const options = getLastFetchOptions();
-    expect(options?.headers).toEqual(
-      expect.objectContaining({
-        Authorization: "Bearer env-pat-token",
-      })
-    );
   });
 });

@@ -5,7 +5,7 @@
  */
 
 import { endpoints } from "../../lib/endpoints.js";
-import { apiRequestJson } from "../../lib/request.js";
+import { ApiError, apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 
 interface DebugTestCaseArgs {
@@ -19,22 +19,20 @@ interface DebugTestCaseArgs {
 
 export const debugTestCaseTool = {
   name: "debug_testcase",
+  title: "Debug Test Case",
   description:
-    "Fetch historical execution and failure data for a specific test case. Returns raw historical data with test run details (ID, counter, branch), test runs summary, and a debugging prompt from the API. Each execution includes its associated test run information (testRunId, testRunCounter, branch) to help correlate failures across different test runs and branches. The AI client will analyze the data to identify failure patterns, find root causes, and provide fix suggestions. Use this when you need to debug a failing test case. Example: 'Debug test case \"Verify user login\"'. " +
-    "Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. " +
-    "Set include_ai_insights=true to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations (investigation/remediation steps + reasoning + historical insight) and quick fixes (concrete fixes, often with code snippets, plus long-term stabilization steps). By default they target the most recent failing execution; pass testrun_id to target a specific run. " +
-    'AI payloads are generated lazily — if `ai_fixes` sections report status "in_progress", poll get_ai_insights(testrun_id=..., testcase_id=...) until they report "completed". An "unavailable" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights); a 4xx (bad ids) is terminal.',
+    'AI-assisted root cause analysis for a failing or flaky test. Returns historical execution data, aggregated failure patterns (error types, frequency, browsers affected), common error messages, and a debugging_prompt field. If you are debugging a failing test, call get_debug_evidence first: it already carries the debugging_prompt, the verdict and the artifact links. Come here afterwards only for the stored AI suggestions or the full execution history. IMPORTANT: always read the debugging_prompt field in the response — it contains pre-formatted analysis instructions curated for this specific test. Treat it as your analysis context before drawing conclusions. Any fixes you produce from this analysis are recommendations only — validate them against the live code before applying. Use this when the user asks "why is test X failing?", "debug test X", or "is test X flaky?". Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. Set include_ai_insights=true to also get TestDino\'s stored AI analysis for this test under `ai_fixes`: recommendations (investigation/remediation steps + reasoning + historical insight) and quick fixes (concrete fixes, often with code snippets, plus long-term stabilization steps). By default they target the most recent failing execution; pass testrun_id to target a specific run. AI payloads are generated lazily — if `ai_fixes` sections report status "in_progress", poll get_ai_insights(testrun_id=..., testcase_id=...) until they report "completed". An "unavailable" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights); a 4xx (bad ids) is terminal. Workflow: this returns the long history across runs. If you are diagnosing a failure rather than surveying a pattern, get_debug_evidence is the first call — it returns this history alongside the verdict, the regression boundary and every artifact link, so starting here costs extra round trips for the same evidence.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       testcase_name: {
         type: "string",
         description:
-          "Test case name/title to debug. Required unless testcase_id is given. Example: 'Verify user can logout and login'.",
+          "Test case name / title to debug. Required unless testcase_id is given.",
       },
       testcase_id: {
         type: "string",
@@ -44,20 +42,28 @@ export const debugTestCaseTool = {
       suite_file_path: {
         type: "string",
         description:
-          "Optional spec file path to disambiguate when several tests share the same title. Example: 'tests/checkout.spec.ts'.",
+          'Optional spec file path — disambiguates when several tests share the same title. Example: "tests/checkout.spec.ts".',
       },
       include_ai_insights: {
         type: "boolean",
         description:
-          "Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set). If a section reports `in_progress`, poll get_ai_insights(testrun_id=..., testcase_id=...) instead of re-calling this tool.",
+          "Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set).",
       },
       testrun_id: {
         type: "string",
         description:
-          "Only with include_ai_insights: target the AI fixes at this specific run instead of the most recent failure.",
+          "Only with include_ai_insights: fetch the AI analysis for this specific run instead of the most recent failure.",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -76,7 +82,17 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
   }
 
   if (!args?.testcase_id && !args?.testcase_name) {
-    throw new Error("testcase_id or testcase_name is required");
+    throw new ApiError(
+      "Provide testcase_id (the pw_test_id) or testcase_name.",
+      400,
+      {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Provide testcase_id (the pw_test_id) or testcase_name.",
+        },
+      }
+    );
   }
 
   try {
@@ -102,33 +118,13 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
       },
     });
 
-    // TDV2-112: keep the tool response a single VALID STANDALONE JSON block.
-    // The screenshot guidance was previously pushed as a SECOND text block after
-    // the JSON payload; fold it INTO the JSON (a `_agent_guidance` field) instead
-    // so the raw response parses cleanly on its own.
-    const probe = JSON.stringify(response, null, 2);
-    const hasImages =
-      probe.includes('"contentType": "image/') ||
-      probe.includes('"name": "screenshot"');
-    const isPlainObject =
-      response !== null &&
-      typeof response === "object" &&
-      !Array.isArray(response);
-
-    const payload =
-      hasImages && isPlainObject
-        ? {
-            ...(response as Record<string, unknown>),
-            _agent_guidance:
-              "Screenshot images are available in the historical test data. Fetch and view the screenshot URLs in the attempts' attachments to visually inspect the application state at the time of each failure — this is critical for accurate root cause analysis.",
-          }
-        : response;
-
     return {
-      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response) }],
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to debug test case: ${errorMessage}`);
+    throw new Error(`Failed to debug test case: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

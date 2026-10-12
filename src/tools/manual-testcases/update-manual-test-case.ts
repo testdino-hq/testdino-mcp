@@ -3,14 +3,11 @@
  */
 
 import { endpoints } from "../../lib/endpoints.js";
-import { apiRequestJson } from "../../lib/request.js";
+import { ApiError, apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
-import {
-  processAttachments,
-  processStepAttachments,
-  FileData,
-} from "../../lib/file-utils.js";
-import type { TestStep } from "../../lib/file-utils.js";
+
+type TestStep = Record<string, unknown>;
+type FileData = Record<string, unknown>;
 
 interface ManualTestCaseUpdates {
   name?: string; // Updated test case name/title
@@ -51,7 +48,7 @@ interface ManualTestCaseUpdates {
   tags?: string;
   flags?: ("To be Automated" | "Is flaky" | "Muted")[];
   attachments?: {
-    add?: (FileData | string)[]; // Processed attachments: FileData objects for local files, strings for URLs
+    add?: FileData[];
     remove?: string[]; // Array of attachment IDs or URLs to remove
   };
   customFields?: Record<string, string>; // Custom fields as key-value pairs
@@ -67,213 +64,37 @@ interface UpdateManualTestCaseArgs {
 
 export const updateManualTestCaseTool = {
   name: "update_manual_test_case",
+  title: "Update Manual Test Case",
   description:
-    "Update an existing manual test case. Use this to modify test case details, steps, status, priority, or any other fields. Provide only the fields you want to update in the updates object. " +
-    "To add comments, pass `updates.comments` as an array of strings — each becomes a new comment (PAT owner is author). " +
-    "To link Jira issues, pass `updates.issues` as an array of ticket keys (e.g. ['PROJ-123']); the server looks each up in the project's connected Jira and saves with title+url, or as a plain text stub when Jira isn't connected or the ticket isn't found (same fallback as the UI). " +
-    "Automated-test links are NOT writable here — `updates.linkedTests` is rejected; use link_automated_test / bulk_link_automated_tests / unlink_automated_test.",
+    'Modify an existing manual test case. Send only the fields you want to change inside the updates object — omit everything else. Requires write permission. IMPORTANT: steps is a full replacement — passing a steps array overwrites all existing steps. Always call get_manual_test_case() first to read current steps before modifying them. For attachments use the nested shape: { add: ["url-or-path"], remove: ["attachment-id"] } — you can add and remove in the same call. Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. To add comments, pass updates.comments as an array of comment-body strings — each is appended as a new comment (PAT owner is author). Cap of 20 comments/case is enforced. To link issues, pass updates.issues as an array of ticket keys (e.g. ["PROJ-123","ENG-9"]). Every key is looked up in the project\'s connected trackers (Jira and/or Linear) and must resolve in exactly one — the whole call fails with 409 INTEGRATION_NOT_CONNECTED when neither is connected (tell the user to connect Jira or Linear in Settings → Integrations), 400 naming a key that exists in both trackers (pass that entry as { "provider": "jira" | "linear", "displayId": "KEY" } instead of a bare string), or 400 naming the keys that do not resolve. Nothing is written unless all keys resolve. Duplicate displayIds on the case are skipped.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       caseId: {
         type: "string",
-        description:
-          "Test case ID (Required). Can be internal _id or human-readable ID like 'TC-123'.",
+        description: 'Internal _id or "TC-123" style ID',
       },
       updates: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Object containing the fields to update. Can include: title (or name), description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions, automationStatus, tags, flags, attachments, customFields, etc.",
-        properties: {
-          name: {
-            type: "string",
-            description:
-              "Updated test case title (or name). `title` is the rename-safe primary field; `name` is accepted as an alias.",
-          },
-          description: {
-            type: "string",
-            description: "Updated description.",
-          },
-          status: {
-            type: "string",
-            description: "Updated status.",
-            enum: ["Active", "Draft", "Deprecated"],
-          },
-          testStepsDeclarationType: {
-            type: "string",
-            description: "Updated test steps declaration type.",
-            enum: ["Classic", "Gherkin"],
-          },
-          preconditions: {
-            type: "string",
-            description: "Updated preconditions.",
-          },
-          postconditions: {
-            type: "string",
-            description: "Updated postconditions.",
-          },
-          steps: {
-            type: "array",
-            description:
-              "Updated test steps array. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription. Each top-level step can include attachments as URLs or local file paths.",
-            items: {
-              type: "object",
-              oneOf: [
-                {
-                  properties: {
-                    action: {
-                      type: "string",
-                      description:
-                        "The action to perform in this step (Classic format).",
-                    },
-                    expectedResult: {
-                      type: "string",
-                      description:
-                        "The expected outcome of this action (Classic format).",
-                    },
-                    data: {
-                      type: "string",
-                      description:
-                        "Optional test data for this step (Classic format).",
-                    },
-                    attachments: {
-                      type: "array",
-                      description:
-                        "Optional top-level step attachments as URLs or local file paths.",
-                      items: { type: "string" },
-                    },
-                  },
-                  required: ["action", "expectedResult"],
-                },
-                {
-                  properties: {
-                    event: {
-                      type: "string",
-                      enum: ["Given", "When", "And", "Then", "But"],
-                    },
-                    stepDescription: { type: "string" },
-                    attachments: {
-                      type: "array",
-                      description:
-                        "Optional top-level step attachments as URLs or local file paths.",
-                      items: { type: "string" },
-                    },
-                  },
-                  required: ["event", "stepDescription"],
-                },
-              ],
-            },
-          },
-          priority: {
-            type: "string",
-            description: "Updated priority.",
-            enum: ["high", "medium", "low", "Not set"],
-          },
-          severity: {
-            type: "string",
-            description: "Updated severity.",
-            enum: [
-              "Blocker",
-              "critical",
-              "major",
-              "Normal",
-              "minor",
-              "trivial",
-              "Not set",
-            ],
-          },
-          type: {
-            type: "string",
-            description: "Updated type.",
-            enum: [
-              "functional",
-              "smoke",
-              "regression",
-              "security",
-              "performance",
-              "e2e",
-              "Integration",
-              "API",
-              "Unit",
-              "Accessability",
-              "Compatibility",
-              "Acceptance",
-              "Exploratory",
-              "Usability",
-              "Other",
-            ],
-          },
-          layer: {
-            type: "string",
-            description: "Updated layer.",
-            enum: ["e2e", "api", "unit", "not set"],
-          },
-          behavior: {
-            type: "string",
-            description: "Updated behavior.",
-            enum: ["positive", "negative", "destructive", "Not set"],
-          },
-          automationStatus: {
-            type: "string",
-            description: "Updated automation status.",
-            enum: ["Manual", "Automated", "To be automated"],
-          },
-          tags: {
-            type: "string",
-            description: "Updated tags.",
-          },
-          flags: {
-            type: "array",
-            description: "Updated automation flags/checklist options.",
-            items: {
-              type: "string",
-              enum: ["To be Automated", "Is flaky", "Muted"],
-            },
-          },
-          attachments: {
-            type: "object",
-            description: "Add or remove attachments (up to 10MB each).",
-            properties: {
-              add: {
-                type: "array",
-                description: "Array of attachment URLs or file paths to add.",
-                items: { type: "string" },
-              },
-              remove: {
-                type: "array",
-                description: "Array of attachment IDs or URLs to remove.",
-                items: { type: "string" },
-              },
-            },
-          },
-          customFields: {
-            type: "object",
-            description:
-              "Updated custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
-            additionalProperties: {
-              type: "string",
-            },
-          },
-          comments: {
-            type: "array",
-            description:
-              "Array of comment bodies to append to the test case. Each string becomes a new comment with the PAT owner as the author. The server enforces a cap of 20 comments per case; entries past the cap are rejected.",
-            items: { type: "string" },
-          },
-          issues: {
-            type: "array",
-            description:
-              "Array of Jira ticket keys to link to the test case (e.g. ['PROJ-123', 'ENG-45']). The server resolves each key against the project's connected Jira: tickets that are found are saved with title and URL; tickets that aren't found (or if no Jira is connected) are saved as plain text stubs — same fallback as the UI's add-issue flow. Duplicate links for the same ticket are silently skipped.",
-            items: { type: "string" },
-          },
-        },
+          "Fields to update: title (alias: name), description, preconditions, postconditions, status, steps, priority, severity, type, layer, behavior, automationStatus, tags, flags, attachments {add, remove}, customFields, comments (array of strings to append), issues (array of ticket keys to link, resolved against the connected Jira / Linear)…",
       },
     },
     required: ["projectId", "caseId", "updates"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -304,24 +125,13 @@ export async function handleUpdateManualTestCase(
   // The server strips linkedTests from the generic update (links go through the
   // gated, audited link path), so forwarding it would return 200 and change nothing.
   if ("linkedTests" in args.updates) {
-    throw new Error(
-      "updates.linkedTests is not writable here. Use link_automated_test (one case) or bulk_link_automated_tests (many) to link automated tests, and unlink_automated_test to remove a link."
-    );
+    const message =
+      "updates.linkedTests is not writable here. Use link_automated_test (one case) or bulk_link_automated_tests (many) to link automated tests, and unlink_automated_test to remove a link.";
+    throw new ApiError(message, 400, { success: false, message });
   }
 
   try {
-    // Process attachments if present: convert local file paths to file data objects (same format as UI)
-    const processedUpdates = { ...args.updates };
-    if (processedUpdates.steps && Array.isArray(processedUpdates.steps)) {
-      processedUpdates.steps = processStepAttachments(processedUpdates.steps);
-    }
-    if (processedUpdates.attachments?.add) {
-      processedUpdates.attachments.add = processAttachments(
-        processedUpdates.attachments.add
-      );
-    }
-
-    const body = { updates: processedUpdates };
+    const body = { updates: args.updates };
 
     const updateManualTestCaseUrl = endpoints.updateManualTestCase(
       String(args.projectId),
@@ -346,6 +156,8 @@ export async function handleUpdateManualTestCase(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update manual test case: ${errorMessage}`);
+    throw new Error(`Failed to update manual test case: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

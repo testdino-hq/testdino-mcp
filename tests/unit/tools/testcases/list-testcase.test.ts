@@ -13,19 +13,14 @@ describe("handleListTestCases", () => {
     restoreFetch();
   });
 
-  it("should throw when no run scope is provided", async () => {
-    await expect(handleListTestCases(createArgs() as never)).rejects.toThrow(
-      "A run scope is required"
-    );
-  });
+  it("leaves a missing run scope to the server, as the hosted tool does", async () => {
+    mockFetchSuccess({ items: [], warnings: ["no by_testrun_id supplied"] });
 
-  it("should throw when only page/limit are given (they do not select runs)", async () => {
-    // Regression (TDV2-107): page/limit alone used to be treated as a valid
-    // standalone trigger, which the gateway then answered with an empty result.
-    // They paginate WITHIN a run scope, so on their own they must be rejected.
-    await expect(
-      handleListTestCases(createArgs({ page: 2, limit: 25 }) as never)
-    ).rejects.toThrow("A run scope is required");
+    const result = await handleListTestCases(
+      createArgs({ page: 2, limit: 25 }) as never
+    );
+
+    expect(JSON.parse(result.content[0].text).warnings).toHaveLength(1);
   });
 
   it("should include query params in the URL", async () => {

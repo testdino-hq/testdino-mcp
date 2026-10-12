@@ -13,25 +13,30 @@ interface GetManualTestCaseArgs {
 
 export const getManualTestCaseTool = {
   name: "get_manual_test_case",
+  title: "Get Manual Test Case",
   description:
-    "Retrieve detailed information of a single manual test case, including steps, custom fields, preconditions, and all metadata. " +
-    "Activity is included inline: `comments` (latest), `versions` (latest 20 of the version history), `results` (latest 100 execution results across every manual run that ran this case), and `linkedIssues` (Jira tickets linked to the case). " +
-    "`versions` and `results` are READ-ONLY — they reflect what happened, you cannot mutate them. " +
-    "Use update_manual_test_case to add comments (updates.comments) or link issues (updates.issues).",
+    'Get the full details of one manual test case: steps, preconditions, postconditions, metadata, linkedIssues, and activity (comments, version history, and execution results across all manual runs). caseId accepts either the internal _id or a human-readable ID like "TC-123". Call this before update_manual_test_case to see current steps, comments, and linked issues before modifying them. Version history and results are read-only — they reflect what happened, you cannot mutate them. Comments and linked issues are added via update_manual_test_case.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       caseId: {
         type: "string",
-        description:
-          "Test case ID (Required). Can be internal _id or human-readable ID like 'TC-123'.",
+        description: 'Internal _id or "TC-123" style ID',
       },
     },
     required: ["projectId", "caseId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -78,6 +83,8 @@ export async function handleGetManualTestCase(args?: GetManualTestCaseArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get manual test case details: ${errorMessage}`);
+    throw new Error(`Failed to get manual test case details: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

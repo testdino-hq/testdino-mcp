@@ -133,6 +133,27 @@ async function fetchOnce(
   }
 }
 
+// Carries the server's status and body so the tool result can return them as
+// the hosted MCP does, not a flattened message.
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly statusCode: number,
+    readonly body: unknown
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+function parseBody(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 export async function apiRequestJson<T = unknown>(
   url: string,
   options: RequestOptions = {}
@@ -142,10 +163,12 @@ export async function apiRequestJson<T = unknown>(
   if (!response.ok) {
     const errorText = await response.text();
     const formattedErrorText = formatApiErrorBody(errorText);
-    throw new Error(
+    throw new ApiError(
       `API request failed: ${response.status} ${response.statusText}${
         formattedErrorText ? `\n${formattedErrorText}` : ""
-      }${rateLimitHint(response)}`
+      }${rateLimitHint(response)}`,
+      response.status,
+      parseBody(errorText)
     );
   }
 

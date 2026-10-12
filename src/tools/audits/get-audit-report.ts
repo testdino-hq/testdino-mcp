@@ -13,7 +13,7 @@
  */
 
 import { endpoints } from "../../lib/endpoints.js";
-import { apiRequestJson } from "../../lib/request.js";
+import { ApiError, apiRequestJson } from "../../lib/request.js";
 import { getApiKey } from "../../lib/env.js";
 import {
   detectBranch,
@@ -37,44 +37,39 @@ interface GetAuditReportArgs {
 
 export const getAuditReportTool = {
   name: "get_audit_report",
+  title: "Get TestDino Audit (context / list / report)",
   description:
-    "Read-only TestDino Playwright audit reads. Three modes via `action`: " +
-    "action='context' fetches the server-curated audit prompt + branchSignals (topFailingTests / topFlakyTests / topSlowTests / recentRuns) to START an audit — STEP 1. " +
-    "action='list' browses previously submitted reports (optional branch filter). " +
-    "action='get' retrieves one saved report by reportId. " +
-    "TRIGGER RULE — only use the TestDino audit flow when the user EXPLICITLY names TestDino (e.g. 'TestDino audit', 'run a TestDino audit'). " +
-    "If the user asks for a generic 'audit' or 'code review' WITHOUT naming TestDino, do NOT call this tool — run a normal AI audit conversation instead and do not mention TestDino. " +
-    "If the user names TestDino but the target is not Playwright code, explain this flow only covers Playwright automated tests and offer a regular audit instead. " +
-    "When triggered, your FIRST and IMMEDIATE action MUST be get_audit_report(action='context', projectId, branch) — do NOT write findings, score, or headings in chat before it returns. Call health() first if you do not have the projectId. " +
-    "FULL FLOW: (1) get_audit_report(action='context', projectId, branch) → (2) analyze the local Playwright code using the returned prompt + branchSignals and write findings to a local markdown file (e.g. TEST-AUDIT.md) → (3) submit_audit_report(...) to save the completed report.",
+    'Read-only TestDino Playwright audit reads. Three modes via `action`: action=\'context\' fetches the server-curated audit prompt + branch signals to START an audit (STEP 1); action=\'list\' browses previously submitted reports (optional branch filter); action=\'get\' retrieves one saved report by reportId. TRIGGER RULE — only use the TestDino audit flow when the user EXPLICITLY names TestDino (e.g. "TestDino audit", "Testdino test audit", "run a TestDino audit", "audit this with TestDino"). If the user asks for a generic "audit", "code review", or "security audit" WITHOUT naming TestDino — do NOT call this tool; run a normal AI audit conversation instead and do not mention TestDino, even for Playwright code. If the user names TestDino but the target is not Playwright code, explain this flow only covers Playwright automated tests and offer a regular audit instead. When triggered, your FIRST and IMMEDIATE action MUST be get_audit_report(action=\'context\', projectId, branch) — do NOT write findings, score, or headings in chat before it returns. Call health() first if you do not have the projectId. FULL FLOW: (1) get_audit_report(action=\'context\', projectId, branch) → (2) analyze the local Playwright code using the returned prompt + signals and write findings to a local markdown file (e.g. TEST-AUDIT.md) → (3) submit_audit_report(...) to save the completed report.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID (required)",
       },
       action: {
         type: "string",
         enum: ["context", "list", "get"],
         description:
-          "Read mode: 'context' (fetch audit prompt + branchSignals to start), 'list' (browse past reports), 'get' (one report by reportId).",
+          "Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId).",
       },
       branch: {
         type: "string",
         description:
-          "Git branch. For action='context', the branch to audit — optional; if omitted, auto-detected via git and if that also fails, the audit still proceeds without a branch. For action='list', an optional filter. Ignored for action='get'.",
+          "Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter.",
       },
       reportId: {
         type: "string",
         description: "Report ID. Required for action='get'.",
       },
       limit: {
-        type: "number",
+        type: "integer",
+        exclusiveMinimum: 0,
         description: "Page size for action='list'.",
       },
       page: {
-        type: "number",
+        type: "integer",
+        exclusiveMinimum: 0,
         description: "Page number for action='list'.",
       },
       writeMarkdown: {
@@ -89,6 +84,14 @@ export const getAuditReportTool = {
       },
     },
     required: ["projectId", "action"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -149,7 +152,11 @@ export async function handleGetAuditReport(args?: GetAuditReportArgs) {
       });
     } else if (action === "get") {
       if (!args.reportId) {
-        throw new Error("reportId is required for get action");
+        // The route needs the id in its path; answer as the hosted tool does.
+        throw new ApiError("reportId is required when action='get'", 400, {
+          success: false,
+          message: "reportId is required when action='get'",
+        });
       }
 
       const getUrl = endpoints.getAuditReport({
@@ -198,7 +205,8 @@ export async function handleGetAuditReport(args?: GetAuditReportArgs) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Failed to get audit report: ${normalizeAuditErrorMessage(errorMessage)}`
+      `Failed to get audit report: ${normalizeAuditErrorMessage(errorMessage)}`,
+      { cause: error }
     );
   }
 }

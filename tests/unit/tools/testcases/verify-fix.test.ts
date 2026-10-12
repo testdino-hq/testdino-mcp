@@ -31,13 +31,28 @@ describe("handleVerifyFix", () => {
       "projectId",
       { projectId: undefined, testcase_name: "t", baseline_run_id: "r" },
     ],
-    ["testcase_id or testcase_name", { projectId: "p", baseline_run_id: "r" }],
     ["baseline_run_id", { projectId: "p", testcase_name: "t" }],
   ])("throws when %s is missing", async (param, args) => {
     process.env.TESTDINO_PAT = "test-pat";
     await expect(handleVerifyFix(createArgs(args) as never)).rejects.toThrow(
       `${param} is required`
     );
+  });
+
+  it("refuses an unnamed test with the hosted tool's 400", async () => {
+    process.env.TESTDINO_PAT = "test-pat";
+    await expect(
+      handleVerifyFix(createArgs({ baseline_run_id: "r" }) as never)
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      body: {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Provide testcase_id (the pw_test_id) or testcase_name.",
+        },
+      },
+    });
   });
 
   it("forwards the title and baseline run, omitting suite_file_path when not given", async () => {

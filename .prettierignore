@@ -5,3 +5,9 @@ coverage/
 *.map
 package-lock.json
 
+
+# A verbatim copy of the hosted MCP guide (services/mcp/node/src/mcp/streaming/sdk/skill.md); reformatting it breaks the copy.
+docs/skill.md
+# Copied from the hosted MCP on sync day.
+tests/fixtures/hosted-catalogue.json
+tests/fixtures/hosted-validation.json

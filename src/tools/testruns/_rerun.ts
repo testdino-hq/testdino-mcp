@@ -1,9 +1,8 @@
-/**
- * Shared POST helper for the two re-run tools. Not `apiRequestJson`: a refusal
- * is a 400 whose body is the answer, and that throws it as a 500-char string.
- */
+// Shared POST helper for the two re-run tools: a longer timeout, and a
+// timed-out write is reported as possibly started.
 
 import {
+  ApiError,
   apiRequest,
   formatApiErrorBody,
   rateLimitHint,
@@ -15,26 +14,6 @@ const RERUN_TIMEOUT_MS = 30_000;
 export interface RerunToolOutput {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-}
-
-/**
- * A refusal the caller can act on. Two envelopes reach here: the gateway's
- * `{error: {code, message}}`, and integration's `{error: "<CODE>", message}`
- * passed through unchanged when GitHub refuses the dispatch.
- */
-function isContractRefusal(status: number, body: unknown): boolean {
-  if (status !== 400 || typeof body !== "object" || body === null) {
-    return false;
-  }
-  const error = (body as { error?: unknown }).error;
-  if (typeof error === "string") {
-    return error.length > 0;
-  }
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    typeof (error as { code?: unknown }).code === "string"
-  );
 }
 
 export async function postRerun(
@@ -82,21 +61,12 @@ export async function postRerun(
     };
   }
 
-  if (isContractRefusal(response.status, parsed)) {
-    // statusCode first and isError set, exactly as the hosted server shapes a
-    // failed tool result, so a client that branches on either behaves the same
-    // on both surfaces.
-    const shaped = { statusCode: response.status, ...(parsed as object) };
-    return {
-      content: [{ type: "text", text: JSON.stringify(shaped, null, 2) }],
-      isError: true,
-    };
-  }
-
   const formattedErrorText = formatApiErrorBody(text);
-  throw new Error(
+  throw new ApiError(
     `API request failed: ${response.status} ${response.statusText}${
       formattedErrorText ? `\n${formattedErrorText}` : ""
-    }${rateLimitHint(response)}`
+    }${rateLimitHint(response)}`,
+    response.status,
+    parsed === undefined ? text : parsed
   );
 }

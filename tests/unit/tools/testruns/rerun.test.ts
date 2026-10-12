@@ -33,6 +33,7 @@ import {
 import { createArgs, parseToolResponse } from "../../../helpers/mockTypes.js";
 import { handleGetRerunSelection } from "../../../../src/tools/testruns/get-rerun-selection.js";
 import { handleRerunTest } from "../../../../src/tools/testruns/rerun-test.js";
+import { ApiError } from "../../../../src/lib/request.js";
 
 const RUN = "test_run_abc123";
 
@@ -165,7 +166,9 @@ describe("handleRerunTest", () => {
       })
     );
 
-    await handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never);
+    await handleRerunTest(
+      createArgs({ runId: RUN, confirm: true }) as never
+    ).catch(() => undefined);
 
     expect(Object.keys(bodyOf()).sort()).toEqual(["confirm", "runId"]);
   });
@@ -181,16 +184,28 @@ describe("handleRerunTest", () => {
       })
     );
 
-    await handleRerunTest(createArgs({ runId: RUN, confirm: false }) as never);
+    await handleRerunTest(
+      createArgs({ runId: RUN, confirm: false }) as never
+    ).catch(() => undefined);
 
     expect(bodyOf()).toMatchObject({ confirm: false });
   });
 });
 
-describe("re-run refusals reach the agent instead of being thrown", () => {
-  // Without this, apiRequestJson would throw the body as a string truncated at
-  // 500 characters and the agent would lose the question, the mechanism and
-  // the fallback command — the entire content of the refusal.
+// The handler throws the server's refusal as an ApiError; the server turns it
+// into the hosted result (isError, statusCode, full body) — dispatch.test.ts.
+async function refusalOf(call: Promise<unknown>): Promise<ApiError> {
+  const error = await call.then(
+    () => undefined,
+    (e: unknown) => e
+  );
+  expect((error as Error).cause).toBeInstanceOf(ApiError);
+  return (error as Error).cause as ApiError;
+}
+
+describe("re-run refusals reach the agent in full", () => {
+  // A refusal truncated at 500 characters would lose the question, the
+  // mechanism and the fallback command — the entire content of the refusal.
   it("returns a 400 contract refusal as tool output, in full", async () => {
     const refusal = {
       success: false,
@@ -210,11 +225,11 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
     expect(JSON.stringify(refusal).length).toBeGreaterThan(500);
     mockFetchError(400, JSON.stringify(refusal));
 
-    const res = await handleRerunTest(
-      createArgs({ runId: RUN, confirm: true }) as never
-    );
-
-    const parsed = parseToolResponse(res) as typeof refusal;
+    const parsed = (
+      await refusalOf(
+        handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never)
+      )
+    ).body as typeof refusal;
     expect(parsed.error.code).toBe("MODE_REQUIRED");
     expect(parsed.error.message).toBe(refusal.error.message);
     expect(parsed.rerun_mechanism.github_run).toBe("4242");
@@ -233,18 +248,16 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
       })
     );
 
-    const res = await handleGetRerunSelection(
-      createArgs({ runId: RUN }) as never
+    const refusal = await refusalOf(
+      handleGetRerunSelection(createArgs({ runId: RUN }) as never)
     );
 
-    expect(parseToolResponse(res)).toMatchObject({
-      error: { code: "VALIDATION_ERROR" },
-    });
+    expect(refusal.body).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
   });
 
   // The hosted server sets isError and puts statusCode first on every result
   // over 400; a client branching on either must not see a refusal as a success.
-  it("marks a refusal as an error and carries the status, like the hosted server", async () => {
+  it("carries the status with the refusal", async () => {
     mockFetchError(
       400,
       JSON.stringify({
@@ -253,15 +266,12 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
       })
     );
 
-    const res = await handleRerunTest(
-      createArgs({ runId: RUN, confirm: true }) as never
+    const refusal = await refusalOf(
+      handleRerunTest(createArgs({ runId: RUN, confirm: true }) as never)
     );
 
-    expect(res.isError).toBe(true);
-    expect(parseToolResponse(res)).toMatchObject({
-      statusCode: 400,
-      error: { code: "CONFIRM_REQUIRED" },
-    });
+    expect(refusal.statusCode).toBe(400);
+    expect(refusal.body).toMatchObject({ error: { code: "CONFIRM_REQUIRED" } });
   });
 
   // Integration passes its own 400s through the gateway unchanged, and its
@@ -277,19 +287,18 @@ describe("re-run refusals reach the agent instead of being thrown", () => {
       })
     );
 
-    const res = await handleRerunTest(
-      createArgs({
-        runId: RUN,
-        confirm: true,
-        mode: "latest",
-        workflow: "CI",
-      }) as never
+    const refusal = await refusalOf(
+      handleRerunTest(
+        createArgs({
+          runId: RUN,
+          confirm: true,
+          mode: "latest",
+          workflow: "CI",
+        }) as never
+      )
     );
 
-    expect(res.isError).toBe(true);
-    expect(parseToolResponse(res)).toMatchObject({
-      error: "GITHUB_DISPATCH_FAILED",
-    });
+    expect(refusal.body).toMatchObject({ error: "GITHUB_DISPATCH_FAILED" });
   });
 
   // A timed-out write is never retried, so the agent cannot tell whether CI

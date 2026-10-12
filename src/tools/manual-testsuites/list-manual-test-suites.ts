@@ -18,22 +18,29 @@ interface ListManualTestSuitesParams {
 
 export const listManualTestSuitesTool = {
   name: "list_manual_test_suites",
+  title: "List Manual Test Suites",
   description:
-    "List the test suite hierarchy to help users find suiteIds for test case creation. Use this to navigate the test suite structure and understand test organization.",
+    "Get the test suite folder hierarchy for a project. Returns suite IDs, names, parent relationships, and child counts. ALWAYS call this before create_manual_test_case — you need the exact suiteName (case-sensitive) to create a test case. Pass parentSuiteId to list only the direct children of a specific suite.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       parentSuiteId: {
         type: "string",
-        description:
-          "Optional parent suite ID to fetch only children of a specific suite. If not provided, returns the root-level suites.",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -83,6 +90,8 @@ export async function handleListManualTestSuites(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list manual test suites: ${errorMessage}`);
+    throw new Error(`Failed to list manual test suites: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

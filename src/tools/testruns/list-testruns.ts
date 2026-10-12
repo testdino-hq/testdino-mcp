@@ -15,6 +15,7 @@ interface ListTestRunsArgs {
   by_environment?: string;
   by_status?: "passed" | "failed" | "interrupted" | "incomplete" | "running";
   by_test_case_tags?: string;
+  by_test_controls?: string;
   search?: string;
   sort?: "counter_desc" | "counter_asc" | "duration_asc" | "duration_desc";
   limit?: number;
@@ -30,6 +31,7 @@ interface ListTestRunsParams {
   by_environment?: string;
   by_status?: string;
   by_test_case_tags?: string;
+  by_test_controls?: string;
   search?: string;
   sort?: string;
   limit?: number;
@@ -38,72 +40,80 @@ interface ListTestRunsParams {
 
 export const listTestRunsTool = {
   name: "list_testruns",
+  title: "List Test Runs",
   description:
-    "Browse and filter your test runs to find specific test executions. Filter by git branch (e.g., 'develop', 'main'), run status ('passed', 'failed', 'interrupted', 'incomplete', 'running'), time interval ('Latest', '1h', '2h', '5h', '1d', '3d', '5d', 'weekly', 'monthly', or custom date ranges), commit author, environment (e.g., 'production', 'staging', 'development'), or test case tags. Search commit messages (or an exact run counter when numeric) with 'search', and order results with 'sort'. Supports efficient pagination using page/limit or offset/limit. Returns test run summaries with statistics (total, passed, failed, skipped, flaky counts), duration, status, branch, author, and PR information when available. Perfect for answering questions like 'What tests ran on the develop branch?' or 'Show me all failed runs from last hour.' The PAT should be configured in mcp.json as TESTDINO_PAT environment variable.",
+    'Browse test runs for a project with optional filters. Use this when you need run-level metadata: pass/fail totals, duration, branch, commit, author, or when you need testrun_id values for follow-up calls. Use specific filters and pagination instead of fetching broad result sets. You do NOT need to call this before list_testcase when you already have branch/time/author filters — list_testcase resolves runs internally. Common time values: "1d", "3d", "weekly", "monthly", or "YYYY-MM-DD,YYYY-MM-DD" for a custom range.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID (e.g. project_<id>)",
       },
       by_branch: {
         type: "string",
-        description:
-          "Filter by git branch name (e.g., 'main', 'develop', 'feature/login').",
+        description: "Filter by git branch name",
       },
       by_time_interval: {
         type: "string",
         description:
-          "Filter by time interval. Supports: 'Latest' (most recent, no time filter), '1h' (last hour), '2h' (last 2 hours), '5h' (last 5 hours), '12h' (last 12 hours), '1d' (last day), '3d' (last 3 days), '5d' (last 5 days), 'weekly' (last 7 days), 'monthly' (last 30 days), 'last 1 hour', 'last day', 'last 5 days', or '2024-01-01,2024-01-31' (date range).",
+          'Time filter: "1h", "1d", "weekly", "monthly", "last 5 days", or "YYYY-MM-DD,YYYY-MM-DD"',
       },
       by_author: {
         type: "string",
-        description: "Filter by commit author name (exact match).",
+        description: "Filter by commit author",
       },
       by_commit: {
         type: "string",
-        description: "Filter by git commit hash (full or partial).",
+        description: "Filter by commit hash prefix",
       },
       by_environment: {
         type: "string",
-        description:
-          "Filter by environment. Example: 'production', 'staging', 'development'.",
+        description: "Filter by CI/deployment environment",
       },
       by_status: {
         type: "string",
         enum: ["passed", "failed", "interrupted", "incomplete", "running"],
-        description:
-          "Filter by run status: 'passed', 'failed', 'interrupted', 'incomplete', or 'running'.",
-      },
-      by_test_case_tags: {
-        type: "string",
-        description:
-          "Comma-separated test case tags contained in the run (exact match, include the '@' prefix if the tag has one, e.g. '@critical').",
+        description: "Filter by run status",
       },
       search: {
         type: "string",
+        description: "Search run commit message, or exact counter when numeric",
+      },
+      by_test_case_tags: {
+        type: "string",
+        description: "Comma-separated test case tags contained in the run",
+      },
+      by_test_controls: {
+        type: "string",
+        enum: ["excluded", "critical", "any"],
         description:
-          "Search run commit messages, or match an exact run counter when the value is numeric.",
+          'Runs Test Controls changed, as the runs list filter: "excluded" = had quarantined failures, "critical" = a critical test passed only on retry, "any" = changed by Test Controls. Each run carries `quarantine` ({state, excluded_count, critical_flaky}; null for reporters before 2.8.0).',
       },
       sort: {
         type: "string",
         enum: ["counter_desc", "counter_asc", "duration_asc", "duration_desc"],
-        description:
-          "Sort order for the run list: 'counter_desc' (newest first, default), 'counter_asc', 'duration_asc', or 'duration_desc'.",
-      },
-      limit: {
-        type: "number",
-        description: "Number of results per page (default: 20, max: 1000).",
-        default: 20,
+        description: "Run list sort order",
       },
       page: {
-        type: "number",
-        description: "Page number (default: 1).",
-        default: 1,
+        type: "integer",
+        exclusiveMinimum: 0,
+        description: "1-indexed page number (default: 1)",
+      },
+      limit: {
+        type: "integer",
+        description: "Items per page. Data Handler accepts 10, 25, 50, or 100.",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -148,6 +158,9 @@ export async function handleListTestRuns(args?: ListTestRunsArgs) {
     if (args?.by_test_case_tags) {
       params.by_test_case_tags = String(args.by_test_case_tags);
     }
+    if (args?.by_test_controls) {
+      params.by_test_controls = String(args.by_test_controls);
+    }
     if (args?.search) {
       params.search = String(args.search);
     }
@@ -179,6 +192,8 @@ export async function handleListTestRuns(args?: ListTestRunsArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list test runs: ${errorMessage}`);
+    throw new Error(`Failed to list test runs: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

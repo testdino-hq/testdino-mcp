@@ -23,75 +23,80 @@ interface GetTestCaseDetailsArgs {
 
 export const getTestCaseDetailsTool = {
   name: "get_testcase_details",
+  title: "Get Test Case Details",
   description:
-    "Get detailed information about a specific test case. You can identify the test case in two ways: 1) By testcase_id (can be used alone), or 2) By testcase_name combined with testrun_id (required because test cases can have the same name across different test runs). Returns error message, code snippet, file location, test steps per attempt, console logs, and artifacts (screenshots, videos, traces). Use steps_filter='failed_only' to return only steps that errored, stripping passing setup/hook steps. Use this to debug why a test failed or understand how it executed. Example: 'Get test case details for \"Verify user can logout and login\" in testrun #43'.",
+    'Get full details of a test case — errors, stack traces, steps, console logs, and artifacts. Use testcase_id (the Playwright pw_test_id) for the most precise lookup; it can be used alone for latest detail or paired with testrun_id for exact run-scoped detail. testcase_name resolves through test history; combine it with testrun_id to scope to specific run(s), otherwise the latest run is used. Always pass steps_filter="failed_only" when debugging — it drops unrelated passing setup/hook steps and keeps failed branches plus required parent context, cutting noise significantly. Every stored artifact comes back in `evidence[]` — trace, video, screenshots, and for a visual failure the expected/actual/diff images — each with its attempt index, a `url`, and an `expires_at`. Download what you need as soon as you receive it: the links are minutes-scale by design. If one has expired, call this tool again to mint fresh links rather than treating the artifact as missing. `traceDownloadUrl` points at the first FAILING attempt, which on a flaky test is not the last one.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       testcase_id: {
         type: "string",
         description:
-          "Test case ID. Can be used alone to get test case details. Example: 'test_case_123'.",
+          "Exact test case ID(s) — Playwright pw_test_id, comma-separated (max 50).",
       },
       testcase_name: {
         type: "string",
         description:
-          "Test case title (partial match, case-insensitive). Must be combined with testrun_id when used alone. Example: 'Verify user can logout and login'.",
+          "Test case title — resolves through test history; scoped by testrun_id when given, else latest matching detail.",
       },
       testrun_id: {
         type: "string",
         description:
-          "Single test run ID to filter results. Example: 'test_run_6901b2abc6b187e63f536a6b'.",
-      },
-      by_fulltitle: {
-        type: "string",
-        description:
-          "Full test case title including suite path (partial match, case-insensitive). Example: 'auth.spec.js > Login > Verify user can logout and login'.",
-      },
-      by_testrun_ids: {
-        type: "string",
-        description:
-          "Multiple test run IDs (comma-separated, max 20). Example: 'test_run_abc,test_run_def'.",
+          "Run scope for testcase_id / testcase_name lookup. Comma-separated (max 20).",
       },
       testcaseid: {
         type: "string",
         description:
-          "(deprecated — use testcase_id) Test case ID. Retained for backward compatibility.",
+          "Deprecated alias for testcase_id (kept for backward compatibility).",
       },
       by_title: {
         type: "string",
         description:
-          "(deprecated — use testcase_name) Test case title (partial match, case-insensitive). Retained for backward compatibility.",
+          "Deprecated alias for testcase_name (kept for backward compatibility).",
       },
       by_testrun_id: {
         type: "string",
         description:
-          "(deprecated — use testrun_id) Single test run ID to filter results. Retained for backward compatibility.",
+          "Deprecated alias for testrun_id (kept for backward compatibility).",
+      },
+      by_fulltitle: {
+        type: "string",
+      },
+      by_testrun_ids: {
+        type: "string",
+        description: "Comma-separated (max 20)",
       },
       include_history: {
         type: "boolean",
         description:
-          "Include historical executions of the same test case when searching by name. Default: false.",
-        default: false,
+          "Attach DH /analytics/test-history output to returned case detail items.",
       },
       history_limit: {
-        type: "number",
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
         description:
-          "Max number of history entries to return (max: 100, default: 10).",
-        default: 10,
+          "Maximum history timeline cells to keep when include_history=true.",
       },
       steps_filter: {
         type: "string",
         enum: ["failed_only"],
-        description:
-          "Filter steps in each attempt. Use 'failed_only' to return only steps with errors, stripping passing setup and hook steps.",
+        description: 'Use "failed_only" to drop passing setup/hook steps',
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -106,62 +111,19 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
     );
   }
 
-  // Validate: need at least one identifying/search parameter. Deprecated aliases
-  // (testcaseid, by_title) still count so old callers keep working.
-  const hasTestCaseId = !!(args?.testcase_id || args?.testcaseid);
-  const hasSearchParam = !!(
-    args?.testcase_name ||
-    args?.by_title ||
-    args?.by_fulltitle
-  );
-
-  if (!hasTestCaseId && !hasSearchParam) {
-    throw new Error(
-      "At least one of the following must be provided: 'testcase_id', 'testcase_name', or 'by_fulltitle'."
-    );
-  }
-
   try {
-    // Build query parameters
-    const queryParams: Record<string, string> = {
-      projectId: String(args.projectId),
-    };
-
-    // Primary params map to their endpoint query names.
-    if (args.testcase_id) {
-      queryParams.testcaseid = String(args.testcase_id);
-    }
-    if (args.testcase_name) {
-      queryParams.by_title = String(args.testcase_name);
-    }
-    if (args.testrun_id) {
-      queryParams.by_testrun_id = String(args.testrun_id);
-    }
-    if (args.by_fulltitle) {
-      queryParams.by_fulltitle = String(args.by_fulltitle);
-    }
-    if (args.by_testrun_ids) {
-      queryParams.by_testrun_ids = String(args.by_testrun_ids);
-    }
-    // Deprecated aliases: forward as-is under their original query names so
-    // existing callers keep working. Primary params take precedence above.
-    if (args.testcaseid && !queryParams.testcaseid) {
-      queryParams.testcaseid = String(args.testcaseid);
-    }
-    if (args.by_title && !queryParams.by_title) {
-      queryParams.by_title = String(args.by_title);
-    }
-    if (args.by_testrun_id && !queryParams.by_testrun_id) {
-      queryParams.by_testrun_id = String(args.by_testrun_id);
-    }
-    if (args.include_history !== undefined) {
-      queryParams.include_history = String(args.include_history);
-    }
-    if (args.history_limit !== undefined) {
-      queryParams.history_limit = String(args.history_limit);
-    }
-    if (args.steps_filter) {
-      queryParams.steps_filter = args.steps_filter;
+    // The server resolves aliases and missing identifiers, exactly as it does
+    // for the hosted tool; every argument goes as given.
+    const queryParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(args ?? {})) {
+      if (
+        key !== "token" &&
+        value !== undefined &&
+        value !== null &&
+        value !== ""
+      ) {
+        queryParams[key] = String(value);
+      }
     }
 
     // Build URL with query parameters using endpoints helper
@@ -175,34 +137,13 @@ export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {
       },
     });
 
-    // TDV2-112: keep the tool response a single VALID STANDALONE JSON block.
-    // The screenshot guidance was previously pushed as a SECOND text block after
-    // the JSON, so the raw response was JSON followed by loose prose. Fold the
-    // hint INTO the JSON payload instead (a `_agent_guidance` field) so the
-    // response parses cleanly on its own.
-    const probe = JSON.stringify(response, null, 2);
-    const hasImages =
-      probe.includes('"contentType": "image/') ||
-      probe.includes('"screenshots"');
-    const isPlainObject =
-      response !== null &&
-      typeof response === "object" &&
-      !Array.isArray(response);
-
-    const payload =
-      hasImages && isPlainObject
-        ? {
-            ...(response as Record<string, unknown>),
-            _agent_guidance:
-              "This test case has screenshot images attached. Fetch and view the screenshot URLs (in the 'screenshots' or attachment 'path' fields) to visually inspect the application state at the time of failure — this is critical for accurate diagnosis.",
-          }
-        : response;
-
     return {
-      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response) }],
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve test case details: ${errorMessage}`);
+    throw new Error(`Failed to retrieve test case details: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

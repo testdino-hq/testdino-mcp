@@ -17,20 +17,20 @@ interface ListAutomatedTestsArgs {
 
 export const listAutomatedTestsTool = {
   name: "list_automated_tests",
+  title: "List Automated Tests",
   description:
-    "Search the automated (Playwright) test identities recorded for a project — the source of the `pwTestId` and `fullTitle` pair that link_automated_test / bulk_link_automated_tests require. " +
-    'ALWAYS take fullTitle from this tool: it is a server-reconstructed join key ("<spec file> > <describe…> > <test title>") and a hand-built one fails identity validation. ' +
-    'Filter with search (title substring), linkStatus ("all" | "linked" | "unlinked") and page with cursor/limit. Each row also reports whether it is already linked to a manual case.',
+    'Search the automated (Playwright) test identities recorded for a project — the source of the `pwTestId` and `fullTitle` pair that link_automated_test / bulk_link_automated_tests require. ALWAYS take fullTitle from this tool: it is a server-reconstructed join key ("<spec file> > <describe…> > <test title>") and a hand-built one fails identity validation. Filter with search (title substring), linkStatus ("all" | "linked" | "unlinked") and page with cursor/limit. Each row also reports whether it is already linked to a manual case.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       search: {
         type: "string",
-        description: "Substring match on the test title.",
+        maxLength: 500,
+        description: "Substring match on the test title",
       },
       linkStatus: {
         type: "string",
@@ -44,11 +44,21 @@ export const listAutomatedTestsTool = {
           "nextCursor from the previous page. Omit for the first page.",
       },
       limit: {
-        type: "number",
-        description: "Page size (default 20, max 100).",
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+        description: "Page size (default 20, max 100)",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -75,6 +85,8 @@ export async function handleListAutomatedTests(args?: ListAutomatedTestsArgs) {
     return toolResult(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list automated tests: ${errorMessage}`);
+    throw new Error(`Failed to list automated tests: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

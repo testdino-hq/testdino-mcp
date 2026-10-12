@@ -24,37 +24,77 @@ interface ListSessionsArgs {
 
 export const listSessionsTool = {
   name: "list_sessions",
+  title: "List Exploratory Sessions",
   description:
-    "Browse exploratory sessions for a project. Filter by status (active|closed), state, sessionType, assigneeUserId, release (releaseId), tags, or free-text search on name. Pass releaseId='none' for sessions not attached to a release. Default page size 25 (max 200).",
+    "Browse exploratory sessions for a project. Filter by status (active|closed), state, sessionType, assignee, release (releaseId), tags, or free-text search on name. Default page size 25 (max 200).",
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
-      search: { type: "string", description: "Match by session name." },
-      status: { type: "string", enum: ["active", "closed"] },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
+      search: {
+        type: "string",
+        description: "Match by session name",
+      },
+      status: {
+        type: "string",
+        enum: ["active", "closed"],
+      },
       state: {
         type: "string",
         description:
-          "Workflow state. Either canonical ('under_review', 'done') or display ('Under review', 'Done') form — the server normalizes lowercase+underscored.",
+          'Workflow state. Pass either the canonical form ("new", "under_review", "done", "rejected") or the display form ("Under review", "Done") — the server normalizes (lowercase, spaces → underscores) so UI badges colorize correctly.',
       },
-      sessionType: { type: "string" },
+      sessionType: {
+        type: "string",
+      },
       assigneeUserId: {
         type: "string",
         description:
-          "User _id OR email — both accepted (server resolves email to user _id).",
+          'User _id (e.g. "user_abc...") OR email address — both are accepted.',
       },
       releaseId: {
         type: "string",
-        description: "'none' for unlinked sessions.",
+        description:
+          'Filter to sessions in this release. Pass "none" for unlinked.',
       },
-      tags: { type: "string", description: "Single tag or comma-separated." },
-      isClosed: { type: "boolean" },
-      sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
-      limit: { type: "number", description: "Default 25 (max 200)." },
+      tags: {
+        type: "string",
+        description: "Single tag or comma-separated tags",
+      },
+      isClosed: {
+        type: "boolean",
+      },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "updatedAt", "name"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 200,
+        description: "Default 25",
+      },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -82,6 +122,6 @@ export async function handleListSessions(args?: ListSessionsArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list sessions: ${msg}`);
+    throw new Error(`Failed to list sessions: ${msg}`, { cause: error });
   }
 }

@@ -16,12 +16,9 @@ interface GetFlakeVerdictArgs {
 
 export const getFlakeVerdictTool = {
   name: "get_flake_verdict",
+  title: "Get Flake Verdict",
   description:
-    "Say whether a failing test behaves the same way every time, by comparing its retry attempts within one run. " +
-    "If you are debugging a failing test, call get_debug_evidence first — it returns this plus the regression boundary and every artifact link in one call, so calling this separately afterwards repeats work already done. " +
-    'Returns a computed verdict — "deterministic" (every attempt failed with the same signature, so the failure repeats), "flaky" (an attempt passed on retry, so the outcome is not consistent), or "inconclusive" (too few attempts, or the attempts failed differently) — plus the per-attempt signatures behind it. ' +
-    "The verdict describes the behaviour, not the cause. It tells you which fixes the evidence cannot support; it does not tell you where the fix goes. Decide that after reading the artifacts, the trace and the code. " +
-    "Needs a test that ran with retries enabled; a single attempt is always inconclusive.",
+    'Say whether a failing test behaves the same way every time, by comparing its retry attempts within one run. If you are debugging a failing test, call get_debug_evidence first — it returns this plus the regression boundary and every artifact link in one call, so calling this separately afterwards repeats work already done. Returns a computed verdict — "deterministic" (every attempt failed with the same signature, so the failure repeats), "flaky" (an attempt passed on retry, so the outcome is not consistent), or "inconclusive" (too few attempts, or the attempts failed differently) — plus the per-attempt signatures behind it. The verdict describes the behaviour, not the cause. It tells you which fixes the evidence cannot support; it does not tell you where the fix goes. Decide that after reading the artifacts, the trace and the code. Needs a test that ran with retries enabled; a single attempt is always inconclusive.',
   inputSchema: {
     type: "object",
     properties: {
@@ -40,6 +37,14 @@ export const getFlakeVerdictTool = {
       },
     },
     required: ["projectId", "testcase_id"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -78,6 +83,8 @@ export async function handleGetFlakeVerdict(args?: GetFlakeVerdictArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get flake verdict: ${errorMessage}`);
+    throw new Error(`Failed to get flake verdict: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

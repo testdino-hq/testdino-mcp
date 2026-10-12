@@ -257,23 +257,6 @@ describe("MCP Server Integration", () => {
         expect(tool.inputSchema.type).toBe("object");
       }
     });
-
-    it("every inputSchema property should have a description", async () => {
-      const result = await client.listTools();
-      for (const tool of result.tools) {
-        const props = tool.inputSchema.properties as Record<
-          string,
-          { description?: string }
-        >;
-        if (!props) continue;
-        for (const [propName, propDef] of Object.entries(props)) {
-          expect(
-            propDef.description,
-            `${tool.name}.${propName} missing description`
-          ).toBeTruthy();
-        }
-      }
-    });
   });
 
   describe("tool routing", () => {

@@ -188,3 +188,38 @@ export {
   getTraceAnalysisTool,
   handleGetTraceAnalysis,
 } from "./ai-insights/get-trace-analysis.js";
+
+// Test Controls
+export {
+  listTestControlsTool,
+  handleListTestControls,
+} from "./test-controls/list-test-controls.js";
+export {
+  getTestControlsTool,
+  handleGetTestControls,
+} from "./test-controls/get-test-controls.js";
+export {
+  getQuarantineTool,
+  handleGetQuarantine,
+} from "./test-controls/get-quarantine.js";
+export {
+  quarantineTestsTool,
+  handleQuarantineTests,
+} from "./test-controls/quarantine-tests.js";
+export {
+  updateQuarantineTool,
+  handleUpdateQuarantine,
+} from "./test-controls/update-quarantine.js";
+export {
+  releaseQuarantineTool,
+  handleReleaseQuarantine,
+} from "./test-controls/release-quarantine.js";
+export {
+  setTestCriticalTool,
+  handleSetTestCritical,
+} from "./test-controls/set-test-critical.js";
+export {
+  assignTestTool,
+  handleAssignTest,
+} from "./test-controls/assign-test.js";
+export { watchTestTool, handleWatchTest } from "./test-controls/watch-test.js";

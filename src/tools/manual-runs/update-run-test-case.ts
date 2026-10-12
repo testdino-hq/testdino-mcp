@@ -16,29 +16,42 @@ interface UpdateRunTestCaseArgs {
 
 export const updateRunTestCaseTool = {
   name: "update_run_test_case",
+  title: "Update Test Case In A Run",
   description:
-    "Set the assignee and/or result for one test case inside a manual run — exactly what clicking 'Assign to' and changing the result pill does in the UI. Requires write permission. rtcRef accepts the caseKey ('TC-156'), the internal `tcm_rtc_...` RTC ID, or the underlying test case _id. Works for both already-touched cases and 'untested' virtual cases (the server auto-creates the per-case record on first edit). IMPORTANT: updates.assigneeUserId accepts an email OR a User _id — both work. updates.result canonical values are 'untested', 'passed', 'failed', 'blocked', 'skipped', 'retest' — pass display ('Passed', 'Blocked') or canonical form, server normalizes lowercase+underscored. To assign or update multiple cases at once, call this tool in parallel (one call per case).",
+    'Update one test case inside a manual run. Two modes, same tool: (1) Quick verdict — pass updates.assigneeUserId and/or updates.result/status to do what clicking "Assign to" and the result pill does in the UI. (2) Detailed result — additionally pass any of updates.comment (rich HTML), updates.linkedIssues, updates.attachments, updates.stepResults to record a full result entry, exactly like the UI\'s "Add detailed result…" dialog. Whenever any of those rich fields are present the server logs a complete result instead of a bare status change. NOTE: combining updates.assigneeUserId with any detailed-result field in one call is rejected — make two calls (one to assign, one to record the result), mirroring the UI\'s separate "Assign to" and "Add detailed result…" actions. Requires write permission. rtcRef accepts the caseKey ("TC-156"), the internal `tcm_rtc_...` RTC ID, or the underlying test case _id. Works for both already-touched cases and "untested" virtual cases (the server auto-creates the per-case record on first edit). Closed runs reject result writes. IMPORTANT: send updates.assigneeUserId as an email OR User _id — both are accepted. updates.result accepts the UI labels — the canonical values are "untested", "passed", "failed", "blocked", "skipped", "retest". Pass display ("Passed", "Blocked") or canonical ("passed", "blocked") form — the server normalizes lowercase+underscored. To update multiple cases at once, call this tool in parallel (one call per case). Suggestion: attaching files via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       runId: {
         type: "string",
-        description:
-          "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
+        description: 'Internal run _id or counter-style ID e.g. "RUN-12"',
       },
       rtcRef: {
         type: "string",
         description:
-          "Per-case record reference — `tcm_rtc_...` _id, caseKey ('TC-156'), or underlying test case _id (required).",
+          'Per-case record reference — `tcm_rtc_...` _id, caseKey ("TC-156"), or underlying test case _id.',
       },
       updates: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Fields to update. Quick verdict fields: assigneeUserId (email or _id, pass null to unassign), result/status (display or canonical form), elapsed (seconds). Detailed-mode fields: comment (HTML), linkedIssues, attachments, stepResults (e.g. [{order, status, comment}]). Quick and detailed are mutually exclusive — mixing an assignee with detailed fields is rejected server-side.",
+          'Quick verdict: assigneeUserId (email or _id; null to unassign), result/status (display or canonical), elapsed (seconds). Detailed result (any of these triggers a full result entry): comment (rich HTML), linkedIssues (array of linked-issue objects), attachments (array of attachment objects/URLs), stepResults (array, e.g. [{ "order": 1, "status": "passed", "comment": "" }]), configuration (the browser/platform this result is for). configuration is REQUIRED when the run covers more than one browser — a result naming none belongs to no cell and is rejected.',
       },
     },
     required: ["projectId", "runId", "rtcRef", "updates"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -72,6 +85,6 @@ export async function handleUpdateRunTestCase(args?: UpdateRunTestCaseArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to update run test case: ${msg}`);
+    throw new Error(`Failed to update run test case: ${msg}`, { cause: error });
   }
 }

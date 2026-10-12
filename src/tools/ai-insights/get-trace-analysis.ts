@@ -21,30 +21,35 @@ interface GetTraceAnalysisArgs {
 
 export const getTraceAnalysisTool = {
   name: "get_trace_analysis",
+  title: "Get Trace Analysis",
   description:
-    "Debug a failing Playwright test from its trace.zip using the Playwright agent CLI (npx playwright trace …, Playwright 1.59+). " +
-    "Returns a runbook that teaches the exact CLI protocol (open → actions → action → snapshot → close) plus how to classify the failure and propose a fix. " +
-    "Pass projectId + testcase_id (the Playwright pw_test_id) to also get a short-lived download URL for that case's hosted trace; optionally scope with testrun_id. " +
-    "Omit the ids to just get the runbook for a trace.zip you already have locally. " +
-    "The analysis runs on your machine — download the trace, run the CLI commands yourself, then report the root cause and fix.",
+    "Debug a failing Playwright test from its trace.zip using the Playwright agent CLI (npx playwright trace …, Playwright 1.59+). Returns a runbook that teaches the exact CLI protocol (open → actions → action → snapshot → close) plus how to classify the failure and propose a fix. Pass projectId + testcase_id (the Playwright pw_test_id) to also get a short-lived download URL for that case's hosted trace; optionally scope with testrun_id. Omit the ids to just get the runbook for a trace.zip you already have locally. The analysis runs on your machine — download the trace, run the CLI commands yourself, then report the root cause and fix.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
-        type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        type: ["string", "null"],
+        description:
+          "Project ID — required to resolve the hosted trace download URL",
       },
       testcase_id: {
-        type: "string",
+        type: ["string", "null"],
         description:
-          "Playwright pw_test_id of the failing case whose hosted trace to resolve.",
+          "Playwright pw_test_id of the failing case whose hosted trace to resolve",
       },
       testrun_id: {
-        type: "string",
-        description: "Optional run scope for testcase_id (single run).",
+        type: ["string", "null"],
+        description: "Optional run scope for testcase_id (single run)",
       },
     },
-    required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -80,6 +85,8 @@ export async function handleGetTraceAnalysis(args?: GetTraceAnalysisArgs) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to retrieve trace analysis: ${errorMessage}`);
+    throw new Error(`Failed to retrieve trace analysis: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }

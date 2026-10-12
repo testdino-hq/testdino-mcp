@@ -21,36 +21,64 @@ interface ListReleasesArgs {
 
 export const listReleasesTool = {
   name: "list_releases",
+  title: "List Releases",
   description:
-    "Browse releases (a.k.a. milestones) for a project. Use search to match by name; type filters by free-text release type; isCompleted filters by completion state; parentReleaseId returns the direct children of a release (releases nest up to 3 levels deep). Default page size 25 (max 200).",
+    "Browse releases (milestones) for a project. Supports filtering by type, completion status, parent release, and free-text search on name. Pass parentReleaseId to get only the direct children of a release (releases nest up to 3 levels deep). Default page size is 25 (max 200).",
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
-      search: { type: "string", description: "Match by release name." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
+      search: {
+        type: "string",
+        description: "Match by name",
+      },
       type: {
         type: "string",
         description:
-          "Release type. Either canonical ('iteration', 'major') or display ('Iteration', 'Major') form — server normalizes to lowercase so UI badge color matches.",
+          'Release type. Default options (lowercased on save so the UI badge color matches): "release", "version", "sprint", "iteration", "plan", "cycle", "feature". Display labels ("Sprint", "Iteration", …) are accepted and normalized. Projects can customize this list via Project Settings → Release Types, so other values may be valid for a given project.',
       },
-      isCompleted: { type: "boolean" },
+      isCompleted: {
+        type: "boolean",
+      },
       parentReleaseId: {
         type: "string",
-        description: "Direct children of this release.",
+        description: "Filter to direct children of a release",
       },
       status: {
         type: "string",
-        description: "Release status (project-specific).",
+        description: "Release status (project-specific)",
       },
       sortBy: {
         type: "string",
         enum: ["createdAt", "startDate", "endDate", "name"],
       },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
-      limit: { type: "number", description: "Default 25 (max 200)." },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 200,
+        description: "Default 25",
+      },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -77,6 +105,6 @@ export async function handleListReleases(args?: ListReleasesArgs) {
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to list releases: ${msg}`);
+    throw new Error(`Failed to list releases: ${msg}`, { cause: error });
   }
 }

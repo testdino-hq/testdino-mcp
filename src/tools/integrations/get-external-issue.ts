@@ -18,38 +18,47 @@ interface GetExternalIssueArgs {
 
 export const getExternalIssueTool = {
   name: "get_external_issue",
+  title: "Get External Issue",
   description:
-    "Fetches previously created external issues (Jira, Linear, Asana, monday.com, GitHub) by their issue IDs or keys. " +
-    "Returns current issue details including status in the external provider. " +
-    "Use this to check whether issues filed via create_external_issue are still open or have been resolved.",
+    "Fetch external issue/task details by provider IDs or keys previously linked to TestDino, such as Jira keys TD-17 or Linear issue identifiers.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "TestDino project ID",
       },
       provider: {
         type: "string",
-        enum: ["jira", "linear", "asana", "monday", "github"],
+        enum: ["jira", "linear", "asana"],
         description:
-          "Integration provider the issue lives in (Required). Use the same provider passed to create_external_issue.",
+          "Provider to read issues from. monday.com and GitHub have no issue read route.",
       },
       issueIds: {
         type: "array",
-        items: { type: "string", minLength: 1 },
+        items: {
+          type: "string",
+          minLength: 1,
+        },
         minItems: 1,
-        description:
-          "External issue IDs or keys (Required). Array of one or more IDs previously linked to TestDino (e.g. Jira keys like 'TD-17' or Linear identifiers).",
+        description: "External issue IDs or keys.",
       },
       target: {
         type: "object",
-        additionalProperties: true,
+        additionalProperties: {},
         description:
-          "Provider-specific read context (optional). For Jira, pass { defaultApp } to read from a specific Atlassian site/resource.",
+          "Provider-specific target/context values. For Jira, pass { defaultApp } to read from a specific Atlassian site/resource.",
       },
     },
     required: ["projectId", "provider", "issueIds"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -76,43 +85,24 @@ export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {
   }
 
   try {
-    // Fetch each issue against the single-issue backend and aggregate. A failed
-    // ID surfaces as an error entry rather than aborting the whole call, so one
-    // stale/unknown ID does not hide the issues that resolved fine.
-    const results = await Promise.all(
-      args.issueIds.map(async (rawId) => {
-        const issueId = String(rawId);
-        const url = endpoints.getExternalIssue({
-          projectId: String(args.projectId),
-          provider: String(args.provider),
-          issueId,
-          target: args.target,
-        });
-        try {
-          const issue = await apiRequestJson<unknown>(url, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          return { issueId, issue };
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
-          return { issueId, error: message };
-        }
-      })
+    const response = await apiRequestJson<unknown>(
+      endpoints.lookupExternalIssues({
+        projectId: String(args.projectId),
+        provider: String(args.provider),
+      }),
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: { issueIds: args.issueIds, target: args.target },
+      }
     );
-
-    // Preserve the single-issue response shape when exactly one ID is requested,
-    // so simple lookups read the same as before; return the array otherwise.
-    const payload =
-      results.length === 1 && results[0].error === undefined
-        ? results[0].issue
-        : { issues: results };
-
     return {
-      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response) }],
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get external issue: ${errorMessage}`);
+    throw new Error(`Failed to get external issue: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }
