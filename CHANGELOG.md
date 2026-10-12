@@ -2,7 +2,7 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
-## 3.0.0
+## 2.2.0
 
 The package now exposes exactly what the hosted TestDino MCP exposes — the same
 tools, descriptions, parameters, prompts and skills guide — and answers every
