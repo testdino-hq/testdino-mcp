@@ -127,6 +127,21 @@ describe("same catalogue as the hosted MCP", () => {
       },
     ],
     ["fix_flake_b", "fix_flake", { projectId: "project_x" }],
+    ["optimize_swarm_a", "optimize_swarm", { projectId: "project_x" }],
+    [
+      "optimize_swarm_b",
+      "optimize_swarm",
+      { projectId: "project_x", testrun_id: "test_run_y" },
+    ],
+    [
+      "optimize_swarm_c",
+      "optimize_swarm",
+      {
+        projectId: "it's",
+        testrun_id: "test_run_y",
+        compare_to_run_id: "test_run_z",
+      },
+    ],
   ])("builds %s exactly as the hosted MCP", async (sample, name, args) => {
     const result = await client.getPrompt({ name, arguments: args });
     expect(result).toEqual(hosted.promptSamples[sample]);

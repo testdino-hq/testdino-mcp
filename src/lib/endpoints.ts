@@ -129,6 +129,7 @@ export const endpoints = {
     by_status?: string;
     by_testsuite_id?: string;
     by_shard?: number;
+    by_machine?: string;
     search?: string;
     sort?: string;
     by_tag?: string;

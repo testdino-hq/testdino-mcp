@@ -44,7 +44,8 @@ disk, stay package-only.
   `get_quarantine`, `quarantine_tests`, `update_quarantine`,
   `release_quarantine`, `set_test_critical`, `assign_test`, `watch_test`, and a
   `by_test_controls` filter on `list_testruns` and `list_testcase`.
-- **Prompts** `fix_run`, `fix_case` and `fix_flake`, beside `testdino_guide`.
+- **Prompts** `fix_run`, `fix_case`, `fix_flake` and `optimize_swarm`, beside `testdino_guide`.
+- **Swarm runs**: `list_testcase` takes `by_machine` (one machine's cases); `get_run_details` describes the per-machine fields.
 - Every tool carries the hosted `title` and its read-only / destructive
   annotations, so clients that honour them ask before a destructive call.
 

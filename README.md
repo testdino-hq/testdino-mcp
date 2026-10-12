@@ -176,7 +176,7 @@ The server provides 54 tools across eleven domains, the same tools, prompts and 
 
 > **Ask first.** Quarantining, releasing and marking critical change what fails the build; the tools are flagged destructive so your client asks before running them.
 
-**Prompts:** `testdino_guide` (the skills guide), `fix_run` (triage a failing run into a fix plan), `fix_case` (root-cause one failing test) and `fix_flake` (route a retried failure to the right kind of fix).
+**Prompts:** `testdino_guide` (the skills guide), `fix_run` (triage a failing run into a fix plan), `fix_case` (root-cause one failing test), `fix_flake` (route a retried failure to the right kind of fix) and `optimize_swarm` (why a multi-machine run took as long as it did, and the one change that would help).
 
 > AI Insights are also available inline: pass `include_ai_insights: true` to `get_run_details` (attaches the run's AI Insights under `ai_insights`) or `debug_testcase` (attaches recommendations + quick fixes under `ai_fixes`).
 

@@ -20,6 +20,7 @@ interface ListTestCasesArgs {
     | "running";
   by_testsuite_id?: string;
   by_shard?: number;
+  by_machine?: string;
   search?: string;
   sort?: "name_asc" | "name_desc" | "duration_asc" | "duration_desc";
   by_tag?: string;
@@ -44,6 +45,7 @@ interface ListTestCasesParams {
   by_status?: string;
   by_testsuite_id?: string;
   by_shard?: number;
+  by_machine?: string;
   search?: string;
   sort?: string;
   by_tag?: string;
@@ -65,7 +67,7 @@ export const listTestCasesTool = {
   name: "list_testcase",
   title: "List Test Cases",
   description:
-    'List and filter test cases across runs. Provide at least one run context: by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit. Without a run context the tool returns an empty result with a warning. KEY INSIGHT: when you use by_branch, by_time_interval, by_author, or by_commit, this tool resolves the matching runs internally — you do NOT need to call list_testruns first. Combine filters freely: e.g. by_branch="main" + by_status="failed" + by_time_interval="1d" gives you all failures on main today in one call. Batch up to 20 run IDs with by_testrun_id="id1,id2,id3". Prefer specific filters and pagination over broad result sets.',
+    'List and filter test cases across runs. Provide at least one run context: by_testrun_id, counter, by_pages, by_branch, by_time_interval, by_environment, by_author, or by_commit. Without a run context the tool returns an empty result with a warning. KEY INSIGHT: when you use by_branch, by_time_interval, by_author, or by_commit, this tool resolves the matching runs internally — you do NOT need to call list_testruns first. Combine filters freely: e.g. by_branch="main" + by_status="failed" + by_time_interval="1d" gives you all failures on main today in one call. Batch up to 20 run IDs with by_testrun_id="id1,id2,id3". Prefer specific filters and pagination over broad result sets. For a swarm run, by_machine scopes to one machine\'s cases, and each case carries `machine_id` — that is how a failure is attributed to a specific machine. There is no spec-file filter: use search with the file name (it matches every title-path segment, which includes the spec file) and sort=duration_desc to see which tests dominate a file.',
   inputSchema: {
     type: "object",
     properties: {
@@ -103,6 +105,11 @@ export const listTestCasesTool = {
         exclusiveMinimum: 0,
         description:
           "1-based shard index — scope results to a single shard of a sharded run",
+      },
+      by_machine: {
+        type: "string",
+        description:
+          "Machine (device) id, or a comma-separated list — scope results to what ran on specific machines of a swarm run. Ids come from `machines[].machine_id` in get_run_details and are case-sensitive. An unknown id matches nothing rather than erroring.",
       },
       search: {
         type: "string",
@@ -211,6 +218,9 @@ export async function handleListTestCases(args?: ListTestCasesArgs) {
     }
     if (args?.by_shard !== undefined) {
       params.by_shard = Number(args.by_shard);
+    }
+    if (args?.by_machine) {
+      params.by_machine = String(args.by_machine);
     }
     if (args?.search) {
       params.search = String(args.search);

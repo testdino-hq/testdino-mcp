@@ -1,6 +1,10 @@
 import { buildFixCaseMessage, toFixCaseArgs } from "./fix-case.js";
 import { buildFixFlakeMessage, toFixFlakeArgs } from "./fix-flake.js";
 import { buildFixRunMessage, toFixRunArgs } from "./fix-run.js";
+import {
+  buildOptimizeSwarmMessage,
+  toOptimizeSwarmArgs,
+} from "./optimize-swarm.js";
 
 // The hosted MCP's prompts/list, copied.
 export const PROMPTS = [
@@ -87,6 +91,31 @@ export const PROMPTS = [
       },
     ],
   },
+  {
+    name: "optimize_swarm",
+    title: "Explain a swarm run’s duration",
+    description:
+      "Explain why a swarm (multi-machine) run took as long as it did, what it cost in wasted CI minutes, and the one change that would actually make it faster. Separates uneven packing across machines from a single long spec file, because only the first is the scheduler’s to fix.",
+    arguments: [
+      {
+        name: "projectId",
+        description: "Project ID (e.g. project_<id>)",
+        required: true,
+      },
+      {
+        name: "testrun_id",
+        description:
+          "Swarm run to analyse. Omit to pick from the recent runs first.",
+        required: false,
+      },
+      {
+        name: "compare_to_run_id",
+        description:
+          "An earlier swarm run to compare against — switches to before/after mode to check whether a change (a spec split, a machine-count change) actually shortened the run. Requires testrun_id.",
+        required: false,
+      },
+    ],
+  },
 ];
 
 // Builds a fix prompt's text from its arguments, as the hosted server does.
@@ -97,4 +126,6 @@ export const FIX_PROMPT_TEXT: Record<
   fix_run: (args) => buildFixRunMessage(toFixRunArgs(args)),
   fix_case: (args) => buildFixCaseMessage(toFixCaseArgs(args)),
   fix_flake: (args) => buildFixFlakeMessage(toFixFlakeArgs(args)),
+  optimize_swarm: (args) =>
+    buildOptimizeSwarmMessage(toOptimizeSwarmArgs(args)),
 };
