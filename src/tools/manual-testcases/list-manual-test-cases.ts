@@ -62,102 +62,81 @@ interface ListManualTestCasesParams {
 
 export const listManualTestCasesTool = {
   name: "list_manual_test_cases",
+  title: "List Manual Test Cases",
   description:
-    "Search and list manual test cases with filtering capabilities. Use this to find specific manual test cases for QA testing, auditing, or test case management. Supports filtering by project, time, suite, status, priority, severity, type, layer, behavior, automation status, and tags.",
+    'Search and browse manual test cases with filters. Use suiteId to scope to a folder, search to match by title or caseId (e.g. "TC-123"), status for active/draft/deprecated, and tags for comma-separated tag filtering. Default limit is 10 — increase it if you need more results.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       time: {
         type: "string",
-        description: "Filter by time interval.",
-        enum: ["last 1 hour", "Last 5 hours", "Yesterday", "last 7 days"],
+        description: 'e.g. "last 1 hour", "Yesterday", "last 7 days"',
       },
       search: {
         type: "string",
-        description:
-          "Search term to match against title or caseId. Example: 'login' or 'TC-123'.",
+        description: "Match title or caseId",
       },
       suiteId: {
         type: "string",
-        description:
-          "Filter by specific test suite ID. Use list_manual_test_suites to find suite IDs.",
       },
       status: {
         type: "string",
-        description: "Filter by test case status.",
         enum: ["active", "draft", "deprecated"],
       },
       priority: {
         type: "string",
-        description: "Filter by priority level.",
-        enum: ["high", "medium", "low", "Not set"],
+        description:
+          "Priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.",
       },
       severity: {
         type: "string",
-        description: "Filter by severity level.",
-        enum: [
-          "Blocker",
-          "critical",
-          "major",
-          "Normal",
-          "minor",
-          "trivial",
-          "Not set",
-        ],
+        description:
+          "Severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.",
       },
       type: {
         type: "string",
-        description: "Filter by test case type.",
-        enum: [
-          "functional",
-          "smoke",
-          "regression",
-          "security",
-          "performance",
-          "e2e",
-          "Integration",
-          "API",
-          "Unit",
-          "Accessability",
-          "Compatibility",
-          "Acceptance",
-          "Exploratory",
-          "Usability",
-          "Other",
-        ],
+        description:
+          "Type. Values come from Project Settings → Test Case Properties. Defaults: Smoke, Regression, Functional, Integration, E2E, API, Unit, Performance, Security, Accessibility, Usability, Compatibility, Acceptance, Exploratory, Other.",
       },
       layer: {
         type: "string",
-        description: "Filter by test layer.",
-        enum: ["e2e", "api", "unit", "not set"],
+        description:
+          "Layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.",
       },
       behavior: {
         type: "string",
-        description: "Filter by test behavior type.",
-        enum: ["positive", "negative", "destructive", "Not set"],
+        description:
+          "Behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.",
       },
       automationStatus: {
         type: "string",
-        description: "Filter by automation status.",
-        enum: ["Manual", "Automated", "To be automated"],
+        description:
+          "Automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated.",
       },
       tags: {
         type: "string",
-        description:
-          "Filter by tags. Can be a single tag or comma-separated tags. Example: 'smoke' or 'smoke,regression,login'.",
+        description: "Single tag or comma-separated tags",
       },
       limit: {
-        type: "number",
-        description:
-          "Maximum number of results to return (default: 10, max: 1000).",
-        default: 10,
+        type: "integer",
+        minimum: 1,
+        maximum: 1000,
+        description: "Default 10",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

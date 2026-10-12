@@ -22,34 +22,40 @@ interface GetRunDetailsParams {
 
 export const getRunDetailsTool = {
   name: "get_run_details",
+  title: "Get Test Run Details",
   description:
-    "Get detailed information about test runs. Shows test statistics (passed, failed, skipped, flaky), all test suites and cases, git metadata, and error details. Supports batch operations (comma-separated IDs, max 20). Use this to analyze test execution health or debug specific failures. " +
-    "Set include_ai_insights=true (single testrun_id only) to also get the run's AI Insights under `ai_insights`: AI failure categorization (flaky/bug/ui_change), failure clusters, new-failures cards, the error-analysis table, and the LLM-written run summary. " +
-    'AI payloads are generated lazily — if `ai_insights` sections report status "processing"/"not_generated", poll get_ai_insights(testrun_id=...) until "completed" instead of re-calling this tool. An "unavailable" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights), a 4xx (bad ids) is terminal.',
+    'Get the full breakdown of one or more test runs — test statistics, error category breakdown, suite list, and all test cases in the run. Use testrun_id for ID-based lookup or counter for the human-readable run number (e.g. counter="47"). Batch up to 20 runs by comma-separating: testrun_id="id1,id2,id3". Typical workflow: list_testruns() → pick IDs → get_run_details() for the specific run. Set include_ai_insights=true (single testrun_id only) to also get the run\'s AI Insights under `ai_insights`: AI failure categorization (flaky/bug/ui_change), failure clusters, new-failures cards, the error-analysis table, and the LLM-written run summary. AI payloads are generated lazily — if `ai_insights` sections report status "processing"/"not_generated", poll get_ai_insights(testrun_id=...) until "completed" instead of re-calling this tool. An "unavailable" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights), a 4xx (bad ids) is terminal.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       testrun_id: {
         type: "string",
-        description:
-          "Test run ID(s). Single ID or comma-separated for batch (max 20). Example: 'test_run_123' or 'run1,run2,run3'.",
+        description: "Single test run ID, or comma-separated IDs (max 20)",
       },
       counter: {
-        type: ["number", "string"],
+        type: ["string", "number"],
         description:
-          "Run counter. A number for a single run (e.g. 47), or a comma-separated string ('47,48,49', max 20) for a batch.",
+          'Run counter. Number for a single run (e.g. 47), or comma-separated string ("47,48,49", max 20) for batch lookup.',
       },
       include_ai_insights: {
         type: "boolean",
         description:
-          "Attach the run's AI Insights (failure categorization, clusters, error-analysis table, LLM summary) under `ai_insights`. Requires a single testrun_id (not counter, not a batch). If a section reports `processing`, poll get_ai_insights(testrun_id=...) instead of re-calling this tool.",
+          "Attach the run's AI Insights (categorization, clusters, error-analysis table, written summary) under `ai_insights`. Requires a single testrun_id (not counter, not a batch).",
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

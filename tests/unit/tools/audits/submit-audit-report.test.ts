@@ -15,29 +15,25 @@ describe("handleSubmitAuditReport", () => {
     restoreFetch();
   });
 
-  it("rejects a missing orgId", async () => {
-    // orgId is the streaming contract — the backend 400s without it, so the
-    // client must surface a helpful message pointing to health() rather than
-    // let the server rejection bubble as a mystery 400.
-    await expect(
-      handleSubmitAuditReport(
-        createArgs({
-          score: 80,
-          markdownReport: "# Report",
-        }) as never
-      )
-    ).rejects.toThrow(/orgId is required/);
+  it("leaves a missing orgId to the server, as the hosted tool does", async () => {
+    mockFetchSuccess({ success: true });
+
+    await handleSubmitAuditReport(
+      createArgs({ markdownReport: "# Report" }) as never
+    );
+
+    const body = JSON.parse(String(getLastFetchOptions()?.body));
+    expect(body).not.toHaveProperty("orgId");
   });
 
-  it("rejects a missing score", async () => {
-    await expect(
-      handleSubmitAuditReport(
-        createArgs({
-          orgId: "org_1",
-          markdownReport: "# Report",
-        }) as never
-      )
-    ).rejects.toThrow(/score is required/);
+  it("submits without a score; the server computes it", async () => {
+    mockFetchSuccess({ success: true });
+
+    await handleSubmitAuditReport(
+      createArgs({ orgId: "org_1", markdownReport: "# Report" }) as never
+    );
+
+    expect(getLastFetchUrl()).toContain("/audit");
   });
 
   it("rejects a missing markdown", async () => {
@@ -101,46 +97,21 @@ describe("handleSubmitAuditReport", () => {
     );
   });
 
-  it("normalizes legacy audit categories before submitting", async () => {
-    // Behavior test: legacy categories from prior prompts (e.g.
-    // "determinism_flakiness") get mapped to the canonical taxonomy on the
-    // way out, so users don't need to migrate their AI-agent instructions.
-    mockFetchSuccess({
-      success: true,
-      data: { auditId: "audit_legacy", score: 84 },
-    });
+  it("sends findings as given; the server normalizes categories", async () => {
+    mockFetchSuccess({ success: true });
 
     await handleSubmitAuditReport(
       createArgs({
         orgId: "org_1",
-        score: 84,
-        findings: [
-          {
-            title: "Timing problems",
-            category: "determinism_flakiness",
-            subCategory: "Hard Wait",
-          },
-        ],
+        findings: [{ title: "Timing", category: "determinism_flakiness" }],
         markdownReport: "# Legacy category",
       }) as never
     );
 
     const body = JSON.parse(String(getLastFetchOptions()?.body));
-    expect(body.findings[0].category).toBe("stability_issues");
-    expect(body.findings[0].subCategory).toBe("hard_wait");
-  });
-
-  it("rejects unknown audit categories", async () => {
-    await expect(
-      handleSubmitAuditReport(
-        createArgs({
-          orgId: "org_1",
-          score: 80,
-          findings: [{ title: "?", category: "not_a_thing" }],
-          markdownReport: "# X",
-        }) as never
-      )
-    ).rejects.toThrow(/'not_a_thing' is invalid/);
+    expect(body.findings).toEqual([
+      { title: "Timing", category: "determinism_flakiness" },
+    ]);
   });
 
   it("reads markdownReportPath (relative to workspace) instead of inline markdown", async () => {

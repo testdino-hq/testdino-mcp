@@ -22,41 +22,66 @@ interface ListRunTestCasesArgs {
 
 export const listRunTestCasesTool = {
   name: "list_run_test_cases",
+  title: "List Test Cases In A Run",
   description:
-    "Get the per-case execution records inside a manual run — what the UI shows as rows in the run's test-case table. Each row carries the test case identity (caseKey like 'TC-156', title), the current assignee, and the current result/status ('untested', 'passed', 'failed', etc.). Filter by assignee (email or User _id) or result/status. Use this before update_run_test_case so you have the rtcRef for each case you want to update.",
+    'Get the per-case execution records inside a manual run — what the UI shows as rows in the run\'s test-case table. Each row carries the test case identity (caseKey like "TC-156", title), the current assignee, and the current result/status ("untested", "passed", "failed", etc.). Filter by assignee (email or User _id) or result/status. Use this before update_run_test_case so you have the rtcRef for each case you want to update.',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       runId: {
         type: "string",
-        description:
-          "Internal run _id or counter-style ID e.g. 'RUN-12' (required).",
+        description: 'Internal run _id or counter-style ID e.g. "RUN-12"',
       },
       search: {
         type: "string",
-        description: "Match by case title or caseKey.",
+        description: "Match by case title or caseKey",
       },
       assignee: {
         type: "string",
         description:
-          "Filter by assignee — User _id OR email (server resolves email).",
+          "Filter by assignee — User _id OR email (server resolves).",
       },
       result: {
         type: "string",
         description:
-          "Filter by result/status. Display ('Passed') or canonical ('passed') form.",
+          'Filter by result/status. Display ("Passed") or canonical ("passed") form.',
       },
-      status: { type: "string", description: "Alias for result." },
+      status: {
+        type: "string",
+        description: "Alias for `result`. Same normalization rules.",
+      },
       sortBy: {
         type: "string",
         enum: ["createdAt", "updatedAt", "status", "caseKey"],
       },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
-      limit: { type: "number", description: "Default 25 (max 200)." },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 200,
+        description: "Default 25",
+      },
     },
     required: ["projectId", "runId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

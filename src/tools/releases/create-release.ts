@@ -34,66 +34,144 @@ interface CreateReleaseArgs {
 
 export const createReleaseTool = {
   name: "create_release",
+  title: "Create Release",
   description:
-    "Create a new release. Requires write permission (org_owner, org_admin, or org_member). Use parentReleaseId to nest under another release (max 3 levels deep). startDate/endDate are ISO date strings. isStarted/isCompleted are independent flags — startedAt/completedAt record when those transitions happened.",
+    "Create a new release. Requires write permission. Use parentReleaseId to nest under another release (max 3 levels deep). startDate/endDate are ISO date strings. isStarted/isCompleted are independent flags — startedAt/completedAt are recorded separately. branch/environment/buildTarget/testers describe what build the release ships and who tests it (testers must be org members — pass User _ids).",
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
-      name: { type: "string", description: "Release name (required)." },
-      description: { type: "string" },
-      note: { type: "string", description: "Rich HTML note." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
+      name: {
+        type: "string",
+        description: "Release name",
+      },
+      description: {
+        type: "string",
+      },
+      note: {
+        type: "string",
+        description: "Rich HTML note",
+      },
       type: {
         type: "string",
         description:
-          "Release type. Either canonical ('iteration', 'major') or display ('Iteration', 'Major') form — server normalizes to lowercase so UI badge color matches.",
+          'Release type. Default options: "release", "version", "sprint", "iteration", "plan", "cycle", "feature" (case-insensitive — server lowercases on save so the UI badge color matches). Projects can add or rename types via Project Settings → Release Types; pass the value the project actually has.',
       },
       parentReleaseId: {
         type: "string",
-        description: "Parent release for nesting.",
       },
-      startDate: { type: "string", description: "ISO date." },
-      endDate: { type: "string", description: "ISO date." },
-      isStarted: { type: "boolean" },
-      isCompleted: { type: "boolean" },
-      startedAt: { type: "string", description: "ISO datetime." },
-      completedAt: { type: "string", description: "ISO datetime." },
+      startDate: {
+        type: "string",
+        description: "ISO date",
+      },
+      endDate: {
+        type: "string",
+        description: "ISO date",
+      },
+      isStarted: {
+        type: "boolean",
+      },
+      isCompleted: {
+        type: "boolean",
+      },
+      startedAt: {
+        type: "string",
+        description: "ISO datetime",
+      },
+      completedAt: {
+        type: "string",
+        description: "ISO datetime",
+      },
       linkedIssues: {
         type: "array",
-        items: {},
+        items: {
+          type: "object",
+          properties: {
+            displayId: {
+              type: "string",
+            },
+            title: {
+              type: "string",
+            },
+            url: {
+              type: "string",
+            },
+            issueType: {
+              type: "string",
+            },
+            status: {
+              type: "string",
+            },
+            source: {
+              type: "string",
+            },
+          },
+          additionalProperties: true,
+        },
         description:
-          "Array of linked-issue objects (same shape list_releases returns).",
+          "Array of linked-issue objects (same shape as list_releases returns).",
       },
       branch: {
         type: "string",
-        description: "Source branch this release ships from",
+        description: "Source branch this release ships from.",
       },
       environment: {
         type: "string",
-        description: "Environment label, e.g. 'Staging'",
+        description: 'Environment label this release targets, e.g. "Staging".',
       },
       buildTarget: {
         type: "object",
-        description: "Build target details.",
         properties: {
           platform: {
-            type: "string",
-            description: "Build platform.",
-            enum: ["web", "ios", "android", "api"],
+            anyOf: [
+              {
+                type: "string",
+                enum: ["web", "ios", "android", "api"],
+              },
+              {
+                type: "null",
+              },
+            ],
           },
-          version: { type: "string", description: "Build version." },
-          buildNumber: { type: "string", description: "Build number." },
-          source: { type: "string", description: "Build source." },
-          deployUrl: { type: "string", description: "Deployment URL." },
+          version: {
+            type: "string",
+          },
+          buildNumber: {
+            type: "string",
+          },
+          source: {
+            type: "string",
+          },
+          deployUrl: {
+            type: "string",
+          },
         },
+        additionalProperties: true,
+        description:
+          'Build the release cuts against: { platform: "web"|"ios"|"android"|"api", version, buildNumber, source, deployUrl }. An all-empty object is stored as null.',
       },
       testers: {
         type: "array",
-        items: { type: "string" },
-        description: "User _ids assigned as testers; must be org members",
+        items: {
+          type: "string",
+        },
+        description:
+          "User _ids assigned as testers. Must be members of the org.",
       },
     },
     required: ["projectId", "name"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

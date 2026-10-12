@@ -13,10 +13,19 @@ describe("handleDebugTestCase", () => {
     restoreFetch();
   });
 
-  it("should throw when neither testcase_id nor testcase_name is given", async () => {
-    await expect(handleDebugTestCase(createArgs() as never)).rejects.toThrow(
-      "testcase_id or testcase_name is required"
-    );
+  it("refuses an unnamed test with the hosted tool's 400", async () => {
+    await expect(
+      handleDebugTestCase(createArgs() as never)
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      body: {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Provide testcase_id (the pw_test_id) or testcase_name.",
+        },
+      },
+    });
   });
 
   // A title shared by several Playwright projects answers 409; the gateway then asks for testcase_id.
@@ -74,7 +83,7 @@ describe("handleDebugTestCase", () => {
     expect(url).not.toContain("include_ai_insights");
   });
 
-  it("should append screenshot hint when response contains screenshot attachments", async () => {
+  it("returns the body unchanged, with no added fields", async () => {
     const mockData = {
       historicalData: [
         {
@@ -94,10 +103,7 @@ describe("handleDebugTestCase", () => {
       createArgs({ testcase_name: "Verify user login" }) as never
     );
 
-    // TDV2-112: single valid-JSON block, guidance folded in — no loose prose.
-    expect(result.content.length).toBe(1);
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed._agent_guidance).toContain("Screenshot");
+    expect(JSON.parse(result.content[0].text)).toEqual(mockData);
   });
 
   it("should forward suite_file_path into the request URL", async () => {

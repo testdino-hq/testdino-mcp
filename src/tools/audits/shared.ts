@@ -2,22 +2,13 @@
  * Shared helpers for the audit tools.
  *
  * `get_audit_report` and `submit_audit_report` reuse this module: filesystem
- * plumbing, git branch detection, markdown cleanup, findings sanitization,
- * and error-message normalization.
+ * plumbing, git branch detection, markdown cleanup and error-message
+ * normalization.
  */
 
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import { execSync } from "child_process";
 import { dirname, isAbsolute, relative, resolve, sep } from "path";
-import {
-  AUDIT_CATEGORY_CODES,
-  isRecognizedAuditCategory,
-  normalizeAuditCategory,
-  normalizeAuditSubCategory,
-} from "./audit-categories.js";
-
-export const AUDIT_CATEGORY_LIST = AUDIT_CATEGORY_CODES.join(", ");
-
 const LEADING_PROGRESS_LINE_PATTERN =
   /^\*\*(?:reading|scanning|building|analy(?:s|z)ing|reviewing|inspecting|writing|generating)\b[^*]*\*\*$/i;
 
@@ -210,38 +201,6 @@ export function detectBranch(): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-export function sanitizeAuditFindings(
-  findings: Array<Record<string, unknown>>
-): Array<Record<string, unknown>> {
-  return findings.map((finding, index) => {
-    const rawCategory = finding.category;
-
-    if (
-      rawCategory != null &&
-      typeof rawCategory === "string" &&
-      rawCategory.trim() &&
-      !isRecognizedAuditCategory(rawCategory)
-    ) {
-      throw new Error(
-        `findings[${index}].category '${rawCategory}' is invalid. Use one of: ${AUDIT_CATEGORY_LIST}`
-      );
-    }
-
-    const normalizedCategory = normalizeAuditCategory(rawCategory);
-    const normalizedSubCategory = normalizeAuditSubCategory(
-      finding.subCategory
-    );
-
-    return {
-      ...finding,
-      category: normalizedCategory,
-      ...(normalizedSubCategory
-        ? { subCategory: normalizedSubCategory }
-        : { subCategory: "" }),
-    };
-  });
 }
 
 export function normalizeAuditErrorMessage(errorMessage: string): string {

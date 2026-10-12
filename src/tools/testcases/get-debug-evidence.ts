@@ -6,6 +6,7 @@
 
 import { endpoints } from "../../lib/endpoints.js";
 import {
+  ApiError,
   apiRequest,
   apiRequestJson,
   formatApiErrorBody,
@@ -25,10 +26,9 @@ interface GetDebugEvidenceArgs {
 
 export const getDebugEvidenceTool = {
   name: "get_debug_evidence",
+  title: "Get Debug Evidence",
   description:
-    "Start every failing-test investigation here. One call returns the whole cheap tier of the evidence ladder: the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for every stored artifact — trace, screenshots, and the expected/actual/diff images on a visual failure. " +
-    'Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why, so it rules fixes out rather than pointing at a cause; the boundary turns "why does this fail" into "what changed between these two runs", which is a far smaller question. ' +
-    "Artifact links are minutes-scale: download what you need immediately, and call this again to mint fresh ones rather than treating an expired link as a missing artifact.",
+    'Start every failing-test investigation here. One call returns the whole cheap tier of the evidence ladder: the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for every stored artifact — trace, screenshots, and the expected/actual/diff images on a visual failure. Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why, so it rules fixes out rather than pointing at a cause; the boundary turns "why does this fail" into "what changed between these two runs", which is a far smaller question. Artifact links are minutes-scale: download what you need immediately, and call this again to mint fresh ones rather than treating an expired link as a missing artifact.',
   inputSchema: {
     type: "object",
     properties: {
@@ -67,11 +67,20 @@ export const getDebugEvidenceTool = {
       },
       maxLength: {
         type: "integer",
+        exclusiveMinimum: 0,
         description:
           'Cap the markdown length. Applies to format="md" only; anything cut is announced in the output. JSON is never truncated, because a cut payload would not parse and would read as a complete one.',
       },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
@@ -119,10 +128,18 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
       const text = await response.text();
       if (!response.ok) {
         const formattedErrorText = formatApiErrorBody(text);
-        throw new Error(
+        let body: unknown = text;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          // A non-JSON error body stays text.
+        }
+        throw new ApiError(
           `API request failed: ${response.status} ${response.statusText}${
             formattedErrorText ? `\n${formattedErrorText}` : ""
-          }`
+          }`,
+          response.status,
+          body
         );
       }
       return { content: [{ type: "text", text }] };

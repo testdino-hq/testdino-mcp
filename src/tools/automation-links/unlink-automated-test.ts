@@ -15,27 +15,37 @@ interface UnlinkAutomatedTestArgs {
 
 export const unlinkAutomatedTestTool = {
   name: "unlink_automated_test",
+  title: "Unlink Automated Test",
   description:
-    "Remove one automated-test link from a manual test case by its linkId (the `_id` of a linkedTests entry — from get_test_case_links or get_manual_test_case). Requires write permission; not gated by plan so a downgraded org can still detach. " +
-    "When the last link is removed the case automationStatus reverts to Manual. 404 when the linkId is not on that case.",
+    "Remove one automated-test link from a manual test case by its linkId (the `_id` of a linkedTests entry — from get_test_case_links or get_manual_test_case). Requires write permission; not gated by plan so a downgraded org can still detach. When the last link is removed the case automationStatus reverts to Manual. 404 when the linkId is not on that case.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       caseId: {
         type: "string",
-        description:
-          "Manual test case ID (Required). Internal _id or 'TC-123' style ID.",
+        description: 'Manual case: internal _id or "TC-123" style ID',
       },
       linkId: {
         type: "string",
-        description: "linkedTests[]._id (Required), e.g. 'tcm_link_…'.",
+        minLength: 1,
+        maxLength: 80,
+        description: 'linkedTests[]._id, e.g. "tcm_link_…"',
       },
     },
     required: ["projectId", "caseId", "linkId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

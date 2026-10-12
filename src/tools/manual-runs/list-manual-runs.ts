@@ -23,32 +23,72 @@ interface ListManualRunsArgs {
 
 export const listManualRunsTool = {
   name: "list_manual_runs",
+  title: "List Manual Test Runs",
   description:
-    "Browse manual test runs for a project. Filter by status (active|closed), state (new|in_progress|on_hold|done), environment, release (releaseId), tags (csv or single), or free-text search on name. Pass releaseId='none' to list runs not attached to any release. Default page size 25 (max 200).",
+    "Browse manual test runs for a project. Filter by status (active|closed), state (new|in_progress|on_hold|done), environment, release (releaseId), tags, or free-text search on name. Default page size 25 (max 200).",
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
-      search: { type: "string", description: "Match by run name." },
-      status: { type: "string", enum: ["active", "closed"] },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
+      search: {
+        type: "string",
+        description: "Match by run name",
+      },
+      status: {
+        type: "string",
+        enum: ["active", "closed"],
+      },
       state: {
         type: "string",
         description:
-          "Workflow state. Either canonical ('in_progress', 'on_hold', 'done') or display ('In Progress', 'On Hold') form — the server normalizes lowercase+underscored.",
+          'Workflow state. Either canonical ("new", "in_progress", "on_hold", "done") or display ("In Progress", "On Hold") form — server normalizes to lowercase+underscored so UI colors render correctly.',
       },
-      environment: { type: "string" },
+      environment: {
+        type: "string",
+      },
       releaseId: {
         type: "string",
-        description: "Filter to runs in this release. 'none' = unlinked.",
+        description:
+          'Filter to runs in this release. Pass "none" to list unlinked runs.',
       },
-      tags: { type: "string", description: "Single tag or comma-separated." },
-      isClosed: { type: "boolean" },
-      sortBy: { type: "string", enum: ["createdAt", "updatedAt", "name"] },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
-      page: { type: "number" },
-      limit: { type: "number", description: "Default 25 (max 200)." },
+      tags: {
+        type: "string",
+        description: "Single tag or comma-separated tags",
+      },
+      isClosed: {
+        type: "boolean",
+      },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "updatedAt", "name"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 200,
+        description: "Default 25",
+      },
     },
     required: ["projectId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

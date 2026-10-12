@@ -22,31 +22,38 @@ interface CreateManualTestSuiteBody {
 
 export const createManualTestSuiteTool = {
   name: "create_manual_test_suite",
+  title: "Create Manual Test Suite",
   description:
-    "Create a new test suite folder to organize test cases. Use this to create a logical grouping for related test cases. Suites can be nested by providing a parentSuiteId.",
+    "Create a new test suite folder for organizing manual test cases. Requires write permission. Use parentSuiteId to nest it under an existing suite — get the ID from list_manual_test_suites() first.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       name: {
         type: "string",
-        description:
-          "Suite name (Required). A descriptive name for the test suite.",
-      },
-      description: {
-        type: "string",
-        description: "Description of the test suite.",
+        maxLength: 500,
+        description: "Suite name",
       },
       parentSuiteId: {
         type: "string",
-        description:
-          "Optional parent suite ID to create this suite as a child of another suite. If not provided, creates a root-level suite.",
+      },
+      description: {
+        type: "string",
       },
     },
     required: ["projectId", "name"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

@@ -13,13 +13,15 @@ describe("handleGetTestCaseDetails", () => {
     restoreFetch();
   });
 
-  it("should throw when no search parameter is provided", async () => {
-    await expect(
-      handleGetTestCaseDetails(createArgs() as never)
-    ).rejects.toThrow("At least one of the following must be provided");
+  it("leaves a missing identifier to the server, as the hosted tool does", async () => {
+    mockFetchSuccess({});
+
+    await handleGetTestCaseDetails(createArgs() as never);
+
+    expect(getLastFetchUrl()).toMatch(/get-testcase-details$/);
   });
 
-  it("should include testcase_id as testcaseid in URL query params", async () => {
+  it("sends testcase_id as given; the server resolves it", async () => {
     mockFetchSuccess({ id: "tc_123" });
 
     await handleGetTestCaseDetails(
@@ -28,7 +30,7 @@ describe("handleGetTestCaseDetails", () => {
 
     const url = getLastFetchUrl();
     expect(url).toContain("test-project-id");
-    expect(url).toContain("testcaseid=tc_123");
+    expect(url).toContain("testcase_id=tc_123");
   });
 
   it("should accept testcase_name as a search parameter", async () => {
@@ -43,7 +45,7 @@ describe("handleGetTestCaseDetails", () => {
 
     expect(result).toHaveProperty("content");
     const url = getLastFetchUrl();
-    expect(url).toContain("by_title=Login");
+    expect(url).toContain("testcase_name=Login");
   });
 
   it("should accept by_fulltitle as a search parameter", async () => {
@@ -58,7 +60,7 @@ describe("handleGetTestCaseDetails", () => {
     expect(url).toContain("by_fulltitle=auth.spec.js");
   });
 
-  it("folds the screenshot hint INTO a single valid-JSON block (TDV2-112)", async () => {
+  it("returns the body unchanged, with no added fields", async () => {
     const mockData = {
       id: "tc_123",
       screenshots: [{ url: "https://example.com/screenshot.png" }],
@@ -69,13 +71,7 @@ describe("handleGetTestCaseDetails", () => {
       createArgs({ testcase_id: "tc_123" }) as never
     );
 
-    // Single content block — no loose diagnostic text after the JSON.
-    expect(result.content.length).toBe(1);
-    // The whole block must parse as standalone JSON.
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.id).toBe("tc_123");
-    // The guidance is folded in as a field, not appended as prose.
-    expect(parsed._agent_guidance).toContain("screenshot");
+    expect(JSON.parse(result.content[0].text)).toEqual(mockData);
   });
 
   it("should forward all optional params to the API", async () => {
@@ -95,10 +91,10 @@ describe("handleGetTestCaseDetails", () => {
     );
 
     const url = getLastFetchUrl();
-    expect(url).toContain("testcaseid=tc_999");
-    expect(url).toContain("by_title=Checkout+test");
+    expect(url).toContain("testcase_id=tc_999");
+    expect(url).toContain("testcase_name=Checkout+test");
     expect(url).toContain("by_fulltitle=e2e+%3E+Checkout+test");
-    expect(url).toContain("by_testrun_id=run_100");
+    expect(url).toContain("testrun_id=run_100");
     expect(url).toContain("by_testrun_ids=run_100%2Crun_101");
     expect(url).toContain("include_history=true");
     expect(url).toContain("history_limit=20");
@@ -142,7 +138,7 @@ describe("handleGetTestCaseDetails", () => {
     // Verify URL has all params correctly mapped
     const url = getLastFetchUrl();
     expect(url).toContain("/api/mcp/proj-checkout/get-testcase-details");
-    expect(url).toContain("testcaseid=tc_789");
+    expect(url).toContain("testcase_id=tc_789");
     expect(url).toContain("include_history=true");
 
     // Verify auth header

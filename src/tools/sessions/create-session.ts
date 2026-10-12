@@ -24,23 +24,37 @@ interface CreateSessionArgs {
 
 export const createSessionTool = {
   name: "create_session",
+  title: "Create Exploratory Session",
   description:
-    'Create a new exploratory testing session. Requires write permission. mission accepts rich HTML (the high-level charter). assigneeUserId accepts either a User _id ("user_abc...") or an email address — the email is resolved against TestDino users automatically. estimate is in minutes. Findings cannot be created here — add them in the UI. IMPORTANT: tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT the comma-separated form that list_sessions accepts as a filter.',
+    'Create a new exploratory testing session. Requires write permission. mission accepts rich HTML (the high-level charter). assigneeUserId accepts either a User _id ("user_abc...") or an email address — the email is resolved against TestDino users automatically. estimate is in minutes. Findings are not available via MCP — add them in the UI. IMPORTANT: tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT the comma-separated form that list_sessions accepts as a filter.',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
-      name: { type: "string", description: "Session name (required)." },
-      mission: { type: "string", description: "Rich HTML mission/charter." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
+      name: {
+        type: "string",
+        description: "Session name",
+      },
+      mission: {
+        type: "string",
+        description: "Rich HTML mission/charter",
+      },
       sessionType: {
         type: "string",
-        description: "Free-text type, e.g. 'Exploratory'.",
+        description: 'Free-text type, e.g. "Exploratory", "Regression"',
       },
-      config: { type: "string" },
-      environment: { type: "string" },
+      config: {
+        type: "string",
+      },
+      environment: {
+        type: "string",
+      },
       releaseId: {
         type: "string",
-        description: "Attach session to this release.",
+        description: "Attach session to this release",
       },
       assigneeUserId: {
         type: "string",
@@ -50,27 +64,105 @@ export const createSessionTool = {
       state: {
         type: "string",
         description:
-          "Workflow state (default 'new'). Either canonical ('under_review') or display ('Under review') form — server normalizes to lowercase+underscored so UI colors render correctly.",
+          'Workflow state (default "new"). Either canonical ("under_review") or display ("Under review") form — server normalizes to lowercase+underscored so UI colors render correctly.',
       },
-      estimate: { type: "number", description: "Estimate in minutes." },
+      estimate: {
+        type: "integer",
+        minimum: 0,
+        description: "Estimate in minutes",
+      },
       tags: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+        },
         description:
           'Array of tag strings, e.g. ["exploratory","auth"]. NOT a comma-separated string.',
       },
       linkedIssues: {
         type: "array",
-        items: {},
-        description: "Array of linked-issue objects.",
+        items: {
+          type: "object",
+          properties: {
+            displayId: {
+              type: "string",
+            },
+            title: {
+              type: "string",
+            },
+            url: {
+              type: "string",
+            },
+            issueType: {
+              type: "string",
+            },
+            status: {
+              type: "string",
+            },
+            source: {
+              type: "string",
+            },
+          },
+          additionalProperties: true,
+        },
+        description:
+          "Array of linked-issue objects (same shape as list_sessions returns).",
       },
       attachments: {
         type: "array",
-        items: {},
-        description: "Array of attachment objects or URLs.",
+        items: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+            },
+            url: {
+              type: "string",
+            },
+            blobUrl: {
+              type: "string",
+            },
+            containerName: {
+              type: "string",
+            },
+            fileName: {
+              type: "string",
+            },
+            originalFileName: {
+              type: "string",
+            },
+            fileSize: {
+              type: "number",
+            },
+            mimeType: {
+              type: "string",
+            },
+            fileContent: {
+              type: "string",
+            },
+            uploadedBy: {
+              type: "string",
+            },
+            uploadedAt: {
+              type: "string",
+            },
+          },
+          additionalProperties: true,
+        },
+        description:
+          "Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.",
       },
     },
     required: ["projectId", "name"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

@@ -11,30 +11,37 @@ interface GetRunErrorClustersArgs {
 
 export const getRunErrorClustersTool = {
   name: "get_run_error_clusters",
+  title: "Get Run Error Clusters",
   description:
-    "Groups failing tests in a run by error signature to identify patterns and triage failures at scale. " +
-    "Use this after list_testruns to drill into why a run failed — it surfaces clusters of tests sharing the same root-cause error. " +
-    "Filter by status to focus on definitively failed tests, flaky tests, or all. " +
-    "Requires projectId and testrun_id.",
+    'Group ONE run\'s failing tests by shared error signature (normalized error fingerprint), computed for that run only. Returns error clusters (each = one signature + its affected tests + an error category), an `unclustered` bucket for blank/unfingerprintable errors, a per-category rollup, and run totals. Failed/timed-out tests cluster on their final-attempt error; flaky tests cluster on the error they recovered from (pre-recovery). Categories: assertion, timeout, element_not_found, network, other. Use this to answer "what are the distinct failures in this run?" or "which error affected the most tests?" — it is far cheaper than paging every failed case. Optionally narrow with status="failed" or status="flaky" (default "all"). Workflow: list_testruns() → pick a testrun_id → get_run_error_clusters().',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID (e.g. project_<id>)",
       },
       testrun_id: {
         type: "string",
-        description: "Test run ID (Required). The run to cluster errors for.",
+        minLength: 1,
+        description: "The test run ID to cluster errors for (single run)",
       },
       status: {
         type: "string",
         enum: ["all", "failed", "flaky"],
         description:
-          "Filter by test status. 'failed' shows definitively failed tests, 'flaky' shows flaky tests, 'all' (default) includes both.",
+          'Which contributing tests populate the clusters (default "all")',
       },
     },
     required: ["projectId", "testrun_id"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

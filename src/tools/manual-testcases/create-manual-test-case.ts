@@ -80,189 +80,182 @@ interface CreateManualTestCaseBody {
 
 export const createManualTestCaseTool = {
   name: "create_manual_test_case",
+  title: "Create Manual Test Case",
   description:
-    "Create a new manual test case. Use this to document new test scenarios, features, or requirements. Supports adding test steps, preconditions, postconditions, and metadata like priority, severity, and type.",
+    'Create a new manual test case. Requires write permission. MANDATORY FIRST STEP: always call list_manual_test_suites() before this tool to get the exact suite name — suiteName must be an exact match, not approximate. Steps default to Classic format (action + expectedResult). Set testStepsDeclarationType="Gherkin" if using Given/When/Then steps. Classic step shape: { action, expectedResult, data, attachments }. Gherkin step shape: { event: "Given"|"When"|"And"|"Then"|"But", stepDescription, attachments }. Use top-level attachments for whole-test-case files, or step.attachments for files tied to a specific step. Suggestion: attaching files via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       title: {
         type: "string",
-        description:
-          "Test case title (Required). A clear, descriptive title for the test case.",
+        description: "Test case title",
       },
       suiteName: {
         type: "string",
-        description:
-          "Test suite name (Required). The suite where this test case will be created. Use list_manual_test_suites to find suite names.",
+        description: "Target suite name",
       },
       description: {
         type: "string",
-        description: "Detailed description of what this test case validates.",
       },
       status: {
         type: "string",
-        description: "Test case status.",
-        enum: ["Active", "Draft", "Deprecated"],
+        description:
+          "Status. Values come from Project Settings → Test Case Properties. Defaults: Active, Draft, Deprecated.",
       },
       testStepsDeclarationType: {
         type: "string",
-        description: "Type of test steps declaration format.",
         enum: ["Classic", "Gherkin"],
       },
       preconditions: {
         type: "string",
-        description:
-          "Prerequisites or setup required before executing this test case.",
       },
       postconditions: {
         type: "string",
-        description:
-          "Expected state or cleanup actions after executing this test case.",
       },
       steps: {
         type: "array",
-        description:
-          "Array of test steps. For Classic format: action, expectedResult, and optional data. For Gherkin format: event and stepDescription. Each top-level step can include attachments as URLs or local file paths.",
         items: {
           type: "object",
-          oneOf: [
-            {
-              properties: {
-                action: {
-                  type: "string",
-                  description:
-                    "The action to perform in this step (Classic format).",
-                },
-                expectedResult: {
-                  type: "string",
-                  description:
-                    "The expected outcome of this action (Classic format).",
-                },
-                data: {
-                  type: "string",
-                  description:
-                    "Optional test data for this step (Classic format).",
-                },
-                attachments: {
-                  type: "array",
-                  description:
-                    "Optional top-level step attachments as URLs or local file paths.",
-                  items: { type: "string" },
-                },
-              },
-              required: ["action", "expectedResult"],
+          properties: {
+            action: {
+              type: "string",
             },
-            {
-              properties: {
-                event: {
-                  type: "string",
-                  description: "Gherkin event keyword (Gherkin format).",
-                  enum: ["Given", "When", "And", "Then", "But"],
-                },
-                stepDescription: {
-                  type: "string",
-                  description: "The step description (Gherkin format).",
-                },
-                attachments: {
-                  type: "array",
-                  description:
-                    "Optional top-level step attachments as URLs or local file paths.",
-                  items: { type: "string" },
-                },
-              },
-              required: ["event", "stepDescription"],
+            expectedResult: {
+              type: "string",
             },
-          ],
+            data: {
+              type: "string",
+            },
+            attachments: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  _id: {
+                    type: "string",
+                  },
+                  url: {
+                    type: "string",
+                  },
+                  blobUrl: {
+                    type: "string",
+                  },
+                  containerName: {
+                    type: "string",
+                  },
+                  fileName: {
+                    type: "string",
+                  },
+                  originalFileName: {
+                    type: "string",
+                  },
+                  fileSize: {
+                    type: "number",
+                  },
+                  mimeType: {
+                    type: "string",
+                  },
+                  fileContent: {
+                    type: "string",
+                  },
+                  uploadedBy: {
+                    type: "string",
+                  },
+                  uploadedAt: {
+                    type: "string",
+                  },
+                },
+                additionalProperties: true,
+              },
+            },
+            event: {
+              type: "string",
+              enum: ["Given", "When", "And", "Then", "But"],
+            },
+            stepDescription: {
+              type: "string",
+            },
+            keyword: {
+              type: "string",
+              enum: ["Given", "When", "And", "Then", "But"],
+            },
+            text: {
+              type: "string",
+            },
+          },
+          additionalProperties: false,
         },
       },
       priority: {
         type: "string",
-        description: "Test case priority level.",
-        enum: ["high", "medium", "low", "Not set"],
+        description:
+          "Priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.",
       },
       severity: {
         type: "string",
-        description: "Test case severity level.",
-        enum: [
-          "Blocker",
-          "critical",
-          "major",
-          "Normal",
-          "minor",
-          "trivial",
-          "Not set",
-        ],
+        description:
+          "Severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.",
       },
       type: {
         type: "string",
-        description: "Test case type.",
-        enum: [
-          "functional",
-          "smoke",
-          "regression",
-          "security",
-          "performance",
-          "e2e",
-          "Integration",
-          "API",
-          "Unit",
-          "Accessability",
-          "Compatibility",
-          "Acceptance",
-          "Exploratory",
-          "Usability",
-          "Other",
-        ],
+        description:
+          "Type. Values come from Project Settings → Test Case Properties. Defaults: Smoke, Regression, Functional, Integration, E2E, API, Unit, Performance, Security, Accessibility, Usability, Compatibility, Acceptance, Exploratory, Other.",
       },
       layer: {
         type: "string",
-        description: "Test layer.",
-        enum: ["e2e", "api", "unit", "not set"],
+        description:
+          "Layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.",
       },
       behavior: {
         type: "string",
-        description: "Test behavior type.",
-        enum: ["positive", "negative", "destructive", "Not set"],
+        description:
+          "Behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.",
       },
       automationStatus: {
         type: "string",
-        description: "Automation status of the test case.",
-        enum: ["Manual", "Automated", "To be automated"],
+        description:
+          "Automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated.",
       },
       tags: {
         type: "string",
-        description: "Tags to add to your test cases.",
       },
       flags: {
         type: "array",
-        description: "Automation flags/checklist options.",
         items: {
           type: "string",
           enum: ["To be Automated", "Is flaky", "Muted"],
         },
+        description: "Automation flags/checklist values.",
       },
       attachments: {
         type: "array",
-        description:
-          "Array of attachment URLs or file paths (up to 10MB each).",
         items: {
-          type: "string",
+          $ref: "#/properties/steps/items/properties/attachments/items",
         },
+        description:
+          "Whole-test-case attachments as URLs, local paths, or file data objects. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package, which read the file locally without sending bytes through the model.",
       },
       customFields: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Custom fields as key-value pairs. Only available if custom fields are configured in test case management settings.",
-        additionalProperties: {
-          type: "string",
-        },
+          "Values keyed by custom field name. Every required field must be set; the error names any that are missing.",
       },
     },
     required: ["projectId", "title", "suiteName"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

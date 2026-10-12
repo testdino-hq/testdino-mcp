@@ -11,29 +11,37 @@ interface ConnectIntegrationArgs {
 
 export const connectIntegrationTool = {
   name: "connect_integration",
+  title: "Connect Integration",
   description:
-    "Returns an OAuth connect URL for the requested integration provider (Jira, Linear, Asana, monday.com, GitHub). " +
-    "Show the returned URL to the user — do NOT open it programmatically. The user must visit it in their browser to authorize the connection. " +
-    "Call get_integration_status first to check whether the provider is already connected; if it is, this returns status already_connected instead of a URL.",
+    "Start the provider OAuth/connect flow for a TestDino project. The tool first checks current status and returns already_connected instead of starting OAuth when the provider is connected.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
-      },
-      provider: {
-        type: "string",
-        enum: ["jira", "linear", "asana", "monday", "github"],
-        description: "Integration provider to connect (Required).",
+        description: "TestDino project ID",
       },
       orgId: {
         type: "string",
         description:
-          "Organization ID. Optional — derived from your PAT scopes when omitted; pass it explicitly if your PAT spans multiple organizations.",
+          "TestDino organization ID. Usually inferred from the PAT scope; pass explicitly if the token spans multiple orgs.",
+      },
+      provider: {
+        type: "string",
+        enum: ["jira", "linear", "asana", "monday", "github"],
+        description: "Integration provider connected to this TestDino project.",
       },
     },
     required: ["projectId", "provider"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

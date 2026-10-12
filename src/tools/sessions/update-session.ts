@@ -14,23 +14,37 @@ interface UpdateSessionArgs {
 
 export const updateSessionTool = {
   name: "update_session",
+  title: "Update Exploratory Session",
   description:
-    'Modify an existing exploratory session. Send only the fields you want to change inside the `updates` object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Findings are not editable here. updates.assigneeUserId accepts either a User _id or an email address. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
+    'Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Pass updates.status="closed" to close the session (same as the UI "Close session" button: freezes it, snaps state to the project\'s "Done" option). This is not reversible via MCP. Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       sessionId: {
         type: "string",
-        description: "Internal _id or counter-style ID (required).",
+        description: "Internal _id or counter-style ID",
       },
       updates: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments.",
+          'Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. status="closed" closes the session.',
       },
     },
     required: ["projectId", "sessionId", "updates"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

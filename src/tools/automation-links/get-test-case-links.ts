@@ -15,28 +15,37 @@ interface GetTestCaseLinksArgs {
 
 export const getTestCaseLinksTool = {
   name: "get_test_case_links",
+  title: "Get Test Case Links",
   description:
-    "List the automated tests linked to one manual test case, each enriched with recent automation metrics (successRate, lastExecution, platforms). " +
-    'caseId accepts the internal _id or the "TC-123" key. get_manual_test_case also returns the raw linkedTests array; use this tool when you need the metrics or a linkId to pass to unlink_automated_test.',
+    'List the automated tests linked to one manual test case, each enriched with recent automation metrics (successRate, lastExecution, platforms). caseId accepts the internal _id or the "TC-123" key. get_manual_test_case also returns the raw linkedTests array; use this tool when you need the metrics or a linkId to pass to unlink_automated_test.',
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       caseId: {
         type: "string",
-        description:
-          "Test case ID (Required). Can be internal _id or human-readable ID like 'TC-123'.",
+        description: 'Internal _id or "TC-123" style ID',
       },
       days: {
-        type: "number",
+        type: "integer",
+        minimum: 1,
+        maximum: 365,
         description:
-          "Metrics window in days (server default applies when omitted).",
+          "Metrics window in days (server default applies when omitted)",
       },
     },
     required: ["projectId", "caseId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

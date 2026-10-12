@@ -13,18 +13,30 @@ interface GetManualRunArgs {
 
 export const getManualRunTool = {
   name: "get_manual_run",
+  title: "Get Manual Test Run",
   description:
-    "Get the full details of one manual test run: name, status, environment, linked release, test stats (total/passed/failed/blocked/untested), contributors, attachments, linked issues. runId accepts either the internal _id or a counter-style ID like 'RUN-12'.",
+    'Get the full details of one manual test run: name, status, environment, linked release, test stats (total/passed/failed/blocked/untested), contributors, attachments, linked issues. runId accepts either the internal _id or a counter-style ID like "RUN-12".',
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       runId: {
         type: "string",
-        description: "Internal _id or counter-style ID (required).",
+        description: "Internal _id or counter-style ID",
       },
     },
     required: ["projectId", "runId"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

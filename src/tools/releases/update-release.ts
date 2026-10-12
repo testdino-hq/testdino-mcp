@@ -14,23 +14,37 @@ interface UpdateReleaseArgs {
 
 export const updateReleaseTool = {
   name: "update_release",
+  title: "Update Release",
   description:
-    "Modify an existing release. Send only the fields you want to change inside the `updates` object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
+    "Modify an existing release. Send only the fields you want to change inside the updates object. Requires write permission. Fields: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
   inputSchema: {
     type: "object",
     properties: {
-      projectId: { type: "string", description: "Project ID (required)." },
+      projectId: {
+        type: "string",
+        description: "Project ID",
+      },
       releaseId: {
         type: "string",
-        description: "Internal _id or counter-style ID (required).",
+        description: "Internal _id or counter-style ID",
       },
       updates: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget, testers, parentReleaseId.",
+          "Fields to update: name, description, note, type, startDate, endDate, isStarted, isCompleted, startedAt, completedAt, linkedIssues, branch, environment, buildTarget ({platform,version,buildNumber,source,deployUrl}), testers (User _ids, org members), parentReleaseId (re-parent the release; same field name used at create time)…",
       },
     },
     required: ["projectId", "releaseId", "updates"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

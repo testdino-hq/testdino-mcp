@@ -40,18 +40,25 @@ describe("handleGetExternalIssue", () => {
     ).rejects.toThrow("issueIds is required");
   });
 
-  it("calls the provider-in-path endpoint with a single issueId", async () => {
-    mockFetchSuccess({ issueId: "JIRA-123", status: "open" });
+  it("asks for every id in one lookup call, as the hosted tool does", async () => {
+    mockFetchSuccess({ issues: [] });
 
     await handleGetExternalIssue(
-      createArgs({ provider: "jira", issueIds: ["JIRA-123"] }) as never
+      createArgs({
+        provider: "jira",
+        issueIds: ["JIRA-1", "JIRA-2"],
+        target: { defaultApp: "a" },
+      }) as never
     );
 
-    const url = getLastFetchUrl();
-    expect(url).toContain(
-      "/api/mcp/integrations/test-project-id/jira/issues/JIRA-123"
+    expect(getLastFetchUrl()).toContain(
+      "/api/mcp/integrations/test-project-id/jira/issues/lookup"
     );
-    expect(getLastFetchOptions()?.method ?? "GET").toBe("GET");
+    expect(getLastFetchOptions()?.method).toBe("POST");
+    expect(JSON.parse(getLastFetchOptions()?.body as string)).toEqual({
+      issueIds: ["JIRA-1", "JIRA-2"],
+      target: { defaultApp: "a" },
+    });
   });
 
   it("preserves the single-issue response shape for one ID", async () => {
@@ -73,22 +80,5 @@ describe("handleGetExternalIssue", () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.provider).toBe("jira");
     expect(parsed.status).toBe("in_progress");
-  });
-
-  it("aggregates multiple IDs under an `issues` array", async () => {
-    mockFetchSuccess({ status: "open" });
-
-    const result = await handleGetExternalIssue(
-      createArgs({
-        provider: "jira",
-        issueIds: ["JIRA-1", "JIRA-2"],
-      }) as never
-    );
-
-    const parsed = JSON.parse(result.content[0].text);
-    expect(Array.isArray(parsed.issues)).toBe(true);
-    expect(parsed.issues).toHaveLength(2);
-    expect(parsed.issues[0].issueId).toBe("JIRA-1");
-    expect(parsed.issues[1].issueId).toBe("JIRA-2");
   });
 });

@@ -25,35 +25,31 @@ interface CreateExternalIssueArgs {
 
 export const createExternalIssueTool = {
   name: "create_external_issue",
+  title: "Create External Issue",
   description:
-    "Files an issue in a connected provider (Jira, Linear, Asana, monday.com, GitHub) from a TestDino source entity. " +
-    "source.type and source.id are required — they identify the TestDino entity (e.g. a test case or test run) the issue is about; the server resolves them into the issue draft. " +
-    "Pass preview: true to see what would be created without creating it. Idempotent when idempotencyKey is supplied — safe to retry with the same key. " +
-    "Call get_integration_status first (with includeCreateOptions: true to discover the provider fields available for target). " +
-    "If the provider is not connected, this returns INTEGRATION_NOT_CONNECTED with a connect URL — show that URL to the user, do not open it programmatically.",
+    "Create a provider issue/task/item linked to a TestDino entity. Supported source types include automated and manual runs, test cases, suites, releases, and sessions. Check get_integration_status first for required provider fields.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "TestDino project ID",
       },
       provider: {
         type: "string",
-        enum: ["jira", "linear", "asana", "monday", "github"],
-        description: "Integration provider to file the issue in (Required).",
+        enum: ["jira", "linear", "asana", "monday"],
+        description:
+          "Provider to create the issue in. GitHub can be connected but not written to.",
       },
       source: {
         type: "object",
-        description:
-          "TestDino source entity the issue is about (Required). Both fields are required.",
         properties: {
           type: {
             type: "string",
             enum: [
-              "test_case",
               "test_run",
               "test_suite",
+              "test_case",
               "manual_test_case",
               "manual_test_suite",
               "release",
@@ -62,12 +58,12 @@ export const createExternalIssueTool = {
               "session",
             ],
             description:
-              "Source entity type. Use manual_test_case / manual_run / session for TCM entities and test_case / test_run / test_suite for automated ones.",
+              "TestDino entity type the external issue should be associated with.",
           },
           id: {
             type: "string",
-            description:
-              "Source entity ID, counter-style ID, or key within TestDino.",
+            minLength: 1,
+            description: "TestDino entity ID, counter-style ID, or key.",
           },
           runId: {
             type: "string",
@@ -85,40 +81,51 @@ export const createExternalIssueTool = {
           },
         },
         required: ["type", "id"],
+        additionalProperties: false,
+        description: "TestDino entity to link with the external issue.",
       },
       summary: {
         type: "string",
-        description:
-          "Issue title/summary. Optional — derived from the source entity when omitted.",
+        description: "Issue title. Later phases can derive this from source.",
       },
       description: {
         type: "string",
-        description: "Issue description body. Supports plain text.",
+        description:
+          "Issue body/description. Later phases can derive this from source.",
       },
       target: {
         type: "object",
+        additionalProperties: {},
         description:
-          "Provider-specific destination fields (e.g. Jira project key and issue type, monday board ID). Discover available fields via get_integration_status with includeCreateOptions: true.",
-        additionalProperties: true,
+          'Provider-specific target/field values. Jira accepts human-readable aliases such as { jiraProjectKey: "TRX", issueType: "Bug" } or { jiraProjectName, issueTypeName }; raw { jiraProjectId, issueTypeId } also works. Linear { teamId }, Asana { workspaceId, projectId }, monday.com { boardId }.',
       },
       linkBack: {
         type: "boolean",
         description:
-          "When true, the created issue is linked back to the TestDino source entity (currently supported for Jira).",
+          "Whether TestDino should link the created external issue back to the source entity.",
       },
       idempotencyKey: {
         type: "string",
         minLength: 1,
         description:
-          "Unique key to prevent duplicate issues on retry. Use a stable identifier such as the source entity ID.",
+          "Caller-provided stable key for retrying the same create request without creating duplicates when supported downstream.",
       },
       preview: {
         type: "boolean",
         description:
-          "When true, returns the draft that would be created (wouldCreate: false) without filing the issue.",
+          "When true, resolve and return the issue draft without creating anything in the provider.",
       },
     },
     required: ["projectId", "provider", "source"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 

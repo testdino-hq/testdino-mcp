@@ -21,38 +21,61 @@ interface BulkLinkAutomatedTestsArgs {
 
 export const bulkLinkAutomatedTestsTool = {
   name: "bulk_link_automated_tests",
+  title: "Bulk Link Automated Tests",
   description:
-    "Link up to 500 manual case ↔ automated test pairs in one call. Requires write permission and the automation_linking plan feature. " +
-    "Returns per-item results ({ manualTestCaseId, fullTitle, success, error?, link? }) — one bad row never fails the batch, so ALWAYS check each item's success. " +
-    "manualTestCaseId is the case internal _id (tcm_tc_…), not the TC-123 key. Take pwTestId + fullTitle for every row from list_automated_tests.",
+    "Link up to 500 manual case ↔ automated test pairs in one call. Requires write permission and the automation_linking plan feature. Returns per-item results ({ manualTestCaseId, fullTitle, success, error?, link? }) — one bad row never fails the batch, so ALWAYS check each item's success. manualTestCaseId is the case internal _id (tcm_tc_…), not the TC-123 key. Take pwTestId + fullTitle for every row from list_automated_tests.",
   inputSchema: {
     type: "object",
     properties: {
       projectId: {
         type: "string",
-        description: "Project ID (Required). The TestDino project identifier.",
+        description: "Project ID",
       },
       links: {
         type: "array",
-        description: "Pairs to link (1–500).",
-        minItems: 1,
-        maxItems: 500,
         items: {
           type: "object",
           properties: {
             manualTestCaseId: {
               type: "string",
-              description: "Case internal _id (tcm_tc_…).",
+              minLength: 1,
+              maxLength: 80,
+              description: "Case internal _id (tcm_tc_…)",
             },
-            pwTestId: { type: "string" },
-            fullTitle: { type: "string" },
-            displayTitle: { type: "string" },
+            pwTestId: {
+              type: "string",
+              minLength: 1,
+              maxLength: 200,
+            },
+            fullTitle: {
+              type: "string",
+              minLength: 1,
+              maxLength: 2000,
+            },
+            displayTitle: {
+              type: "string",
+              minLength: 1,
+              maxLength: 500,
+            },
           },
           required: ["manualTestCaseId", "pwTestId", "fullTitle"],
+          additionalProperties: false,
         },
+        minItems: 1,
+        maxItems: 500,
+        description: "Pairs to link (1–500)",
       },
     },
     required: ["projectId", "links"],
+    additionalProperties: false,
+    $schema: "http://json-schema.org/draft-07/schema#",
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+  },
+  execution: {
+    taskSupport: "forbidden",
   },
 };
 
