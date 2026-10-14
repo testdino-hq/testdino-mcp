@@ -13,8 +13,8 @@ All notable changes to `@testdino/mcp` are documented here.
 - **`get_project_details`** — one project's health summary, executions used
   this period, connected integrations (connected / healthy only), branch →
   environment mapping, branches / environments / tags seen, the top 10
-  flakiest, slowest, failing, chronically broken and slowing tests, tag pass
-  rates and CI suggestions.
+  flakiest, slowest, failing, chronically broken and slowing tests, tag health
+  and CI suggestions.
 - **`get_pull_requests`** — the newest pull requests of the project's connected
   repo with their latest test run, or one pull request with its branches, merge
   state, size and latest test runs.

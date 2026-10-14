@@ -497,6 +497,22 @@
         "pr_id": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"
       },
       "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 100,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 100 character(s)\",\n    \"path\": [\n      \"pr_id\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "empty projectId (project details)",
+      "tool": "get_project_details",
+      "arguments": {
+        "projectId": ""
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_project_details: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"projectId\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "empty projectId (pull requests)",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": ""
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"projectId\"\n    ]\n  }\n]"
     }
   ]
 }

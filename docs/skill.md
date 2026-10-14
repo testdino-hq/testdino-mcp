@@ -1394,13 +1394,13 @@ For more than a few tests, run with `dry_run: true` first and show the user the 
 
 **When to use**: the user asks about their plan, executions, limits, billing period, top-ups, or "why did my runs stop appearing". Relay `quota.message` as written — it is TestDino's answer for that quota state and the next step.
 
-**Reading the answer**: a section shaped `{status: "unavailable"}` means that read failed — say it could not be checked, never "none" or "zero". `topUps.offered: false` means extra executions are not sold right now. A token covering only some projects gets only those projects and no org-wide totals. Buying executions or changing the plan happens on the billing page, never through a tool.
+**Reading the answer**: a section shaped `{status: "unavailable"}` means that read failed — say it could not be checked, never "none" or "zero". `topUps.offer.offered: false` means extra executions are not sold right now; `topUps.active` lists top-ups already paid for, which still raise the limit. `plan.status: "created"` is an unpaid checkout: the org is on Free until it is paid (`plan.pendingCheckout`). A token covering only some projects gets only those projects and no org-wide totals. Buying executions or changing the plan happens on the billing page, never through a tool.
 
 ---
 
 ### `get_project_details`
 
-**Purpose**: One call for "how is this project set up and doing" — health summary, executions used this period, connected integrations, branch → environment mapping, branches/environments/tags seen, the top 10 flakiest / slowest / most-failing / chronically broken / getting-slower tests, tag pass rates, and CI speed-up suggestions.
+**Purpose**: One call for "how is this project set up and doing" — health summary, executions used this period, connected integrations, branch → environment mapping, branches/environments/tags seen, the top 10 flakiest / slowest / most-failing / chronically broken / getting-slower tests, tag health (tests, flaky and failing counts, reliability per tag), and CI speed-up suggestions. The `seen` lists hold at most 50 values each; `seen.totals` has the full counts.
 
 **Required parameters**: `projectId`. Optional: `window` (7, 30 or 90; default 30), `branch` (narrows the flaky list and CI suggestions only).
 

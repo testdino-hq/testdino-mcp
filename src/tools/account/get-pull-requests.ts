@@ -11,6 +11,7 @@ export const getPullRequestsTool = {
     properties: {
       projectId: {
         type: "string",
+        minLength: 1,
         description: "Project ID (project_<id>), as health returns it",
       },
       pr_id: {
