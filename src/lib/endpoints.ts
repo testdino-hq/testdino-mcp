@@ -832,4 +832,21 @@ export const endpoints = {
     `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(projectId)}/quarantines/${encodeURIComponent(quarantineId)}`,
   testControl: (projectId: string, testcaseId: string): string =>
     `${getBaseUrl()}/api/mcp/test-controls/${encodeURIComponent(projectId)}/tests/${encodeURIComponent(testcaseId)}`,
+
+  /** GET /api/mcp/orgs/:orgId/details */
+  orgDetails: (orgId: string, query: Record<string, unknown>): string =>
+    `${getBaseUrl()}/api/mcp/orgs/${encodeURIComponent(orgId)}/details${buildQueryString(query as Record<string, string | number | boolean | undefined>)}`,
+  /** GET /api/mcp/projects/:projectId/details */
+  projectDetails: (projectId: string, query: Record<string, unknown>): string =>
+    `${getBaseUrl()}/api/mcp/projects/${encodeURIComponent(projectId)}/details${buildQueryString(query as Record<string, string | number | boolean | undefined>)}`,
+  /** GET /api/mcp/projects/:projectId/pull-requests */
+  pullRequests: (projectId: string, query: Record<string, unknown>): string =>
+    `${getBaseUrl()}/api/mcp/projects/${encodeURIComponent(projectId)}/pull-requests${buildQueryString(query as Record<string, string | number | boolean | undefined>)}`,
+  /** GET /api/mcp/projects/:projectId/pull-requests/:prId */
+  pullRequest: (
+    projectId: string,
+    prId: string,
+    query: Record<string, unknown>
+  ): string =>
+    `${getBaseUrl()}/api/mcp/projects/${encodeURIComponent(projectId)}/pull-requests/${encodeURIComponent(prId)}${buildQueryString(query as Record<string, string | number | boolean | undefined>)}`,
 };

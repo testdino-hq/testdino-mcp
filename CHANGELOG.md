@@ -2,6 +2,25 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.1
+
+### Added
+
+- **`get_org_details`** — an organization's plan, executions limit / used /
+  remaining and reset date, seats and projects against the plan, extra
+  executions on offer and active, what happens when executions run out and
+  what to do, the projects your token can see, and per-project test health.
+- **`get_project_details`** — one project's health summary, executions used
+  this period, connected integrations (connected / healthy only), branch →
+  environment mapping, branches / environments / tags seen, the top 10
+  flakiest, slowest, failing, chronically broken and slowing tests, tag pass
+  rates and CI suggestions.
+- **`get_pull_requests`** — the newest pull requests of the project's connected
+  repo with their latest test run, or one pull request with its branches, merge
+  state, size and latest test runs.
+
+All three are read-only and need the TestDino backend released on the same day.
+
 ## 2.2.0
 
 The package now exposes exactly what the hosted TestDino MCP exposes — the same

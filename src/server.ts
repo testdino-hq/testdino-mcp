@@ -141,6 +141,12 @@ import {
   handleAssignTest,
   watchTestTool,
   handleWatchTest,
+  getOrgDetailsTool,
+  handleGetOrgDetails,
+  getProjectDetailsTool,
+  handleGetProjectDetails,
+  getPullRequestsTool,
+  handleGetPullRequests,
 } from "./tools/index.js";
 
 // Get the directory of the current module
@@ -193,7 +199,7 @@ export function createServer(): Server {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.2.0",
+      version: "2.2.1",
     },
     {
       capabilities: {
@@ -262,6 +268,9 @@ export function createServer(): Server {
     setTestCriticalTool,
     assignTestTool,
     watchTestTool,
+    getOrgDetailsTool,
+    getProjectDetailsTool,
+    getPullRequestsTool,
   ];
 
   /**
@@ -657,6 +666,17 @@ export function createServer(): Server {
     }
     if (name === "watch_test") {
       return await handleWatchTest(args);
+    }
+
+    // Account: org, project and pull requests
+    if (name === "get_org_details") {
+      return await handleGetOrgDetails(args);
+    }
+    if (name === "get_project_details") {
+      return await handleGetProjectDetails(args);
+    }
+    if (name === "get_pull_requests") {
+      return await handleGetPullRequests(args);
     }
 
     throw new Error(`Unknown tool: ${name}`);
