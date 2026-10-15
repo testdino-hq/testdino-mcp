@@ -223,3 +223,15 @@ export {
   handleAssignTest,
 } from "./test-controls/assign-test.js";
 export { watchTestTool, handleWatchTest } from "./test-controls/watch-test.js";
+export {
+  getOrgDetailsTool,
+  handleGetOrgDetails,
+} from "./account/get-org-details.js";
+export {
+  getProjectDetailsTool,
+  handleGetProjectDetails,
+} from "./account/get-project-details.js";
+export {
+  getPullRequestsTool,
+  handleGetPullRequests,
+} from "./account/get-pull-requests.js";

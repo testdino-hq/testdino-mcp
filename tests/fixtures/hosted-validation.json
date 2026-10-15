@@ -420,6 +420,99 @@
         "projectId": "project_x"
       },
       "text": "MCP error -32602: Input validation error: Invalid arguments for tool submit_audit_report: [\n  {\n    \"expected\": \"'low' | 'medium' | 'high' | 'critical'\",\n    \"received\": \"undefined\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"findings\",\n      0,\n      \"severity\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"findings\",\n      0,\n      \"summary\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_union\",\n    \"unionErrors\": [\n      {\n        \"issues\": [\n          {\n            \"code\": \"invalid_type\",\n            \"expected\": \"string\",\n            \"received\": \"number\",\n            \"path\": [\n              \"findings\",\n              0,\n              \"evidence\",\n              0\n            ],\n            \"message\": \"Expected string, received number\"\n          }\n        ],\n        \"name\": \"ZodError\"\n      },\n      {\n        \"issues\": [\n          {\n            \"code\": \"invalid_type\",\n            \"expected\": \"object\",\n            \"received\": \"number\",\n            \"path\": [\n              \"findings\",\n              0,\n              \"evidence\",\n              0\n            ],\n            \"message\": \"Expected object, received number\"\n          }\n        ],\n        \"name\": \"ZodError\"\n      }\n    ],\n    \"path\": [\n      \"findings\",\n      0,\n      \"evidence\",\n      0\n    ],\n    \"message\": \"Invalid input\"\n  }\n]"
+    },
+    {
+      "label": "number native enum",
+      "tool": "get_org_details",
+      "arguments": {
+        "orgId": "org_x",
+        "window": 14
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_org_details: [\n  {\n    \"received\": 14,\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      7,\n      30,\n      90\n    ],\n    \"path\": [\n      \"window\"\n    ],\n    \"message\": \"Invalid enum value. Expected 7 | 30 | 90, received '14'\"\n  }\n]"
+    },
+    {
+      "label": "required orgId",
+      "tool": "get_org_details",
+      "arguments": {},
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_org_details: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"orgId\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    },
+    {
+      "label": "orgId too long",
+      "tool": "get_org_details",
+      "arguments": {
+        "orgId": "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_org_details: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 64,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 64 character(s)\",\n    \"path\": [\n      \"orgId\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "project window",
+      "tool": "get_project_details",
+      "arguments": {
+        "projectId": "project_x",
+        "window": 14
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_project_details: [\n  {\n    \"received\": 14,\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      7,\n      30,\n      90\n    ],\n    \"path\": [\n      \"window\"\n    ],\n    \"message\": \"Invalid enum value. Expected 7 | 30 | 90, received '14'\"\n  }\n]"
+    },
+    {
+      "label": "branch too long",
+      "tool": "get_project_details",
+      "arguments": {
+        "projectId": "project_x",
+        "branch": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_project_details: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 255,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 255 character(s)\",\n    \"path\": [\n      \"branch\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "pr status enum",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": "project_x",
+        "status": "everything"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"received\": \"everything\",\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      \"open\",\n      \"draft\",\n      \"merged\",\n      \"closed\",\n      \"all\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid enum value. Expected 'open' | 'draft' | 'merged' | 'closed' | 'all', received 'everything'\"\n  }\n]"
+    },
+    {
+      "label": "pr limit max",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": "project_x",
+        "limit": 21
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 20,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 20\",\n    \"path\": [\n      \"limit\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "pr limit int",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": "project_x",
+        "limit": 2.5
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"integer\",\n    \"received\": \"float\",\n    \"message\": \"Expected integer, received float\",\n    \"path\": [\n      \"limit\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "pr_id too long",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": "project_x",
+        "pr_id": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 100,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 100 character(s)\",\n    \"path\": [\n      \"pr_id\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "empty projectId (project details)",
+      "tool": "get_project_details",
+      "arguments": {
+        "projectId": ""
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_project_details: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"projectId\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "empty projectId (pull requests)",
+      "tool": "get_pull_requests",
+      "arguments": {
+        "projectId": ""
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"projectId\"\n    ]\n  }\n]"
     }
   ]
 }

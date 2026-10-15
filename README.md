@@ -81,7 +81,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 54 tools across eleven domains, the same tools, prompts and skills guide as the hosted TestDino MCP:
+The server provides 57 tools across twelve domains, the same tools, prompts and skills guide as the hosted TestDino MCP:
 
 **Test Execution & Results:**
 
@@ -173,6 +173,12 @@ The server provides 54 tools across eleven domains, the same tools, prompts and 
 52. **`set_test_critical`** - Mark or unmark a test critical (owners and admins).
 53. **`assign_test`** - Assign a test by email, user id or `"me"`, or unassign it.
 54. **`watch_test`** - Watch or stop watching a test.
+
+**Account, projects and pull requests:**
+
+55. **`get_org_details`** - Plan, executions left and when they reset, what happens when they run out, seats and projects against the plan, extra executions, and per-project test health.
+56. **`get_project_details`** - One project's health, usage, connected integrations, branch → environment mapping, and the top 10 flaky, slow, failing, chronic and slowing tests.
+57. **`get_pull_requests`** - The newest pull requests and their latest test run, or one pull request with its test runs.
 
 > **Ask first.** Quarantining, releasing and marking critical change what fails the build; the tools are flagged destructive so your client asks before running them.
 
