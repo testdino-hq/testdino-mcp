@@ -6,17 +6,28 @@ All notable changes to `@testdino/mcp` are documented here.
 
 ### Added
 
-- **Ask about your plan and quota.** `get_org_details` returns your plan,
-  executions left and when they reset, seats and projects used, and whether you
-  can buy more executions. It also says what happens when executions run out
-  and what to do.
-- **Ask how a project is doing.** `get_project_details` returns its health,
-  connected integrations, branch → environment mapping, and the top 10 flaky,
-  slow and failing tests.
-- **Ask about pull requests.** `get_pull_requests` lists recent pull requests
-  with their latest test run, or shows one in detail.
+- **Ask about your plan and quota.** `get_org_details` answers "what plan are
+  we on?", "how many executions are left?" and "can we buy more?":
+  - plan, status and billing period
+  - executions limit, used, remaining, and the reset date
+  - seats and projects used against the plan
+  - extra executions: whether you can buy them, the price, and who can if you
+    cannot
+  - what happens when executions run out, and what to do next
+  - per-project test health (pass, fail and flaky rates) over 7, 30 or 90 days
+- **Ask how a project is doing.** `get_project_details` returns:
+  - a health summary: reliability score, run pass rate, flaky and chronic test
+    counts
+  - executions used this period
+  - connected integrations and the branch → environment mapping
+  - the top 10 flaky, slow, failing, chronically broken and slowing tests
+  - tag health and CI suggestions
+- **Ask about pull requests.** `get_pull_requests` lists the newest pull
+  requests of the connected GitHub or GitLab repo with their latest test run,
+  or shows one in detail with its branches, merge state and latest runs.
 
-All three are read-only and show only what your token can access.
+All three are read-only and show only what your token can access. If one part
+of an answer cannot be loaded, it says so instead of showing zero.
 
 ## 2.2.0
 
