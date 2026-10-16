@@ -6,20 +6,28 @@ All notable changes to `@testdino/mcp` are documented here.
 
 ### Added
 
-- **`get_org_details`** — an organization's plan, executions limit / used /
-  remaining and reset date, seats and projects against the plan, extra
-  executions on offer and active, what happens when executions run out and
-  what to do, the projects your token can see, and per-project test health.
-- **`get_project_details`** — one project's health summary, executions used
-  this period, connected integrations (connected / healthy only), branch →
-  environment mapping, branches / environments / tags seen, the top 10
-  flakiest, slowest, failing, chronically broken and slowing tests, tag health
-  and CI suggestions.
-- **`get_pull_requests`** — the newest pull requests of the project's connected
-  repo with their latest test run, or one pull request with its branches, merge
-  state, size and latest test runs.
+- **Ask about your plan and quota.** `get_org_details` answers "what plan are
+  we on?", "how many executions are left?" and "can we buy more?":
+  - plan, status and billing period
+  - executions limit, used, remaining, and the reset date
+  - seats and projects used against the plan
+  - extra executions: whether you can buy them, the price, and who can if you
+    cannot
+  - what happens when executions run out, and what to do next
+  - per-project test health (pass, fail and flaky rates) over 7, 30 or 90 days
+- **Ask how a project is doing.** `get_project_details` returns:
+  - a health summary: reliability score, run pass rate, flaky and chronic test
+    counts
+  - executions used this period
+  - connected integrations and the branch → environment mapping
+  - the top 10 flaky, slow, failing, chronically broken and slowing tests
+  - tag health and CI suggestions
+- **Ask about pull requests.** `get_pull_requests` lists the newest pull
+  requests of the connected GitHub or GitLab repo with their latest test run,
+  or shows one in detail with its branches, merge state and latest runs.
 
-All three are read-only and need the TestDino backend released on the same day.
+All three are read-only and show only what your token can access. If one part
+of an answer cannot be loaded, it says so instead of showing zero.
 
 ## 2.2.0
 
