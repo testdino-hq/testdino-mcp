@@ -13,7 +13,8 @@ Bump the project version across all locations where it's defined.
 3. **Update all 3 locations:**
    - `package.json` → `"version": "X.Y.Z"`
    - `server.json` → `"version": "X.Y.Z"` AND `packages[0].version`
-   - `src/index.ts` → server constructor `version: "X.Y.Z"`
+   - `src/server.ts` → server constructor `version: "X.Y.Z"`
+   - `package-lock.json` → the root `"version"` (lines 3 and 9)
 
 4. **Verify** — Read all three files and confirm the version is consistent
 
