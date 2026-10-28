@@ -16,7 +16,7 @@ export const updateSessionTool = {
   name: "update_session",
   title: "Update Exploratory Session",
   description:
-    'Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Pass updates.status="closed" to close the session (same as the UI "Close session" button: freezes it, snaps state to the project\'s "Done" option). This is not reversible via MCP. Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
+    'Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. Pass updates.status="closed" to close the session (same as the UI "Close session" button: freezes it, snaps state to the project\'s "Done" option). This is not reversible via MCP. Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
@@ -32,7 +32,7 @@ export const updateSessionTool = {
         type: "object",
         additionalProperties: {},
         description:
-          'Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. status="closed" closes the session.',
+          'Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. status="closed" closes the session.',
       },
     },
     required: ["projectId", "sessionId", "updates"],

@@ -2,6 +2,18 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.2
+
+### Changed
+
+- **Manual testing no longer offers attachments.** `create_manual_test_case`,
+  `update_manual_test_case`, `update_run_test_case`, `create_manual_run`,
+  `update_manual_run`, `create_session` and `update_session` match the hosted
+  MCP: the TestDino server refuses attachments sent through MCP with a clear
+  error before anything is saved. Add files in the TestDino UI.
+- `get_external_issue`, `list_test_controls`, `quarantine_tests` and
+  `update_quarantine` take the hosted limits and descriptions.
+
 ## 2.2.1
 
 ### Added

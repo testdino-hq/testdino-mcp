@@ -2498,7 +2498,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## create_manual_test_case
 
-**Purpose**: Create a manual test case in an existing suite, with optional steps, classification, tags, attachments and custom fields.
+**Purpose**: Create a manual test case in an existing suite, with optional steps, classification, tags and custom fields.
 
 ### Description
 
@@ -2512,40 +2512,38 @@ Write (creates a case; not destructive). Requires write permission.
 
 #### Steps
 
-- **Classic step**: `{ "action", "expectedResult", "data", "attachments" }`
-- **Gherkin step**: `{ "event": "Given" | "When" | "And" | "Then" | "But", "stepDescription", "attachments" }`
+- **Classic step**: `{ "action", "expectedResult", "data" }`
+- **Gherkin step**: `{ "event": "Given" | "When" | "And" | "Then" | "But", "stepDescription" }`
 
-A step key the schema does not declare is dropped before the request.
+Steps take no files: a step `attachments` value is sent on, and the server refuses it with `400`.
 
 #### Attachments
 
-Top-level `attachments` belong to the whole case; `steps[].attachments` belong to one step. Each item must be an attachment object (fields such as `fileName`, `originalFileName`, `fileSize`, `mimeType`, `fileContent`, `url`, `blobUrl`), as on the hosted MCP; a string, URL or local path, is refused with `Input validation error`.
-
-The TestDino server does not store attachments sent through MCP yet: a case-level attachment is refused with `400` ("Attachment uploads via MCP are not yet supported…") after the case is created, and step attachments are accepted but not stored. Add files in the TestDino UI.
+Files cannot be added over MCP. A non-empty `attachments` value, top-level or on a step and in any form, is refused with `400` before the case is saved, so nothing is created. Add files in the TestDino UI.
 
 ### Parameters
 
-| Parameter                  | Type     | Required | Allowed values                                     | Description                                                                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | -------- | -------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`                | string   | yes      |                                                    | Project ID                                                                                                                                                                                                                                                                                                                                                      |
-| `title`                    | string   | yes      |                                                    | Test case title                                                                                                                                                                                                                                                                                                                                                 |
-| `suiteName`                | string   | yes      |                                                    | Target suite name                                                                                                                                                                                                                                                                                                                                               |
-| `description`              | string   | no       |                                                    |                                                                                                                                                                                                                                                                                                                                                                 |
-| `status`                   | string   | no       |                                                    | Status. Values come from Project Settings → Test Case Properties. Defaults: Active, Draft, Deprecated.                                                                                                                                                                                                                                                          |
-| `testStepsDeclarationType` | string   | no       | one of `Classic`, `Gherkin`                        |                                                                                                                                                                                                                                                                                                                                                                 |
-| `preconditions`            | string   | no       |                                                    |                                                                                                                                                                                                                                                                                                                                                                 |
-| `postconditions`           | string   | no       |                                                    |                                                                                                                                                                                                                                                                                                                                                                 |
-| `steps`                    | object[] | no       |                                                    |                                                                                                                                                                                                                                                                                                                                                                 |
-| `priority`                 | string   | no       |                                                    | Priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.                                                                                                                                                                                                                                             |
-| `severity`                 | string   | no       |                                                    | Severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.                                                                                                                                                                                                                        |
-| `type`                     | string   | no       |                                                    | Type. Values come from Project Settings → Test Case Properties. Defaults: Smoke, Regression, Functional, Integration, E2E, API, Unit, Performance, Security, Accessibility, Usability, Compatibility, Acceptance, Exploratory, Other.                                                                                                                           |
-| `layer`                    | string   | no       |                                                    | Layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.                                                                                                                                                                                                                                                             |
-| `behavior`                 | string   | no       |                                                    | Behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.                                                                                                                                                                                                                                         |
-| `automationStatus`         | string   | no       |                                                    | Automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated.                                                                                                                                                                                                                                                       |
-| `tags`                     | string   | no       |                                                    |                                                                                                                                                                                                                                                                                                                                                                 |
-| `flags`                    | string[] | no       | each one of `To be Automated`, `Is flaky`, `Muted` | Automation flags/checklist values.                                                                                                                                                                                                                                                                                                                              |
-| `attachments`              | object[] | no       |                                                    | Whole-test-case attachments as URLs, local paths, or file data objects. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package, which read the file locally without sending bytes through the model. |
-| `customFields`             | object   | no       |                                                    | Values keyed by custom field name. Every required field must be set; the error names any that are missing.                                                                                                                                                                                                                                                      |
+| Parameter                  | Type     | Required | Allowed values                                     | Description                                                                                                                                                                                                                           |
+| -------------------------- | -------- | -------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`                | string   | yes      |                                                    | Project ID                                                                                                                                                                                                                            |
+| `title`                    | string   | yes      |                                                    | Test case title                                                                                                                                                                                                                       |
+| `suiteName`                | string   | yes      |                                                    | Target suite name                                                                                                                                                                                                                     |
+| `description`              | string   | no       |                                                    |                                                                                                                                                                                                                                       |
+| `status`                   | string   | no       |                                                    | Status. Values come from Project Settings → Test Case Properties. Defaults: Active, Draft, Deprecated.                                                                                                                                |
+| `testStepsDeclarationType` | string   | no       | one of `Classic`, `Gherkin`                        |                                                                                                                                                                                                                                       |
+| `preconditions`            | string   | no       |                                                    |                                                                                                                                                                                                                                       |
+| `postconditions`           | string   | no       |                                                    |                                                                                                                                                                                                                                       |
+| `steps`                    | object[] | no       |                                                    |                                                                                                                                                                                                                                       |
+| `priority`                 | string   | no       |                                                    | Priority. Values come from Project Settings → Test Case Properties. Defaults: Critical, High, Medium, Low, Not Set.                                                                                                                   |
+| `severity`                 | string   | no       |                                                    | Severity. Values come from Project Settings → Test Case Properties. Defaults: Blocker, Critical, Major, Normal, Minor, Trivial, Not Set.                                                                                              |
+| `type`                     | string   | no       |                                                    | Type. Values come from Project Settings → Test Case Properties. Defaults: Smoke, Regression, Functional, Integration, E2E, API, Unit, Performance, Security, Accessibility, Usability, Compatibility, Acceptance, Exploratory, Other. |
+| `layer`                    | string   | no       |                                                    | Layer. Values come from Project Settings → Test Case Properties. Defaults: E2E, API, Unit, Not Set.                                                                                                                                   |
+| `behavior`                 | string   | no       |                                                    | Behavior. Values come from Project Settings → Test Case Properties. Defaults: Positive, Negative, Destructive, Not Set.                                                                                                               |
+| `automationStatus`         | string   | no       |                                                    | Automation status. Values come from Project Settings → Test Case Properties. Defaults: Manual, Automated.                                                                                                                             |
+| `tags`                     | string   | no       |                                                    |                                                                                                                                                                                                                                       |
+| `flags`                    | string[] | no       | each one of `To be Automated`, `Is flaky`, `Muted` | Automation flags/checklist values.                                                                                                                                                                                                    |
+| `attachments`              | any      | no       |                                                    | Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI.                                                                                                                            |
+| `customFields`             | object   | no       |                                                    | Values keyed by custom field name. Every required field must be set; the error names any that are missing.                                                                                                                            |
 
 ### Example Usage
 
@@ -2568,8 +2566,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
       {
         "action": "Submit a valid email with a wrong password",
         "data": "jane@example.com / wrong-password",
-        "expectedResult": "An error message is shown",
-        "attachments": ["./screenshots/login-error.png"]
+        "expectedResult": "An error message is shown"
       }
     ],
     "priority": "high",
@@ -2646,7 +2643,8 @@ The tool returns the body below as JSON text and as `structuredContent`.
 
 ### Error Handling
 
-- **`Input validation error`** before any request: `projectId`, `title` or `suiteName` missing, a `flags` or `testStepsDeclarationType` value outside its list, a step `event` outside Given/When/And/Then/But, or an attachment that is a string instead of an object.
+- **`Input validation error`** before any request: `projectId`, `title` or `suiteName` missing, a `flags` or `testStepsDeclarationType` value outside its list, or a step `event` outside Given/When/And/Then/But.
+- **`400` for attachments**: any attachment input is refused before the case is saved; add files in the TestDino UI.
 - **A `suiteName` that matches no suite**: call `list_manual_test_suites` and use the exact name.
 - **A classification value the project does not define**: the server rejects it. Use a value from Project Settings → Test Case Properties.
 - **A required custom field missing**: the error names the missing fields; set them in `customFields`.
@@ -2664,7 +2662,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## update_manual_test_case
 
-**Purpose**: Change fields of an existing manual test case, add or remove attachments, append comments and link tracker issues.
+**Purpose**: Change fields of an existing manual test case, append comments and link tracker issues.
 
 ### Description
 
@@ -2677,31 +2675,31 @@ Put only the fields you want to change inside `updates`; everything else stays a
 
 #### The `updates` object
 
-| Field                                                                   | Notes                                                                                                                |
-| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `title` (alias `name`)                                                  | New title                                                                                                            |
-| `description`, `preconditions`, `postconditions`                        | Text                                                                                                                 |
-| `status`                                                                | Project status value (defaults: Active, Draft, Deprecated)                                                           |
-| `priority`, `severity`, `type`, `layer`, `behavior`, `automationStatus` | Values from Project Settings → Test Case Properties, as in `create_manual_test_case`                                 |
-| `tags`                                                                  | Comma-separated string                                                                                               |
-| `flags`                                                                 | Array of `"To be Automated"`, `"Is flaky"`, `"Muted"`                                                                |
-| `steps`                                                                 | Full replacement; same step shapes as `create_manual_test_case`                                                      |
-| `attachments`                                                           | `{ "add": [...], "remove": ["<attachment id>"] }`; add and remove can be combined in one call                        |
-| `customFields`                                                          | Values keyed by custom field name                                                                                    |
-| `comments`                                                              | Array of comment strings; each is appended as a new comment authored by the PAT owner. At most 20 comments per case. |
-| `issues`                                                                | Array of ticket keys to link, for example `["PROJ-123", "ENG-9"]`; see below                                         |
+| Field                                                                   | Notes                                                                                                                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title` (alias `name`)                                                  | New title                                                                                                                                     |
+| `description`, `preconditions`, `postconditions`                        | Text                                                                                                                                          |
+| `status`                                                                | Project status value (defaults: Active, Draft, Deprecated)                                                                                    |
+| `priority`, `severity`, `type`, `layer`, `behavior`, `automationStatus` | Values from Project Settings → Test Case Properties, as in `create_manual_test_case`                                                          |
+| `tags`                                                                  | Comma-separated string                                                                                                                        |
+| `flags`                                                                 | Array of `"To be Automated"`, `"Is flaky"`, `"Muted"`                                                                                         |
+| `steps`                                                                 | Full replacement; same step shapes as `create_manual_test_case`                                                                               |
+| `attachments`                                                           | Not supported: a non-empty `add` / `remove`, any other non-empty value, or a step `attachments` is refused with `400` before anything changes |
+| `customFields`                                                          | Values keyed by custom field name                                                                                                             |
+| `comments`                                                              | Array of comment strings; each is appended as a new comment authored by the PAT owner. At most 20 comments per case.                          |
+| `issues`                                                                | Array of ticket keys to link, for example `["PROJ-123", "ENG-9"]`; see below                                                                  |
 
 **Issues.** Every key is looked up in the project's connected trackers (Jira and/or Linear) and must resolve in exactly one. Nothing is written unless all keys resolve. A key that exists in both trackers must be sent as `{ "provider": "jira" | "linear", "displayId": "KEY" }` instead of a bare string. A key already linked to the case is skipped.
 
-**Attachments.** `updates.attachments` and `updates.steps[].attachments` are sent as given. The TestDino server does not store attachments sent through MCP yet: `attachments.add` is refused with `400`, and step attachments are accepted but not stored. Add files in the TestDino UI.
+**Attachments.** Files cannot be added or removed over MCP. A non-empty `updates.attachments` (any form) or a step `attachments` is refused with `400`, and no field changes; an empty `{ "add": [], "remove": [] }` is ignored. Use the TestDino UI for files.
 
 ### Parameters
 
-| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                                                                                                                                                                                                      |
-| ----------- | ------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `projectId` | string | yes      |                | Project ID                                                                                                                                                                                                                                                                                                                                       |
-| `caseId`    | string | yes      |                | Internal \_id or "TC-123" style ID                                                                                                                                                                                                                                                                                                               |
-| `updates`   | object | yes      |                | Fields to update: title (alias: name), description, preconditions, postconditions, status, steps, priority, severity, type, layer, behavior, automationStatus, tags, flags, attachments {add, remove}, customFields, comments (array of strings to append), issues (array of ticket keys to link, resolved against the connected Jira / Linear)… |
+| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                                                                                                                                                                           |
+| ----------- | ------ | -------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | yes      |                | Project ID                                                                                                                                                                                                                                                                                                            |
+| `caseId`    | string | yes      |                | Internal \_id or "TC-123" style ID                                                                                                                                                                                                                                                                                    |
+| `updates`   | object | yes      |                | Fields to update: title (alias: name), description, preconditions, postconditions, status, steps, priority, severity, type, layer, behavior, automationStatus, tags, flags, customFields, comments (array of strings to append), issues (array of ticket keys to link, resolved against the connected Jira / Linear)… |
 
 ### Example Usage
 
@@ -2800,10 +2798,6 @@ The tool returns the body below as JSON text and as `structuredContent`.
           "expectedResult": "An error message is shown"
         }
       ],
-      "attachments": {
-        "add": ["./screenshots/login-error.png"],
-        "remove": ["<attachment id>"]
-      },
       "comments": ["Verified on staging."],
       "issues": ["PROJ-123"]
     }
@@ -4107,27 +4101,27 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Only `name` is required. `selectionMode` decides which cases the run includes: `"all"` (default, every case in the project) or `"selected"` (scope with `testCaseIds`, `suiteIds`, and `includeUnsorted` for cases with no suite). `releaseId` attaches the run to a release. `state` defaults to `"new"` and accepts the canonical (`"in_progress"`) or display (`"In Progress"`) form. `note` accepts rich HTML; `forecast` is a number. `tags` must be a JSON array of strings (`["smoke","regression"]`), not the comma-separated form `list_manual_runs` takes as a filter. Requires write permission. Writes data; not marked destructive.
 
-**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation.
+**Attachments.** Files cannot be added over MCP: a non-empty `attachments` is refused with `400` ("Add attachments after the run is created.") and nothing is created. Add files in the TestDino UI.
 
 ### Parameters
 
-| Parameter         | Type     | Required | Allowed values           | Description                                                                                                                                                                                                                                             |
-| ----------------- | -------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`       | string   | yes      |                          | Project ID                                                                                                                                                                                                                                              |
-| `name`            | string   | yes      |                          | Run name                                                                                                                                                                                                                                                |
-| `note`            | string   | no       |                          | Rich HTML note                                                                                                                                                                                                                                          |
-| `environment`     | string   | no       |                          | Environment label, e.g. "Staging"                                                                                                                                                                                                                       |
-| `releaseId`       | string   | no       |                          | Attach run to this release                                                                                                                                                                                                                              |
-| `state`           | string   | no       |                          | Workflow state (default "new"). Either canonical ("in_progress") or display ("In Progress") form — server normalizes to lowercase+underscored so UI colors render correctly.                                                                            |
-| `selectionMode`   | string   | no       | one of `all`, `selected` | Default "all"                                                                                                                                                                                                                                           |
-| `testCaseIds`     | string[] | no       |                          | Case IDs to include when selectionMode="selected"                                                                                                                                                                                                       |
-| `suiteIds`        | string[] | no       |                          | Suite IDs whose cases are included when selectionMode="selected"                                                                                                                                                                                        |
-| `includeUnsorted` | boolean  | no       |                          | Also include cases with no suite when selectionMode="selected"                                                                                                                                                                                          |
-| `forecast`        | number   | no       |                          | Numeric forecast/target for the run (model stores this as a number).                                                                                                                                                                                    |
-| `tags`            | string[] | no       |                          | Array of tag strings, e.g. ["smoke","regression"]. NOT a comma-separated string.                                                                                                                                                                        |
-| `linkedIssues`    | object[] | no       |                          | Array of linked-issue objects (use the same shape returned by list_manual_runs).                                                                                                                                                                        |
-| `attachments`     | object[] | no       |                          | Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. |
-| `links`           | object[] | no       |                          | Array of link objects.                                                                                                                                                                                                                                  |
+| Parameter         | Type     | Required | Allowed values           | Description                                                                                                                                                                  |
+| ----------------- | -------- | -------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`       | string   | yes      |                          | Project ID                                                                                                                                                                   |
+| `name`            | string   | yes      |                          | Run name                                                                                                                                                                     |
+| `note`            | string   | no       |                          | Rich HTML note                                                                                                                                                               |
+| `environment`     | string   | no       |                          | Environment label, e.g. "Staging"                                                                                                                                            |
+| `releaseId`       | string   | no       |                          | Attach run to this release                                                                                                                                                   |
+| `state`           | string   | no       |                          | Workflow state (default "new"). Either canonical ("in_progress") or display ("In Progress") form — server normalizes to lowercase+underscored so UI colors render correctly. |
+| `selectionMode`   | string   | no       | one of `all`, `selected` | Default "all"                                                                                                                                                                |
+| `testCaseIds`     | string[] | no       |                          | Case IDs to include when selectionMode="selected"                                                                                                                            |
+| `suiteIds`        | string[] | no       |                          | Suite IDs whose cases are included when selectionMode="selected"                                                                                                             |
+| `includeUnsorted` | boolean  | no       |                          | Also include cases with no suite when selectionMode="selected"                                                                                                               |
+| `forecast`        | number   | no       |                          | Numeric forecast/target for the run (model stores this as a number).                                                                                                         |
+| `tags`            | string[] | no       |                          | Array of tag strings, e.g. ["smoke","regression"]. NOT a comma-separated string.                                                                                             |
+| `linkedIssues`    | object[] | no       |                          | Array of linked-issue objects (use the same shape returned by list_manual_runs).                                                                                             |
+| `attachments`     | any      | no       |                          | Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI.                                                                   |
+| `links`           | object[] | no       |                          | Array of link objects.                                                                                                                                                       |
 
 ### Example Usage
 
@@ -4187,11 +4181,12 @@ The tool returns the body below as JSON text and as `structuredContent`:
 
 ### Error Handling
 
-| Status | Message                                     | What to do                                                                                                                                          |
-| ------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| —      | `Input validation error`                    | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects. |
-| 404    | `Release "<id>" not found in this project.` | Check `releaseId`, or find it with `list_releases`.                                                                                                 |
-| 409    | code `INTEGRATION_NOT_CONNECTED`            | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                  |
+| Status | Message                                     | What to do                                                                                                         |
+| ------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| —      | `Input validation error`                    | Usually `tags` sent as a comma-separated string. Send `tags` as an array.                                          |
+| 400    | `Add attachments after the run is created.` | Drop `attachments`; add files in the TestDino UI.                                                                  |
+| 404    | `Release "<id>" not found in this project.` | Check `releaseId`, or find it with `list_releases`.                                                                |
+| 409    | code `INTEGRATION_NOT_CONNECTED`            | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written. |
 
 Other failures follow [Responses and errors](#responses-and-errors).
 
@@ -4210,19 +4205,19 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Description
 
-`updates` accepts `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `attachments`, `links` and `selectionMode`. `updates.tags` must be a JSON array of strings. Per-case results are set with `update_run_test_case`, not here. `runId` accepts the internal `_id` or a counter-style ID such as `"RUN-12"`. Requires write permission. Destructive: clients that honour annotations ask before running it.
+`updates` accepts `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `links` and `selectionMode`. `updates.tags` must be a JSON array of strings. Per-case results are set with `update_run_test_case`, not here. `runId` accepts the internal `_id` or a counter-style ID such as `"RUN-12"`. Requires write permission. Destructive: clients that honour annotations ask before running it.
 
 **Closing a run.** `updates.status: "closed"` does what the UI "Close run" button does: it freezes the run, snapshots the remaining cases and sets the state to the project's "Done" option. Other fields in the same call are saved first. It cannot be reopened through MCP. A closed run accepts only `releaseId`, so it can be moved to another release without reopening it.
 
-`updates.attachments` is sent as given; uploading a file from your machine is supported only for manual test cases.
+Files cannot be added over MCP: a non-empty `updates.attachments` is refused with `400`, and nothing changes. Use the TestDino UI.
 
 ### Parameters
 
-| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                   |
-| ----------- | ------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string | yes      |                | Project ID                                                                                                                                                    |
-| `runId`     | string | yes      |                | Internal \_id or counter-style ID                                                                                                                             |
-| `updates`   | object | yes      |                | Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. status="closed" closes the run. |
+| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                      |
+| ----------- | ------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `projectId` | string | yes      |                | Project ID                                                                                                                                       |
+| `runId`     | string | yes      |                | Internal \_id or counter-style ID                                                                                                                |
+| `updates`   | object | yes      |                | Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. status="closed" closes the run. |
 
 ### Example Usage
 
@@ -4422,12 +4417,12 @@ Two modes in one tool:
 
 ### Parameters
 
-| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------- | ------ | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string | yes      |                | Project ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `runId`     | string | yes      |                | Internal run \_id or counter-style ID e.g. "RUN-12"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `rtcRef`    | string | yes      |                | Per-case record reference — `tcm_rtc_...` \_id, caseKey ("TC-156"), or underlying test case \_id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `updates`   | object | yes      |                | Quick verdict: assigneeUserId (email or \_id; null to unassign), result/status (display or canonical), elapsed (seconds). Detailed result (any of these triggers a full result entry): comment (rich HTML), linkedIssues (array of linked-issue objects), attachments (array of attachment objects/URLs), stepResults (array, e.g. [{ "order": 1, "status": "passed", "comment": "" }]), configuration (the browser/platform this result is for). configuration is REQUIRED when the run covers more than one browser — a result naming none belongs to no cell and is rejected. |
+| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------- | ------ | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | yes      |                | Project ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `runId`     | string | yes      |                | Internal run \_id or counter-style ID e.g. "RUN-12"                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `rtcRef`    | string | yes      |                | Per-case record reference — `tcm_rtc_...` \_id, caseKey ("TC-156"), or underlying test case \_id.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `updates`   | object | yes      |                | Quick verdict: assigneeUserId (email or \_id; null to unassign), result/status (display or canonical), elapsed (seconds). Detailed result (any of these triggers a full result entry): comment (rich HTML), linkedIssues (array of linked-issue objects), stepResults (array, e.g. [{ "order": 1, "status": "passed", "comment": "" }]), configuration (the browser/platform this result is for). configuration is REQUIRED when the run covers more than one browser — a result naming none belongs to no cell and is rejected. |
 
 ### Example Usage
 
@@ -4682,25 +4677,25 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Only `name` is required. `mission` is the charter, in rich HTML. `assigneeUserId` accepts a User `_id` or an email address, which the server looks up. `estimate` is in minutes. `state` defaults to `"new"` and accepts the canonical (`"under_review"`) or display (`"Under review"`) form. `releaseId` attaches the session to a release. `tags` must be a JSON array of strings (`["exploratory","auth"]`), not the comma-separated form `list_sessions` takes as a filter. Findings cannot be added through MCP — add them in the UI. Requires write permission. Writes data; not marked destructive.
 
-**Attachments.** Each `attachments` item must be an attachment object, as on the hosted MCP; a URL or local path string is refused by input validation.
+**Attachments.** Files cannot be added over MCP: a non-empty `attachments` is refused with `400` ("Add attachments after the session is created.") and nothing is created. Add files in the TestDino UI.
 
 ### Parameters
 
-| Parameter        | Type     | Required | Allowed values | Description                                                                                                                                                                                                                                             |
-| ---------------- | -------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`      | string   | yes      |                | Project ID                                                                                                                                                                                                                                              |
-| `name`           | string   | yes      |                | Session name                                                                                                                                                                                                                                            |
-| `mission`        | string   | no       |                | Rich HTML mission/charter                                                                                                                                                                                                                               |
-| `sessionType`    | string   | no       |                | Free-text type, e.g. "Exploratory", "Regression"                                                                                                                                                                                                        |
-| `config`         | string   | no       |                |                                                                                                                                                                                                                                                         |
-| `environment`    | string   | no       |                |                                                                                                                                                                                                                                                         |
-| `releaseId`      | string   | no       |                | Attach session to this release                                                                                                                                                                                                                          |
-| `assigneeUserId` | string   | no       |                | User \_id ("user_abc...") OR email address — both accepted. Email is looked up server-side.                                                                                                                                                             |
-| `state`          | string   | no       |                | Workflow state (default "new"). Either canonical ("under_review") or display ("Under review") form — server normalizes to lowercase+underscored so UI colors render correctly.                                                                          |
-| `estimate`       | integer  | no       | min `0`        | Estimate in minutes                                                                                                                                                                                                                                     |
-| `tags`           | string[] | no       |                | Array of tag strings, e.g. ["exploratory","auth"]. NOT a comma-separated string.                                                                                                                                                                        |
-| `linkedIssues`   | object[] | no       |                | Array of linked-issue objects (same shape as list_sessions returns).                                                                                                                                                                                    |
-| `attachments`    | object[] | no       |                | Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. |
+| Parameter        | Type     | Required | Allowed values | Description                                                                                                                                                                    |
+| ---------------- | -------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `projectId`      | string   | yes      |                | Project ID                                                                                                                                                                     |
+| `name`           | string   | yes      |                | Session name                                                                                                                                                                   |
+| `mission`        | string   | no       |                | Rich HTML mission/charter                                                                                                                                                      |
+| `sessionType`    | string   | no       |                | Free-text type, e.g. "Exploratory", "Regression"                                                                                                                               |
+| `config`         | string   | no       |                |                                                                                                                                                                                |
+| `environment`    | string   | no       |                |                                                                                                                                                                                |
+| `releaseId`      | string   | no       |                | Attach session to this release                                                                                                                                                 |
+| `assigneeUserId` | string   | no       |                | User \_id ("user_abc...") OR email address — both accepted. Email is looked up server-side.                                                                                    |
+| `state`          | string   | no       |                | Workflow state (default "new"). Either canonical ("under_review") or display ("Under review") form — server normalizes to lowercase+underscored so UI colors render correctly. |
+| `estimate`       | integer  | no       | min `0`        | Estimate in minutes                                                                                                                                                            |
+| `tags`           | string[] | no       |                | Array of tag strings, e.g. ["exploratory","auth"]. NOT a comma-separated string.                                                                                               |
+| `linkedIssues`   | object[] | no       |                | Array of linked-issue objects (same shape as list_sessions returns).                                                                                                           |
+| `attachments`    | any      | no       |                | Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI.                                                                     |
 
 ### Example Usage
 
@@ -4764,12 +4759,13 @@ The tool returns the body below as JSON text and as `structuredContent`:
 
 ### Error Handling
 
-| Status | Message                                                                 | What to do                                                                                                                                          |
-| ------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| —      | `Input validation error`                                                | Usually `tags` sent as a comma-separated string, or an `attachments` item that is a URL string. Send `tags` as an array and attachments as objects. |
-| 400    | `No user found with email "<email>"…` / `No user found with id "<id>"…` | Check `assigneeUserId`.                                                                                                                             |
-| 404    | `Release "<id>" not found in this project.`                             | Check `releaseId`, or find it with `list_releases`.                                                                                                 |
-| 409    | code `INTEGRATION_NOT_CONNECTED`                                        | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written.                                  |
+| Status | Message                                                                 | What to do                                                                                                         |
+| ------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| —      | `Input validation error`                                                | Usually `tags` sent as a comma-separated string. Send `tags` as an array.                                          |
+| 400    | `Add attachments after the session is created.`                         | Drop `attachments`; add files in the TestDino UI.                                                                  |
+| 400    | `No user found with email "<email>"…` / `No user found with id "<id>"…` | Check `assigneeUserId`.                                                                                            |
+| 404    | `Release "<id>" not found in this project.`                             | Check `releaseId`, or find it with `list_releases`.                                                                |
+| 409    | code `INTEGRATION_NOT_CONNECTED`                                        | A `linkedIssues` entry is a Jira key and Jira is not connected. Ask the user to connect Jira; nothing was written. |
 
 Other failures follow [Responses and errors](#responses-and-errors).
 
@@ -4788,19 +4784,19 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Description
 
-`updates` accepts `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues` and `attachments`. `updates.tags` must be a JSON array of strings. Findings are not editable here. `sessionId` accepts the internal `_id` or `"SES-12"`. Requires write permission. Destructive: clients that honour annotations ask before running it.
+`updates` accepts `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags` and `linkedIssues`. `updates.tags` must be a JSON array of strings. Findings are not editable here. `sessionId` accepts the internal `_id` or `"SES-12"`. Requires write permission. Destructive: clients that honour annotations ask before running it.
 
 **Closing a session.** `updates.status: "closed"` does what the UI "Close session" button does: it freezes the session and sets the state to the project's "Done" option. Other fields in the same call are saved first. It cannot be reopened through MCP.
 
-`updates.attachments` is sent as given; uploading a file from your machine is supported only for manual test cases.
+Files cannot be added over MCP: a non-empty `updates.attachments` is refused with `400`, and nothing changes. Use the TestDino UI.
 
 ### Parameters
 
-| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                                         |
-| ----------- | ------ | -------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string | yes      |                | Project ID                                                                                                                                                                          |
-| `sessionId` | string | yes      |                | Internal \_id or counter-style ID                                                                                                                                                   |
-| `updates`   | object | yes      |                | Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. status="closed" closes the session. |
+| Parameter   | Type   | Required | Allowed values | Description                                                                                                                                                            |
+| ----------- | ------ | -------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string | yes      |                | Project ID                                                                                                                                                             |
+| `sessionId` | string | yes      |                | Internal \_id or counter-style ID                                                                                                                                      |
+| `updates`   | object | yes      |                | Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. status="closed" closes the session. |
 
 ### Example Usage
 

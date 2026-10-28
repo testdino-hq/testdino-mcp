@@ -175,22 +175,22 @@ describe("strict objects", () => {
 });
 
 describe("attachments", () => {
-  it("refuses a local file path, as the hosted schema does", async () => {
-    const fetchMock = respond(201, {});
+  it("forwards a stray attachment so the server refuses it, as hosted does", async () => {
     for (const [name, extra] of [
       ["create_manual_test_case", { title: "t", suiteName: "s" }],
       ["create_manual_run", { name: "r" }],
     ] as const) {
+      const fetchMock = respond(400, {
+        success: false,
+        message: "not supported",
+      });
       const result = await client.callTool({
         name,
         arguments: { projectId: P, ...extra, attachments: ["/tmp/a.png"] },
       });
       expect(result.isError).toBe(true);
-      expect((result.content as { text: string }[])[0].text).toMatch(
-        /Expected object, received string/
-      );
+      expect(sentBody(fetchMock).attachments).toEqual(["/tmp/a.png"]);
     }
-    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("forwards attachment objects unchanged", async () => {

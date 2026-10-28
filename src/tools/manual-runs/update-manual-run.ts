@@ -16,7 +16,7 @@ export const updateManualRunTool = {
   name: "update_manual_run",
   title: "Update Manual Test Run",
   description:
-    'Modify an existing manual test run. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Pass updates.status="closed" to close the run (same as the UI "Close run" button: freezes it, snapshots remaining cases, snaps state to the project\'s "Done" option). This is not reversible via MCP. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
+    'Modify an existing manual test run. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. Pass updates.status="closed" to close the run (same as the UI "Close run" button: freezes it, snapshots remaining cases, snaps state to the project\'s "Done" option). This is not reversible via MCP. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
@@ -32,7 +32,7 @@ export const updateManualRunTool = {
         type: "object",
         additionalProperties: {},
         description:
-          'Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. status="closed" closes the run.',
+          'Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. status="closed" closes the run.',
       },
     },
     required: ["projectId", "runId", "updates"],

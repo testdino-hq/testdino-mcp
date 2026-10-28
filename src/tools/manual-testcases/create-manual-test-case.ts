@@ -79,7 +79,7 @@ export const createManualTestCaseTool = {
   name: "create_manual_test_case",
   title: "Create Manual Test Case",
   description:
-    'Create a new manual test case. Requires write permission. MANDATORY FIRST STEP: always call list_manual_test_suites() before this tool to get the exact suite name — suiteName must be an exact match, not approximate. Steps default to Classic format (action + expectedResult). Set testStepsDeclarationType="Gherkin" if using Given/When/Then steps. Classic step shape: { action, expectedResult, data, attachments }. Gherkin step shape: { event: "Given"|"When"|"And"|"Then"|"But", stepDescription, attachments }. Use top-level attachments for whole-test-case files, or step.attachments for files tied to a specific step. Suggestion: attaching files via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.',
+    'Create a new manual test case. Requires write permission. MANDATORY FIRST STEP: always call list_manual_test_suites() before this tool to get the exact suite name — suiteName must be an exact match, not approximate. Steps default to Classic format (action + expectedResult). Set testStepsDeclarationType="Gherkin" if using Given/When/Then steps. Classic step shape: { action, expectedResult, data }. Gherkin step shape: { event: "Given"|"When"|"And"|"Then"|"But", stepDescription }. Files cannot be added over MCP — tell the user to upload them in the TestDino UI.',
   inputSchema: {
     type: "object",
     properties: {
@@ -127,48 +127,6 @@ export const createManualTestCaseTool = {
             data: {
               type: "string",
             },
-            attachments: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  _id: {
-                    type: "string",
-                  },
-                  url: {
-                    type: "string",
-                  },
-                  blobUrl: {
-                    type: "string",
-                  },
-                  containerName: {
-                    type: "string",
-                  },
-                  fileName: {
-                    type: "string",
-                  },
-                  originalFileName: {
-                    type: "string",
-                  },
-                  fileSize: {
-                    type: "number",
-                  },
-                  mimeType: {
-                    type: "string",
-                  },
-                  fileContent: {
-                    type: "string",
-                  },
-                  uploadedBy: {
-                    type: "string",
-                  },
-                  uploadedAt: {
-                    type: "string",
-                  },
-                },
-                additionalProperties: true,
-              },
-            },
             event: {
               type: "string",
               enum: ["Given", "When", "And", "Then", "But"],
@@ -184,8 +142,9 @@ export const createManualTestCaseTool = {
               type: "string",
             },
           },
-          additionalProperties: false,
+          additionalProperties: true,
         },
+        maxItems: 100,
       },
       priority: {
         type: "string",
@@ -229,12 +188,8 @@ export const createManualTestCaseTool = {
         description: "Automation flags/checklist values.",
       },
       attachments: {
-        type: "array",
-        items: {
-          $ref: "#/properties/steps/items/properties/attachments/items",
-        },
         description:
-          "Whole-test-case attachments as URLs, local paths, or file data objects. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package, which read the file locally without sending bytes through the model.",
+          "Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI.",
       },
       customFields: {
         type: "object",

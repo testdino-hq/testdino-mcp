@@ -208,14 +208,9 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 - Use the returned branch signals to decide which files to inspect first.
 - Avoid pasting long snippets when a metric, prevalence estimate, or file/line reference is enough.
 
-### Attachments on hosted MCP — token cost note
+### Files on MCP
 
-Tool fields that carry file payloads (`attachments`, step `attachments`, inline images) are **dramatically more expensive on the hosted/remote MCP** than on the local `testdino-mcp` npm package. On the hosted MCP, the base64-encoded file flows through the LLM's tool-call arguments and stays in the conversation history on every subsequent turn — a single screenshot can easily cost 50k+ tokens. The local npm MCP reads the file on the user's machine after the tool call lands, so the bytes never enter the model's context (cost is ~5 tokens for the path string).
-
-Suggestion to surface to the user when they ask to attach files:
-
-- For lower token usage, prefer the **TestDino UI** or the **local `testdino-mcp` npm package** for uploading attachments.
-- Passing pre-uploaded **URLs** (`https://…`, `blob:…`) is cheap on either transport — the URL string passes through, the file does not.
+Nothing in manual testing takes files over MCP: case and step `attachments`, `attachments.add` / `remove`, result `attachments`, and run and session `attachments` are refused with a 400 and nothing is saved. Tell the user to upload them in the TestDino UI.
 
 Don't refuse the operation — the hosted path still works. Just flag the cost when the user is about to inline a local file or base64 blob, and recommend the cheaper route.
 
@@ -702,6 +697,7 @@ Deletion is not available via MCP — use the TestDino web UI.
 - Prefer counts, ratios, clusters, and representative patterns.
 - If 20 tests share a problem, say that once with prevalence.
 - Let the branch signals drive the investigation order before broad scanning.
+- A branch signal shaped `{status: "unavailable"}` (or `totalRuns: null`) means that read failed — say it could not be checked this time, never that there are none.
 
 **Pattern**:
 
@@ -766,7 +762,7 @@ get_audit_report(action="context", branch="main")
 | `testStepsDeclarationType` | string | `'Classic'` (default) or `'Gherkin'` |
 | `preconditions` | string | Setup requirements before executing |
 | `postconditions` | string | Cleanup or expected state after execution |
-| `steps` | array | Test steps (see formats below); each top-level step can include `attachments` |
+| `steps` | array | Test steps (see formats below); steps take no files (see Files on MCP) |
 | `priority` | string | `'high'`, `'medium'`, `'low'`, `'Not set'` |
 | `severity` | string | `'Blocker'`, `'critical'`, `'major'`, `'Normal'`, `'minor'`, `'trivial'`, `'Not set'` |
 | `type` | string | `'functional'`, `'smoke'`, `'regression'`, `'security'`, `'performance'`, `'e2e'`, `'Integration'`, `'API'`, `'Unit'`, `'Accessibility'`, `'Compatibility'`, `'Acceptance'`, `'Exploratory'`, `'Usability'`, `'Other'` |
@@ -775,7 +771,7 @@ get_audit_report(action="context", branch="main")
 | `automationStatus` | string | `'Manual'`, `'Automated'` |
 | `tags` | string | Comma-separated tags |
 | `flags` | array | `['To be Automated', 'Is flaky', 'Muted']` |
-| `attachments` | array | Array of URLs or local file paths (max 10MB each) |
+| `attachments` | — | Not supported: any value is refused with a 400 |
 | `customFields` | object | Key-value pairs — only if custom fields are configured in project settings |
 
 **Classic step format**:
@@ -784,8 +780,7 @@ get_audit_report(action="context", branch="main")
 {
   "action": "Click the login button",
   "expectedResult": "User is redirected to dashboard",
-  "data": "Username: testuser@example.com",
-  "attachments": ["https://example.com/step-screenshot.png"]
+  "data": "Username: testuser@example.com"
 }
 ```
 
@@ -794,8 +789,7 @@ get_audit_report(action="context", branch="main")
 ```json
 {
   "event": "Given",
-  "stepDescription": "the user is on the login page",
-  "attachments": ["https://example.com/step-screenshot.png"]
+  "stepDescription": "the user is on the login page"
 }
 ```
 
@@ -829,21 +823,8 @@ get_audit_report(action="context", branch="main")
 | `flags` | array | Automation flags/checklist |
 | `comments` | array | Comment-body strings to append — each saved as a new comment (PAT owner is author). Max 20 comments/case |
 | `issues` | array | Jira ticket keys to link, e.g. `["PROJ-123"]` — every key must resolve against the project's connected Jira; 409 `INTEGRATION_NOT_CONNECTED` if Jira is not connected, 400 if a key does not resolve |
-| `attachments` | object | `{ "add": ["url-or-path"], "remove": ["attachment-id-or-url"] }` |
+| `attachments` | — | Not supported: a non-empty `add` or `remove`, or step `attachments`, is refused with a 400 before anything changes |
 | `customFields` | object | Updated custom fields |
-
-**Important**: `attachments` uses a nested `add`/`remove` structure — you can add and remove in the same call:
-
-```json
-{
-  "attachments": {
-    "add": ["https://example.com/new-screenshot.png"],
-    "remove": ["old-attachment-id"]
-  }
-}
-```
-
-Step-level attachments are added by including `attachments` on a top-level step in `updates.steps`.
 
 ---
 
@@ -1062,7 +1043,8 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `suiteIds` | array | Suite IDs whose cases are included when `selectionMode='selected'` |
 | `includeUnsorted` | boolean | Also include cases with no suite (`selectionMode='selected'`) |
 | `tags` | array | Array of tag strings (NOT comma-separated) |
-| `linkedIssues`, `attachments`, `links` | array | Arrays of objects |
+| `linkedIssues`, `links` | array | Arrays of objects |
+| `attachments` | — | Not supported: any value is refused with a 400 |
 
 ---
 
@@ -1072,7 +1054,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `runId`, `updates` (object)
 
-`updates` accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `attachments`, `links`, `selectionMode`.
+`updates` accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `links`, `selectionMode`. Files cannot be added over MCP.
 
 **Close a run**: pass `updates.status: "closed"` — same as the UI "Close run" button (freezes the run, snapshots remaining cases for `'all'` runs, snaps state to the project's "Done" option). **Not reversible via MCP.**
 
@@ -1121,10 +1103,9 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `elapsed` | number | Seconds spent on the case |
 | `comment` | string | Rich HTML note — **triggers detailed-result mode** |
 | `linkedIssues` | array | Linked-issue objects — **triggers detailed-result mode** |
-| `attachments` | array | Attachment objects/URLs — **triggers detailed-result mode** |
 | `stepResults` | array | Per-step outcomes, e.g. `[{ "order": 1, "status": "passed", "comment": "" }]` — **triggers detailed-result mode** |
 
-**Modes**: if `updates` contains any of `comment` / `linkedIssues` / `attachments` / `stepResults`, the server logs a **full result entry** (rich note, time, issues, attachments, per-step outcomes) and advances the case's status — exactly the UI's "Add detailed result…" dialog. Otherwise it's a lightweight verdict/assignee flip recording a bare status change. Assignee changes go through the lightweight path only — combining `assigneeUserId` with any detailed-result field in one call is **rejected with a ValidationError**; make two calls (one to assign, one to record the result), mirroring the UI's separate "Assign to" and "Add detailed result…" actions.
+**Modes**: if `updates` contains any of `comment` / `linkedIssues` / `stepResults`, the server logs a **full result entry** (rich note, time, issues, per-step outcomes) and advances the case's status — exactly the UI's "Add detailed result…" dialog. Otherwise it's a lightweight verdict/assignee flip recording a bare status change. Assignee changes go through the lightweight path only — combining `assigneeUserId` with any detailed-result field in one call is **rejected with a ValidationError**; make two calls (one to assign, one to record the result), mirroring the UI's separate "Assign to" and "Add detailed result…" actions.
 
 **For multiple cases**: call this tool in parallel — one call per case. Don't try to batch in `updates`.
 
@@ -1178,7 +1159,8 @@ Step-level attachments are added by including `attachments` on a top-level step 
 | `state` | string | Workflow state (default `"new"`) |
 | `estimate` | number | Estimate in minutes |
 | `tags` | array | Array of tag strings |
-| `linkedIssues`, `attachments` | array | Arrays of objects |
+| `linkedIssues` | array | Arrays of objects |
+| `attachments` | — | Not supported: any value is refused with a 400 |
 
 **Findings** are not available via MCP — add them in the UI.
 
@@ -1190,7 +1172,7 @@ Step-level attachments are added by including `attachments` on a top-level step 
 
 **Required parameters**: `projectId`, `sessionId`, `updates` (object)
 
-`updates` accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`, `attachments`.
+`updates` accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`. Files cannot be added over MCP.
 
 **Close a session**: pass `updates.status: "closed"` — same as the UI "Close session" button (freezes it, snaps state to the project's "Done" option). **Not reversible via MCP.** Findings are not available via MCP — manage them in the UI.
 
@@ -1296,7 +1278,7 @@ GitHub is a PR/CI integration here, not an issue tracker. Never pass `provider: 
 **Key optional parameters**:
 | Parameter | Type | Description |
 |---|---|---|
-| `view` | string | `quarantined` (default), `critical`, `watched` (tests you watch), `candidates` (flaky tests that could be quarantined) |
+| `view` | string | `quarantined` (default), `critical`, `watched` (tests you watch), `candidates` (flaky tests that failed a build in the last 30 days) |
 | `state` | string | quarantined view only: `active` (default), `ending_soon`, `released` |
 | `covers` | string | quarantined view only: `any` failure or one `error` |
 | `reason` | string | with `state: "released"` only: `manual`, `healthy`, `expired`, `not_seen`, `issue_closed` |
@@ -1339,8 +1321,8 @@ If `warnings` is present, a runs list could not be loaded and is `null` — say 
 |---|---|---|
 | `ends_in_days` | number | 1–90. Default: the project's default length |
 | `assignee` | string | `"me"`, a user id or an email. Default: the test's assignee (one test) or you |
-| `only_this_error` | string | One test only: the error line to cover; other failures still fail the build |
-| `dry_run` | boolean | Creates nothing; reports what would be quarantined, skipped, and the limit |
+| `only_this_error` | string | One test only: the error line to cover, from the test's final attempt; other failures still fail the build |
+| `dry_run` | boolean | Creates nothing; reports what would be quarantined, skipped, and the limit. Does not check `only_this_error` or the assignee's membership |
 
 For more than a few tests, run with `dry_run: true` first and show the user the result. The assignee starts watching the test and is notified when it changes state.
 

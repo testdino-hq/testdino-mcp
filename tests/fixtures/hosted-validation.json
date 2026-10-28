@@ -392,19 +392,6 @@
       "text": "MCP error -32602: Input validation error: Invalid arguments for tool quarantine_tests: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"array\",\n    \"received\": \"string\",\n    \"path\": [\n      \"testcase_ids\"\n    ],\n    \"message\": \"Expected array, received string\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"reason\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be greater than or equal to 1\",\n    \"path\": [\n      \"ends_in_days\"\n    ]\n  }\n]"
     },
     {
-      "label": "step attachments item",
-      "tool": "create_manual_test_case",
-      "arguments": {
-        "title": "t",
-        "suiteName": "s",
-        "attachments": [
-          "/tmp/a.png"
-        ],
-        "projectId": "project_x"
-      },
-      "text": "MCP error -32602: Input validation error: Invalid arguments for tool create_manual_test_case: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"string\",\n    \"path\": [\n      \"attachments\",\n      0\n    ],\n    \"message\": \"Expected object, received string\"\n  }\n]"
-    },
-    {
       "label": "union",
       "tool": "submit_audit_report",
       "arguments": {

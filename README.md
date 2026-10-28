@@ -135,7 +135,7 @@ The server provides 57 tools across twelve domains, the same tools, prompts and 
 33. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
 34. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
 35. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
-36. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues, attachments.
+36. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues.
 
 **Error Analysis:**
 

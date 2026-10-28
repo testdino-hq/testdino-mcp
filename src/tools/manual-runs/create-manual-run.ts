@@ -125,48 +125,8 @@ export const createManualRunTool = {
           "Array of linked-issue objects (use the same shape returned by list_manual_runs).",
       },
       attachments: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            _id: {
-              type: "string",
-            },
-            url: {
-              type: "string",
-            },
-            blobUrl: {
-              type: "string",
-            },
-            containerName: {
-              type: "string",
-            },
-            fileName: {
-              type: "string",
-            },
-            originalFileName: {
-              type: "string",
-            },
-            fileSize: {
-              type: "number",
-            },
-            mimeType: {
-              type: "string",
-            },
-            fileContent: {
-              type: "string",
-            },
-            uploadedBy: {
-              type: "string",
-            },
-            uploadedAt: {
-              type: "string",
-            },
-          },
-          additionalProperties: true,
-        },
         description:
-          "Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.",
+          "Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI.",
       },
       links: {
         type: "array",
@@ -182,6 +142,7 @@ export const createManualRunTool = {
           },
           additionalProperties: true,
         },
+        maxItems: 50,
         description: "Array of link objects.",
       },
     },
