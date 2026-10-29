@@ -1,5 +1,5 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day.",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446).",
  "tools": [
   {
    "name": "health",
@@ -759,7 +759,7 @@
   {
    "name": "create_manual_test_case",
    "title": "Create Manual Test Case",
-   "description": "Create a new manual test case. Requires write permission. MANDATORY FIRST STEP: always call list_manual_test_suites() before this tool to get the exact suite name — suiteName must be an exact match, not approximate. Steps default to Classic format (action + expectedResult). Set testStepsDeclarationType=\"Gherkin\" if using Given/When/Then steps. Classic step shape: { action, expectedResult, data, attachments }. Gherkin step shape: { event: \"Given\"|\"When\"|\"And\"|\"Then\"|\"But\", stepDescription, attachments }. Use top-level attachments for whole-test-case files, or step.attachments for files tied to a specific step. Suggestion: attaching files via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.",
+   "description": "Create a new manual test case. Requires write permission. MANDATORY FIRST STEP: always call list_manual_test_suites() before this tool to get the exact suite name — suiteName must be an exact match, not approximate. Steps default to Classic format (action + expectedResult). Set testStepsDeclarationType=\"Gherkin\" if using Given/When/Then steps. Classic step shape: { action, expectedResult, data }. Gherkin step shape: { event: \"Given\"|\"When\"|\"And\"|\"Then\"|\"But\", stepDescription }. Files cannot be added over MCP — tell the user to upload them in the TestDino UI.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -809,48 +809,6 @@
         "data": {
          "type": "string"
         },
-        "attachments": {
-         "type": "array",
-         "items": {
-          "type": "object",
-          "properties": {
-           "_id": {
-            "type": "string"
-           },
-           "url": {
-            "type": "string"
-           },
-           "blobUrl": {
-            "type": "string"
-           },
-           "containerName": {
-            "type": "string"
-           },
-           "fileName": {
-            "type": "string"
-           },
-           "originalFileName": {
-            "type": "string"
-           },
-           "fileSize": {
-            "type": "number"
-           },
-           "mimeType": {
-            "type": "string"
-           },
-           "fileContent": {
-            "type": "string"
-           },
-           "uploadedBy": {
-            "type": "string"
-           },
-           "uploadedAt": {
-            "type": "string"
-           }
-          },
-          "additionalProperties": true
-         }
-        },
         "event": {
          "type": "string",
          "enum": [
@@ -878,8 +836,9 @@
          "type": "string"
         }
        },
-       "additionalProperties": false
-      }
+       "additionalProperties": true
+      },
+      "maxItems": 100
      },
      "priority": {
       "type": "string",
@@ -921,11 +880,7 @@
       "description": "Automation flags/checklist values."
      },
      "attachments": {
-      "type": "array",
-      "items": {
-       "$ref": "#/properties/steps/items/properties/attachments/items"
-      },
-      "description": "Whole-test-case attachments as URLs, local paths, or file data objects. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package, which read the file locally without sending bytes through the model."
+      "description": "Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI."
      },
      "customFields": {
       "type": "object",
@@ -952,7 +907,7 @@
   {
    "name": "update_manual_test_case",
    "title": "Update Manual Test Case",
-   "description": "Modify an existing manual test case. Send only the fields you want to change inside the updates object — omit everything else. Requires write permission. IMPORTANT: steps is a full replacement — passing a steps array overwrites all existing steps. Always call get_manual_test_case() first to read current steps before modifying them. For attachments use the nested shape: { add: [\"url-or-path\"], remove: [\"attachment-id\"] } — you can add and remove in the same call. Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. To add comments, pass updates.comments as an array of comment-body strings — each is appended as a new comment (PAT owner is author). Cap of 20 comments/case is enforced. To link issues, pass updates.issues as an array of ticket keys (e.g. [\"PROJ-123\",\"ENG-9\"]). Every key is looked up in the project's connected trackers (Jira and/or Linear) and must resolve in exactly one — the whole call fails with 409 INTEGRATION_NOT_CONNECTED when neither is connected (tell the user to connect Jira or Linear in Settings → Integrations), 400 naming a key that exists in both trackers (pass that entry as { \"provider\": \"jira\" | \"linear\", \"displayId\": \"KEY\" } instead of a bare string), or 400 naming the keys that do not resolve. Nothing is written unless all keys resolve. Duplicate displayIds on the case are skipped.",
+   "description": "Modify an existing manual test case. Send only the fields you want to change inside the updates object — omit everything else. Requires write permission. IMPORTANT: steps is a full replacement — passing a steps array overwrites all existing steps. Always call get_manual_test_case() first to read current steps before modifying them. Files cannot be added or removed over MCP — tell the user to use the TestDino UI. To add comments, pass updates.comments as an array of comment-body strings — each is appended as a new comment (PAT owner is author). Cap of 20 comments/case is enforced. To link issues, pass updates.issues as an array of ticket keys (e.g. [\"PROJ-123\",\"ENG-9\"]). Every key is looked up in the project's connected trackers (Jira and/or Linear) and must resolve in exactly one — the whole call fails with 409 INTEGRATION_NOT_CONNECTED when neither is connected (tell the user to connect Jira or Linear in Settings → Integrations), 400 naming a key that exists in both trackers (pass that entry as { \"provider\": \"jira\" | \"linear\", \"displayId\": \"KEY\" } instead of a bare string), or 400 naming the keys that do not resolve. Nothing is written unless all keys resolve. Duplicate displayIds on the case are skipped.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -967,7 +922,7 @@
      "updates": {
       "type": "object",
       "additionalProperties": {},
-      "description": "Fields to update: title (alias: name), description, preconditions, postconditions, status, steps, priority, severity, type, layer, behavior, automationStatus, tags, flags, attachments {add, remove}, customFields, comments (array of strings to append), issues (array of ticket keys to link, resolved against the connected Jira / Linear)…"
+      "description": "Fields to update: title (alias: name), description, preconditions, postconditions, status, steps, priority, severity, type, layer, behavior, automationStatus, tags, flags, customFields, comments (array of strings to append), issues (array of ticket keys to link, resolved against the connected Jira / Linear)…"
      }
     },
     "required": [
@@ -1779,47 +1734,7 @@
       "description": "Array of linked-issue objects (use the same shape returned by list_manual_runs)."
      },
      "attachments": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "properties": {
-        "_id": {
-         "type": "string"
-        },
-        "url": {
-         "type": "string"
-        },
-        "blobUrl": {
-         "type": "string"
-        },
-        "containerName": {
-         "type": "string"
-        },
-        "fileName": {
-         "type": "string"
-        },
-        "originalFileName": {
-         "type": "string"
-        },
-        "fileSize": {
-         "type": "number"
-        },
-        "mimeType": {
-         "type": "string"
-        },
-        "fileContent": {
-         "type": "string"
-        },
-        "uploadedBy": {
-         "type": "string"
-        },
-        "uploadedAt": {
-         "type": "string"
-        }
-       },
-       "additionalProperties": true
-      },
-      "description": "Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package."
+      "description": "Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI."
      },
      "links": {
       "type": "array",
@@ -1835,6 +1750,7 @@
        },
        "additionalProperties": true
       },
+      "maxItems": 50,
       "description": "Array of link objects."
      }
     },
@@ -1856,7 +1772,7 @@
   {
    "name": "update_manual_run",
    "title": "Update Manual Test Run",
-   "description": "Modify an existing manual test run. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. Pass updates.status=\"closed\" to close the run (same as the UI \"Close run\" button: freezes it, snapshots remaining cases, snaps state to the project's \"Done\" option). This is not reversible via MCP. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"smoke\",\"regression\"] — NOT a comma-separated string.",
+   "description": "Modify an existing manual test run. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. Pass updates.status=\"closed\" to close the run (same as the UI \"Close run\" button: freezes it, snapshots remaining cases, snaps state to the project's \"Done\" option). This is not reversible via MCP. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"smoke\",\"regression\"] — NOT a comma-separated string.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -1871,7 +1787,7 @@
      "updates": {
       "type": "object",
       "additionalProperties": {},
-      "description": "Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, attachments, links, selectionMode. status=\"closed\" closes the run."
+      "description": "Fields to update: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. status=\"closed\" closes the run."
      }
     },
     "required": [
@@ -1965,7 +1881,7 @@
   {
    "name": "update_run_test_case",
    "title": "Update Test Case In A Run",
-   "description": "Update one test case inside a manual run. Two modes, same tool: (1) Quick verdict — pass updates.assigneeUserId and/or updates.result/status to do what clicking \"Assign to\" and the result pill does in the UI. (2) Detailed result — additionally pass any of updates.comment (rich HTML), updates.linkedIssues, updates.attachments, updates.stepResults to record a full result entry, exactly like the UI's \"Add detailed result…\" dialog. Whenever any of those rich fields are present the server logs a complete result instead of a bare status change. NOTE: combining updates.assigneeUserId with any detailed-result field in one call is rejected — make two calls (one to assign, one to record the result), mirroring the UI's separate \"Assign to\" and \"Add detailed result…\" actions. Requires write permission. rtcRef accepts the caseKey (\"TC-156\"), the internal `tcm_rtc_...` RTC ID, or the underlying test case _id. Works for both already-touched cases and \"untested\" virtual cases (the server auto-creates the per-case record on first edit). Closed runs reject result writes. IMPORTANT: send updates.assigneeUserId as an email OR User _id — both are accepted. updates.result accepts the UI labels — the canonical values are \"untested\", \"passed\", \"failed\", \"blocked\", \"skipped\", \"retest\". Pass display (\"Passed\", \"Blocked\") or canonical (\"passed\", \"blocked\") form — the server normalizes lowercase+underscored. To update multiple cases at once, call this tool in parallel (one call per case). Suggestion: attaching files via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package.",
+   "description": "Update one test case inside a manual run. Two modes, same tool: (1) Quick verdict — pass updates.assigneeUserId and/or updates.result/status to do what clicking \"Assign to\" and the result pill does in the UI. (2) Detailed result — additionally pass any of updates.comment (rich HTML), updates.linkedIssues, updates.stepResults to record a full result entry, exactly like the UI's \"Add detailed result…\" dialog. Whenever any of those rich fields are present the server logs a complete result instead of a bare status change. NOTE: combining updates.assigneeUserId with any detailed-result field in one call is rejected — make two calls (one to assign, one to record the result), mirroring the UI's separate \"Assign to\" and \"Add detailed result…\" actions. Requires write permission. rtcRef accepts the caseKey (\"TC-156\"), the internal `tcm_rtc_...` RTC ID, or the underlying test case _id. Works for both already-touched cases and \"untested\" virtual cases (the server auto-creates the per-case record on first edit). Closed runs reject result writes. IMPORTANT: send updates.assigneeUserId as an email OR User _id — both are accepted. updates.result accepts the UI labels — the canonical values are \"untested\", \"passed\", \"failed\", \"blocked\", \"skipped\", \"retest\". Pass display (\"Passed\", \"Blocked\") or canonical (\"passed\", \"blocked\") form — the server normalizes lowercase+underscored. To update multiple cases at once, call this tool in parallel (one call per case). Files cannot be added to a result over MCP — tell the user to use the TestDino UI.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -1984,7 +1900,7 @@
      "updates": {
       "type": "object",
       "additionalProperties": {},
-      "description": "Quick verdict: assigneeUserId (email or _id; null to unassign), result/status (display or canonical), elapsed (seconds). Detailed result (any of these triggers a full result entry): comment (rich HTML), linkedIssues (array of linked-issue objects), attachments (array of attachment objects/URLs), stepResults (array, e.g. [{ \"order\": 1, \"status\": \"passed\", \"comment\": \"\" }]), configuration (the browser/platform this result is for). configuration is REQUIRED when the run covers more than one browser — a result naming none belongs to no cell and is rejected."
+      "description": "Quick verdict: assigneeUserId (email or _id; null to unassign), result/status (display or canonical), elapsed (seconds). Detailed result (any of these triggers a full result entry): comment (rich HTML), linkedIssues (array of linked-issue objects), stepResults (array, e.g. [{ \"order\": 1, \"status\": \"passed\", \"comment\": \"\" }]), configuration (the browser/platform this result is for). configuration is REQUIRED when the run covers more than one browser — a result naming none belongs to no cell and is rejected."
      }
     },
     "required": [
@@ -2199,47 +2115,7 @@
       "description": "Array of linked-issue objects (same shape as list_sessions returns)."
      },
      "attachments": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "properties": {
-        "_id": {
-         "type": "string"
-        },
-        "url": {
-         "type": "string"
-        },
-        "blobUrl": {
-         "type": "string"
-        },
-        "containerName": {
-         "type": "string"
-        },
-        "fileName": {
-         "type": "string"
-        },
-        "originalFileName": {
-         "type": "string"
-        },
-        "fileSize": {
-         "type": "number"
-        },
-        "mimeType": {
-         "type": "string"
-        },
-        "fileContent": {
-         "type": "string"
-        },
-        "uploadedBy": {
-         "type": "string"
-        },
-        "uploadedAt": {
-         "type": "string"
-        }
-       },
-       "additionalProperties": true
-      },
-      "description": "Array of attachment objects or URLs. Suggestion: attaching files via the hosted MCP can be token-expensive (the base64 payload flows through the LLM context). For lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package."
+      "description": "Not supported over MCP: any value is refused with a 400. Tell the user to upload files in the TestDino UI."
      }
     },
     "required": [
@@ -2260,7 +2136,7 @@
   {
    "name": "update_session",
    "title": "Update Exploratory Session",
-   "description": "Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. Pass updates.status=\"closed\" to close the session (same as the UI \"Close session\" button: freezes it, snaps state to the project's \"Done\" option). This is not reversible via MCP. Suggestion: adding attachments via the hosted MCP can be token-expensive — for lower token usage, consider the TestDino UI or the local `testdino-mcp` npm package. IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"exploratory\",\"auth\"] — NOT a comma-separated string.",
+   "description": "Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. Pass updates.status=\"closed\" to close the session (same as the UI \"Close session\" button: freezes it, snaps state to the project's \"Done\" option). This is not reversible via MCP. Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. [\"exploratory\",\"auth\"] — NOT a comma-separated string.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -2275,7 +2151,7 @@
      "updates": {
       "type": "object",
       "additionalProperties": {},
-      "description": "Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues, attachments. status=\"closed\" closes the session."
+      "description": "Fields to update: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. status=\"closed\" closes the session."
      }
     },
     "required": [
@@ -2516,7 +2392,8 @@
        "minLength": 1
       },
       "minItems": 1,
-      "description": "External issue IDs or keys."
+      "maxItems": 20,
+      "description": "External issue IDs or keys (at most 20)."
      },
      "target": {
       "type": "object",
@@ -2901,7 +2778,7 @@
   {
    "name": "list_test_controls",
    "title": "List Test Controls",
-   "description": "List the tests under Test Controls in a project, as the Test Controls page shows them. view \"quarantined\" (default) lists quarantines — filter by state (active, ending_soon, released), covers (any failure or one error) and, for released ones, reason; the response includes the quarantine budget. view \"critical\" lists tests marked critical, view \"watched\" lists the tests you watch, view \"candidates\" lists flaky tests that could be quarantined. search matches the test title or file; assignee takes \"me\", a user id or an email. Quarantine settings (budget, default length, auto-release) are changed only in the app, not here.",
+   "description": "List the tests under Test Controls in a project, as the Test Controls page shows them. view \"quarantined\" (default) lists quarantines — filter by state (active, ending_soon, released), covers (any failure or one error) and, for released ones, reason; the response includes the quarantine budget. view \"critical\" lists tests marked critical, view \"watched\" lists the tests you watch, view \"candidates\" lists flaky tests that failed a build in the last 30 days (a test that always passed on retry is not listed, since quarantining it would change nothing). search matches the test title or file; assignee takes \"me\", a user id or an email. Quarantine settings (budget, default length, auto-release) are changed only in the app, not here.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -2935,6 +2812,7 @@
      },
      "assignee": {
       "type": "string",
+      "maxLength": 254,
       "description": "\"me\", a user id or an email. Not for the candidates view"
      },
      "covers": {
@@ -3045,7 +2923,7 @@
   {
    "name": "quarantine_tests",
    "title": "Quarantine Tests",
-   "description": "Call this only when the user asks for it. Quarantine 1 to 100 tests: until the end date, their failures stop failing the build (they still run and are reported). reason is required and becomes the quarantine note. ends_in_days defaults to the project's default length. assignee defaults to the test's assignee for one test, else to you; the assignee also starts watching the test and is notified when it changes state. only_this_error (one test only) takes an error line and covers only failures with that error; other failures still fail the build. dry_run: true creates nothing and reports what would be quarantined, what would be skipped and why, and the quarantine limit — use it before a large quarantine. Several tests are all-or-nothing against the limit; already quarantined tests are skipped. A quarantine cannot be deleted, only released.",
+   "description": "Call this only when the user asks for it. Quarantine 1 to 100 tests: until the end date, their failures stop failing the build (they still run and are reported). reason is required and becomes the quarantine note. ends_in_days defaults to the project's default length. assignee defaults to the test's assignee for one test, else to you; the assignee also starts watching the test and is notified when it changes state. only_this_error (one test only) takes an error line and covers only failures with that error; other failures still fail the build. Pass the error of the test's final attempt, the one the build is judged on. dry_run: true creates nothing and reports what would be quarantined, what would be skipped and why, and the quarantine limit — use it before a large quarantine. It does not check only_this_error or that the assignee is a project member; the real call does. Several tests are all-or-nothing against the limit; already quarantined tests are skipped. A quarantine cannot be deleted, only released.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -3083,7 +2961,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 4096,
-      "description": "The error line to cover; one test only"
+      "description": "The error line to cover, from the test's final attempt; one test only"
      },
      "dry_run": {
       "type": "boolean"
@@ -3138,7 +3016,7 @@
      },
      "issue_key": {
       "type": "string",
-      "maxLength": 128,
+      "maxLength": 64,
       "description": "Ticket key, e.g. \"TD-123\""
      },
      "issue_url": {
@@ -3647,5 +3525,5 @@
    ]
   }
  },
- "guideSha256": "f1558cd841e62af45ab645ca247b5d26d7fb0d7466cff0b78eb72bc2d86bf0ef"
+ "guideSha256": "c8e198a5e23d046f69213449c24005208071d820d88b222e32c21d100543b9fe"
 }

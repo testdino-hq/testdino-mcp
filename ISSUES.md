@@ -27,6 +27,7 @@ Severity levels: `CRITICAL` | `HIGH` | `IMPORTANT` | `MEDIUM` | `LOW`
 | ISS-015 | HIGH      | FIXED  | Transport parity: 13 tools + resource/prompt drifted from the streaming MCP (phantom params, missing params, wrong shapes)  |
 | ISS-016 | HIGH      | FIXED  | A dropped connection failed the tool call outright, and a 429 never said how long to wait                                   |
 | ISS-017 | MEDIUM    | FIXED  | debug_testcase / verify_fix could not name a test by id, so a title shared across Playwright projects 409'd with no way out |
+| ISS-018 | MEDIUM    | FIXED  | Manual-testing tools offered attachments the TestDino server refuses or drops                                               |
 
 ---
 
@@ -347,3 +348,18 @@ if (!args?.projectId) {
 
 **Files:** `src/tools/testcases/debug-testcase.ts`, `src/tools/testcases/verify-fix.ts`, `src/tools/testcases/get-debug-evidence.ts`, `src/lib/endpoints.ts`, `docs/TOOLS.md`, `docs/skill.md`
 **Tests:** `tests/unit/tools/testcases/debug-testcase.test.ts` and `verify-fix.test.ts` — an id-only call sends `testcase_id` and no name; a call naming neither is rejected (all failed before the fix).
+
+---
+
+## ISS-018: Manual-Testing Tools Offered Attachments the Server Refuses (MEDIUM)
+
+**Status:** FIXED (2026-10-28)
+
+**Symptoms:** `create_manual_test_case`, `update_manual_test_case`, `update_run_test_case`, `create_manual_run`, `update_manual_run`, `create_session` and `update_session` told agents to send attachments (URLs, local paths, file objects, `{ add, remove }`). The TestDino server stores none of them through MCP: some were refused, some were dropped while the call reported success, and a refused case-level attachment still left the case behind.
+
+**Root cause:** the tool definitions and `docs/skill.md` were copied from a hosted catalogue that predates the server refusing them (microservices TCM-4, TCM-53, TCM-153, TCM-154; MCP ISS-081).
+
+**Fix:** re-synced from the hosted MCP (microservices PR #1446, `docs/tcm-issue-sync` @ `90193bcd0`): the 7 tools no longer offer attachments, the create tools mark `attachments` unsupported, and a stray value is forwarded so the server's `400` reaches the agent. The same sync brings 4 unrelated hosted updates the package had not copied yet (`get_external_issue`, `list_test_controls`, `quarantine_tests`, `update_quarantine` limits and descriptions).
+
+**Files:** the 11 tool files, `docs/skill.md`, `docs/TOOLS.md`, `README.md`, `tests/fixtures/hosted-catalogue.json`, `tests/fixtures/hosted-validation.json`
+**Tests:** `tests/unit/parity/` — the catalogue matches the refreshed hosted definitions; `dispatch.test.ts` checks a stray attachment is forwarded and the server's refusal surfaces as an error.

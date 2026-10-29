@@ -41,7 +41,8 @@ export const getExternalIssueTool = {
           minLength: 1,
         },
         minItems: 1,
-        description: "External issue IDs or keys.",
+        maxItems: 20,
+        description: "External issue IDs or keys (at most 20).",
       },
       target: {
         type: "object",

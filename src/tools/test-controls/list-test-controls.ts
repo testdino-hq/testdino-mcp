@@ -5,7 +5,7 @@ export const listTestControlsTool = {
   name: "list_test_controls",
   title: "List Test Controls",
   description:
-    'List the tests under Test Controls in a project, as the Test Controls page shows them. view "quarantined" (default) lists quarantines — filter by state (active, ending_soon, released), covers (any failure or one error) and, for released ones, reason; the response includes the quarantine budget. view "critical" lists tests marked critical, view "watched" lists the tests you watch, view "candidates" lists flaky tests that could be quarantined. search matches the test title or file; assignee takes "me", a user id or an email. Quarantine settings (budget, default length, auto-release) are changed only in the app, not here.',
+    'List the tests under Test Controls in a project, as the Test Controls page shows them. view "quarantined" (default) lists quarantines — filter by state (active, ending_soon, released), covers (any failure or one error) and, for released ones, reason; the response includes the quarantine budget. view "critical" lists tests marked critical, view "watched" lists the tests you watch, view "candidates" lists flaky tests that failed a build in the last 30 days (a test that always passed on retry is not listed, since quarantining it would change nothing). search matches the test title or file; assignee takes "me", a user id or an email. Quarantine settings (budget, default length, auto-release) are changed only in the app, not here.',
   inputSchema: {
     type: "object",
     properties: {
@@ -30,6 +30,7 @@ export const listTestControlsTool = {
       },
       assignee: {
         type: "string",
+        maxLength: 254,
         description: '"me", a user id or an email. Not for the candidates view',
       },
       covers: {

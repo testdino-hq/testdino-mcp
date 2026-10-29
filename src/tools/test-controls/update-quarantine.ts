@@ -35,7 +35,7 @@ export const updateQuarantineTool = {
       },
       issue_key: {
         type: "string",
-        maxLength: 128,
+        maxLength: 64,
         description: 'Ticket key, e.g. "TD-123"',
       },
       issue_url: {

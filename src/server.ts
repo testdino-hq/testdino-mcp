@@ -199,7 +199,7 @@ export function createServer(): Server {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.2.1",
+      version: "2.2.2",
     },
     {
       capabilities: {
