@@ -208,3 +208,84 @@ describe("attachments", () => {
     expect(sentBody(fetchMock).attachments).toEqual([attachment]);
   });
 });
+
+// The hosted route answers with the hosted tool result itself; the package must hand it over
+// unchanged so an MCP Apps host renders the same card and every other host shows the same text.
+describe("MCP Apps audit card", () => {
+  const card = {
+    content: [
+      { type: "text", text: "TestDino audit on main: 91/100 · Strong." },
+    ],
+    structuredContent: { schemaVersion: 1, score: 91, band: "Strong" },
+  };
+
+  it("returns the hosted show_audit_report result unchanged", async () => {
+    const fetchMock = respond(200, card);
+    const result = await client.callTool({
+      name: "show_audit_report",
+      arguments: { projectId: P, reportId: "audit_1" },
+    });
+    expect(result).toEqual(card);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(url).toMatch(/\/api\/mcp\/project_x\/audit-card\?reportId=audit_1$/);
+    expect(init.headers.Authorization).toBe("Bearer td_pat_test");
+  });
+
+  it("returns the hosted 'not found' result as is, not a reshaped API error", async () => {
+    const notFound = {
+      content: [{ type: "text", text: "Audit report not found." }],
+      isError: true,
+    };
+    respond(404, notFound);
+    const result = await client.callTool({
+      name: "show_audit_report",
+      arguments: { projectId: P, reportId: "audit_missing" },
+    });
+    expect(result).toEqual(notFound);
+  });
+
+  it("answers a scope refusal like every other tool", async () => {
+    respond(403, {
+      success: false,
+      error: { code: "FORBIDDEN", message: "no" },
+    });
+    const result = await client.callTool({
+      name: "show_audit_report",
+      arguments: { projectId: P },
+    });
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("FORBIDDEN");
+  });
+
+  it("reads the card resource from the hosted MCP with the PAT", async () => {
+    const contents = [
+      {
+        uri: "ui://testdino/audit-report/v1",
+        mimeType: "text/html;profile=mcp-app",
+        text: "<html><script></script></html>",
+        _meta: { ui: { csp: {}, prefersBorder: false } },
+      },
+    ];
+    const fetchMock = respond(200, { contents });
+    const result = await client.readResource({
+      uri: "ui://testdino/audit-report/v1",
+    });
+    expect(result.contents).toEqual(contents);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(url).toMatch(/\/api\/mcp\/ui\/audit-report$/);
+    expect(init.headers.Authorization).toBe("Bearer td_pat_test");
+  });
+
+  it("reports the card resource as unavailable when the hosted MCP cannot serve it", async () => {
+    respond(404, { success: false, message: "Audit card is not available" });
+    await expect(
+      client.readResource({ uri: "ui://testdino/audit-report/v1" })
+    ).rejects.toThrow(/Resource unavailable/);
+  });
+});

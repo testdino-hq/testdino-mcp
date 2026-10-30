@@ -10,7 +10,9 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync } from "fs";
-import { ApiError } from "./lib/request.js";
+import { ApiError, apiRequestJson } from "./lib/request.js";
+import { endpoints } from "./lib/endpoints.js";
+import { getApiKey } from "./lib/env.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
 import {
   applyHostedTransforms,
@@ -40,6 +42,9 @@ import {
   handleGetAuditReport,
   submitAuditReportTool,
   handleSubmitAuditReport,
+  AUDIT_REPORT_URI,
+  showAuditReportTool,
+  handleShowAuditReport,
   listManualTestCasesTool,
   handleListManualTestCases,
   getManualTestCaseTool,
@@ -185,6 +190,9 @@ function asHostedResult(result: {
   }
 }
 
+// Tools whose route returns the hosted tool result itself, not an API body to reshape.
+const PASSTHROUGH_TOOLS = new Set(["show_audit_report"]);
+
 function errorResult(error: unknown): ToolResult {
   for (let e: unknown = error; e instanceof Error; e = e.cause) {
     if (e instanceof ApiError) {
@@ -199,7 +207,7 @@ export function createServer(): Server {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.2.2",
+      version: "2.2.3",
     },
     {
       capabilities: {
@@ -223,6 +231,7 @@ export function createServer(): Server {
     debugTestCaseTool,
     getAuditReportTool,
     submitAuditReportTool,
+    showAuditReportTool,
     listManualTestCasesTool,
     getManualTestCaseTool,
     createManualTestCaseTool,
@@ -292,6 +301,21 @@ export function createServer(): Server {
           description: SKILLS_DESCRIPTION,
           mimeType: "text/markdown",
         },
+        // The MCP Apps audit scorecard, listed exactly as the hosted resources/list lists it.
+        {
+          name: "testdino_audit_report_view",
+          title: "TestDino audit scorecard",
+          uri: "ui://testdino/audit-report/v1",
+          description:
+            "Scorecard view of a saved TestDino Playwright audit report.",
+          mimeType: "text/html;profile=mcp-app",
+          _meta: {
+            ui: {
+              csp: {},
+              prefersBorder: false,
+            },
+          },
+        },
       ],
     };
   });
@@ -299,8 +323,24 @@ export function createServer(): Server {
   /**
    * Read resource content
    */
-  server.setRequestHandler(ReadResourceRequestSchema, (request) => {
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
+
+    // The card's HTML comes from the hosted MCP, so the package never carries its own copy.
+    if (uri === AUDIT_REPORT_URI) {
+      const token = getApiKey();
+      try {
+        return await apiRequestJson<{ contents: unknown[] }>(
+          endpoints.auditCardResource(),
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Resource unavailable: ${AUDIT_REPORT_URI}`
+        );
+      }
+    }
 
     if (uri === SKILLS_GUIDE_URI) {
       let content: string;
@@ -417,6 +457,12 @@ export function createServer(): Server {
     if (name === "get_audit_report") {
       return await handleGetAuditReport(
         args as Parameters<typeof handleGetAuditReport>[0]
+      );
+    }
+
+    if (name === "show_audit_report") {
+      return await handleShowAuditReport(
+        args as Parameters<typeof handleShowAuditReport>[0]
       );
     }
 
@@ -701,6 +747,10 @@ export function createServer(): Server {
       ]);
     }
     try {
+      // The hosted route already answers with the finished tool result.
+      if (PASSTHROUGH_TOOLS.has(name)) {
+        return (await dispatch(name, args)) as ToolResult;
+      }
       return asHostedResult(await dispatch(name, args));
     } catch (error) {
       return errorResult(error);

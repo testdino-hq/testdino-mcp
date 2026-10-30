@@ -81,7 +81,7 @@ All through simple conversational commands.
 
 ### Available Tools
 
-The server provides 57 tools across twelve domains, the same tools, prompts and skills guide as the hosted TestDino MCP:
+The server provides 58 tools across twelve domains, the same tools, prompts and skills guide as the hosted TestDino MCP:
 
 **Test Execution & Results:**
 
@@ -96,89 +96,90 @@ The server provides 57 tools across twelve domains, the same tools, prompts and 
 9. **`verify_fix`** - After a new run lands, check whether a fix held against the run you saw the failure in: `fixed`, `not_fixed`, `changed_failure`, `still_failing`, `unstable`, `no_runs_since_baseline`, or `baseline_not_found`.
 10. **`get_audit_report`** - Fetch the audit context (server-curated prompt + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
 11. **`submit_audit_report`** - Submit a completed audit report (score, findings, recommendations, markdown) to TestDino.
+12. **`show_audit_report`** - Show a saved audit as a scorecard: score and band, where the points were lost, the top issues, and a link to the report. AI tools that render MCP Apps show it as a card; others get a one-paragraph summary.
 
 **Test Case Management:**
 
-12. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
-13. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
-14. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
-15. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
-16. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
-17. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
+13. **`list_manual_test_cases`** - Search and list manual test cases with comprehensive filtering (project, suite, status, priority, severity, type, layer, behavior, automation status, tags, flaky status).
+14. **`get_manual_test_case`** - Get detailed information about a specific manual test case including steps, custom fields, preconditions, postconditions, and all metadata.
+15. **`create_manual_test_case`** - Create new manual test cases with steps, preconditions, postconditions, and metadata (priority, severity, type, layer, behavior).
+16. **`update_manual_test_case`** - Update existing manual test cases (title, description, steps, status, priority, severity, type, layer, behavior, preconditions, postconditions).
+17. **`list_manual_test_suites`** - List test suite hierarchy to find suite IDs for organization. Supports filtering by parent suite.
+18. **`create_manual_test_suite`** - Create new test suite folders to organize test cases. Supports nested suites by providing parentSuiteId.
 
 **Automation Linking:**
 
-18. **`list_automated_tests`** - List the Playwright tests TestDino has seen for a project, the source of `pwTestId` + `fullTitle` for linking. Filter by spec file, suite, or free-text title.
-19. **`get_test_case_links`** - Show which automated tests are linked to a manual test case, with their latest automation result.
-20. **`link_automated_test`** - Link one Playwright test to a manual test case so its automation result shows on the case.
-21. **`unlink_automated_test`** - Remove a link between a manual test case and a Playwright test.
-22. **`bulk_link_automated_tests`** - Link up to 500 case/test pairs in one call, with per-item results so a partial failure is visible.
+19. **`list_automated_tests`** - List the Playwright tests TestDino has seen for a project, the source of `pwTestId` + `fullTitle` for linking. Filter by spec file, suite, or free-text title.
+20. **`get_test_case_links`** - Show which automated tests are linked to a manual test case, with their latest automation result.
+21. **`link_automated_test`** - Link one Playwright test to a manual test case so its automation result shows on the case.
+22. **`unlink_automated_test`** - Remove a link between a manual test case and a Playwright test.
+23. **`bulk_link_automated_tests`** - Link up to 500 case/test pairs in one call, with per-item results so a partial failure is visible.
 
 **Releases (a.k.a. Milestones):**
 
-23. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
-24. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
-25. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
-26. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
+24. **`list_releases`** - Browse releases for a project with filters (search, type, completion status, parent release). Releases group runs + sessions and can nest up to 3 levels deep.
+25. **`get_release`** - Get full details for one release including dates, status, parent/root hierarchy, and rolled-up progress stats across all runs in this release and its descendants. Accepts internal `_id` or counter-style ID like `MS-12`.
+26. **`create_release`** - Create a new release with name, type, dates, and optional parent for nesting.
+27. **`update_release`** - Modify an existing release — name, dates, completion flags, type, linked issues. Closed releases are still editable.
 
 **Manual Test Runs:**
 
-27. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
-28. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
-29. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
-30. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
-31. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
-32. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
+28. **`list_manual_runs`** - Browse manual runs in a project. Filter by status, state, environment, release, tags, or free-text name search.
+29. **`get_manual_run`** - Get full details for one run — test stats (total/passed/failed/blocked/untested), contributors, attachments, linked release. Accepts internal `_id` or counter-style ID like `RUN-12`.
+30. **`create_manual_run`** - Create a new manual run. Choose `selectionMode='all'` for every case in the project, or `'selected'` with suite/case IDs to scope it. Attach to a release with `releaseId`.
+31. **`update_manual_run`** - Modify run metadata — name, environment, state, release attachment, tags. Closed runs are read-only except for `releaseId`.
+32. **`list_run_test_cases`** - Get the per-case execution rows inside a run — exactly what the UI shows in the run's test-case table. Each row includes the current assignee and current result. Filter by assignee (email or \_id) or result.
+33. **`update_run_test_case`** - Set the assignee and/or result for one test case inside a run — same as clicking "Assign to" + the result pill in the UI. Works even on untested cases (auto-creates the per-case row on first edit). Accepts caseKey (`TC-156`), test case _id, or the internal `tcm_rtc_…` ID.
 
 **Exploratory Sessions:**
 
-33. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
-34. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
-35. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
-36. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues.
+34. **`list_sessions`** - Browse exploratory sessions in a project. Filter by status, state, sessionType, assignee (email or \_id), release, tags.
+35. **`get_session`** - Get full details for one session — name, mission, status, assignee, linked release, findings. Accepts internal `_id` or counter-style ID like `SES-12`.
+36. **`create_session`** - Create a new exploratory session with mission/charter, sessionType, assignee, estimate, and optional release attachment.
+37. **`update_session`** - Modify session metadata — name, mission, assignee, state, estimate, linked issues.
 
 **Error Analysis:**
 
-37. **`get_run_error_clusters`** - Group a run's failing tests by error signature to triage at scale. Surfaces clusters of tests that share the same root-cause error, with an optional `status` filter (`all`, `failed`, `flaky`). Use it after `list_testruns` to understand why a run failed.
+38. **`get_run_error_clusters`** - Group a run's failing tests by error signature to triage at scale. Surfaces clusters of tests that share the same root-cause error, with an optional `status` filter (`all`, `failed`, `flaky`). Use it after `list_testruns` to understand why a run failed.
 
 **Integrations (Issue Trackers):**
 
-38. **`connect_integration`** - Return an OAuth connect URL for a provider (Jira, Linear, Asana, monday.com, GitHub). Show the URL to the user to authorize; do not open it programmatically.
-39. **`get_integration_status`** - Report whether a provider is connected for a project. Set `includeCreateOptions` to also fetch the fields available for issue creation. Call this before `create_external_issue`.
-40. **`create_external_issue`** - File an issue in a connected tracker (Jira, Linear, Asana, monday.com) from a TestDino source entity such as a failing test case or run. Supports `preview` and idempotent retries via `idempotencyKey`.
-41. **`get_external_issue`** - Fetch previously created issues by their IDs or keys (one or many) and return their current status in the provider (Jira, Linear, Asana).
+39. **`connect_integration`** - Return an OAuth connect URL for a provider (Jira, Linear, Asana, monday.com, GitHub). Show the URL to the user to authorize; do not open it programmatically.
+40. **`get_integration_status`** - Report whether a provider is connected for a project. Set `includeCreateOptions` to also fetch the fields available for issue creation. Call this before `create_external_issue`.
+41. **`create_external_issue`** - File an issue in a connected tracker (Jira, Linear, Asana, monday.com) from a TestDino source entity such as a failing test case or run. Supports `preview` and idempotent retries via `idempotencyKey`.
+42. **`get_external_issue`** - Fetch previously created issues by their IDs or keys (one or many) and return their current status in the provider (Jira, Linear, Asana).
 
 > **Provider support**: All providers can be connected and status-checked. Issue **creation** works with Jira, Linear, Asana, and monday.com. Issue **read-back** works with Jira, Linear, and Asana. GitHub is supported as a PR/CI integration, not an issue tracker.
 
 **AI Insights:**
 
-42. **`get_ai_insights`** - TestDino's AI analysis at three levels: project overview (per-category failure counts + top offenders over a date range), run (AI failure categorization, failure clusters, error-analysis table, LLM-written summary), and test case (recommendations + quick fixes). Returns a `disabled` status when AI features are turned off for the project (Settings → AI).
-43. **`get_trace_analysis`** - Resolve a failing test's hosted Playwright trace to a short-lived download URL and return a runbook for local trace-CLI debugging (open → actions → snapshot → close).
+43. **`get_ai_insights`** - TestDino's AI analysis at three levels: project overview (per-category failure counts + top offenders over a date range), run (AI failure categorization, failure clusters, error-analysis table, LLM-written summary), and test case (recommendations + quick fixes). Returns a `disabled` status when AI features are turned off for the project (Settings → AI).
+44. **`get_trace_analysis`** - Resolve a failing test's hosted Playwright trace to a short-lived download URL and return a runbook for local trace-CLI debugging (open → actions → snapshot → close).
 
 **Re-run:**
 
-44. **`get_rerun_selection`** - Work out which of a finished run's tests a re-run would execute — failed, flaky, both, or a hand-picked list — as the exact Playwright `--test-list` lines plus the CLI command that runs them locally. Also returns `rerun_mechanism`: whether a same-commit re-run would happen **inside the run's own GitHub run** (so that red check can turn green) or start a separate workflow run, and why. Read-only; nothing runs.
-45. **`rerun_test`** - Start the re-run in CI. Needs `confirm: true` after the user says yes, and needs `mode` — `same-commit` (the commit that failed: are these failures real, or flaky?) or `latest` (the branch tip: did my fix work?). There is **no default mode**; an omitted one is refused so the choice reaches the user. Every refusal happens before anything is dispatched.
+45. **`get_rerun_selection`** - Work out which of a finished run's tests a re-run would execute — failed, flaky, both, or a hand-picked list — as the exact Playwright `--test-list` lines plus the CLI command that runs them locally. Also returns `rerun_mechanism`: whether a same-commit re-run would happen **inside the run's own GitHub run** (so that red check can turn green) or start a separate workflow run, and why. Read-only; nothing runs.
+46. **`rerun_test`** - Start the re-run in CI. Needs `confirm: true` after the user says yes, and needs `mode` — `same-commit` (the commit that failed: are these failures real, or flaky?) or `latest` (the branch tip: did my fix work?). There is **no default mode**; an omitted one is refused so the choice reaches the user. Every refusal happens before anything is dispatched.
 
 > **Ask first.** Call `get_rerun_selection`, show the user what would run and what `rerun_mechanism` says, then ask which mode they want. Re-runs cost CI minutes.
 
 **Test Controls (quarantine, critical, assignee, watch):**
 
-46. **`list_test_controls`** - List the tests under Test Controls as the Test Controls page shows them: quarantined (active, ending soon, released), critical, the tests you watch, or flaky candidates for quarantine.
-47. **`get_test_controls`** - One test's assignee, critical flag, watch state and active quarantine, plus the runs a quarantine kept from failing in the last 90 days.
-48. **`get_quarantine`** - One quarantine with its full history and the runs it covered.
-49. **`quarantine_tests`** - Quarantine 1–100 tests until an end date, with a required reason; `dry_run` shows what would happen first.
-50. **`update_quarantine`** - Extend a quarantine, change its assignee or note, or link a ticket.
-51. **`release_quarantine`** - End a quarantine now; the test's failures fail the build again.
-52. **`set_test_critical`** - Mark or unmark a test critical (owners and admins).
-53. **`assign_test`** - Assign a test by email, user id or `"me"`, or unassign it.
-54. **`watch_test`** - Watch or stop watching a test.
+47. **`list_test_controls`** - List the tests under Test Controls as the Test Controls page shows them: quarantined (active, ending soon, released), critical, the tests you watch, or flaky candidates for quarantine.
+48. **`get_test_controls`** - One test's assignee, critical flag, watch state and active quarantine, plus the runs a quarantine kept from failing in the last 90 days.
+49. **`get_quarantine`** - One quarantine with its full history and the runs it covered.
+50. **`quarantine_tests`** - Quarantine 1–100 tests until an end date, with a required reason; `dry_run` shows what would happen first.
+51. **`update_quarantine`** - Extend a quarantine, change its assignee or note, or link a ticket.
+52. **`release_quarantine`** - End a quarantine now; the test's failures fail the build again.
+53. **`set_test_critical`** - Mark or unmark a test critical (owners and admins).
+54. **`assign_test`** - Assign a test by email, user id or `"me"`, or unassign it.
+55. **`watch_test`** - Watch or stop watching a test.
 
 **Account, projects and pull requests:**
 
-55. **`get_org_details`** - Plan, executions left and when they reset, what happens when they run out, seats and projects against the plan, extra executions, and per-project test health.
-56. **`get_project_details`** - One project's health, usage, connected integrations, branch → environment mapping, and the top 10 flaky, slow, failing, chronic and slowing tests.
-57. **`get_pull_requests`** - The newest pull requests and their latest test run, or one pull request with its test runs.
+56. **`get_org_details`** - Plan, executions left and when they reset, what happens when they run out, seats and projects against the plan, extra executions, and per-project test health.
+57. **`get_project_details`** - One project's health, usage, connected integrations, branch → environment mapping, and the top 10 flaky, slow, failing, chronic and slowing tests.
+58. **`get_pull_requests`** - The newest pull requests and their latest test run, or one pull request with its test runs.
 
 > **Ask first.** Quarantining, releasing and marking critical change what fails the build; the tools are flagged destructive so your client asks before running them.
 

@@ -62,6 +62,7 @@ Every tool answers the same way.
 
 - [get_audit_report](#get_audit_report)
 - [submit_audit_report](#submit_audit_report)
+- [show_audit_report](#show_audit_report)
 
 **Test Case Management:**
 
@@ -2188,6 +2189,56 @@ Other failures follow [Responses and errors](#responses-and-errors).
 ### Technical Details
 
 - **Route**: `POST /api/mcp/:projectId/audit-report`
+- **Authentication**: Bearer PAT from `TESTDINO_PAT`
+
+---
+
+## show_audit_report
+
+**Read-only.** Shows a saved audit as a scorecard.
+
+### Description
+
+Returns one saved TestDino audit as a scorecard: the score and its band (Strong, Fair, Needs work, At risk, the same bands the TestDino dashboard shows), where the points were lost, the top issues, and a link to the report in TestDino.
+
+AI tools that render MCP Apps (Claude Desktop) show it as an interactive card, the same card as the hosted TestDino MCP. Every other tool shows the one-paragraph summary. The card comes from the TestDino MCP (`ui://testdino/audit-report/v1`); the package does not ship a copy.
+
+### Parameters
+
+| Parameter   | Type   | Required | Description                                                       |
+| ----------- | ------ | -------- | ----------------------------------------------------------------- |
+| `projectId` | string | Yes      | Project ID                                                        |
+| `reportId`  | string | No       | Audit report ID. Omit for the latest report.                      |
+| `branch`    | string | No       | Branch to take the latest report from when `reportId` is omitted. |
+
+### Example Usage
+
+- "Show me our latest TestDino audit"
+- "Show TestDino audit audit_6840b0a685f56c8ab21d4b4e as a scorecard"
+
+### Response Format
+
+The hosted result, unchanged: one paragraph of text, for example
+
+```
+TestDino audit on main: 72/100 · Fair. 14 issues: 2 critical, 3 high.
+Top penalty: Flaky or Unstable (−12), Missing Validation (−8).
+Full report: https://app.testdino.com/…/ai-insights?tab=test-audit&audit=…
+```
+
+and `structuredContent` with the scorecard the card renders (score, band, categories, top issues, dashboard link). It never contains the requester's email or the markdown report.
+
+### Error Handling
+
+- **`Audit report not found.`**: the `reportId` does not exist, or belongs to another project.
+- **`No audit reports yet. Run a TestDino audit first.`**: the project (or branch) has no audit yet.
+- **`Couldn't load the audit report. Try again.`**: the lookup failed; it is not the same as having no audits.
+
+Other failures follow [Responses and errors](#responses-and-errors).
+
+### Technical Details
+
+- **Route**: `GET /api/mcp/:projectId/audit-card` (tool result), `GET /api/mcp/ui/audit-report` (card resource)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ---

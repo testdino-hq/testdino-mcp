@@ -1,5 +1,5 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446).",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471).",
  "tools": [
   {
    "name": "health",
@@ -646,6 +646,45 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "show_audit_report",
+   "title": "Show TestDino Audit Scorecard",
+   "description": "Read-only. Shows a saved TestDino Playwright audit as a scorecard: the score and its band (Strong, Fair, Needs work, At risk), where the points were lost, the top issues, and a link to the full report. Use when the user asks to see, show or summarize an audit report. Pass reportId for a specific report; omit it for the latest one, optionally on a branch.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "projectId": {
+      "type": "string",
+      "description": "Project ID (required)"
+     },
+     "reportId": {
+      "type": "string",
+      "description": "Audit report ID. Omit for the latest report."
+     },
+     "branch": {
+      "type": "string",
+      "description": "Branch to take the latest report from when reportId is omitted."
+     }
+    },
+    "required": [
+     "projectId"
+    ],
+    "additionalProperties": false,
+    "$schema": "http://json-schema.org/draft-07/schema#"
+   },
+   "annotations": {
+    "readOnlyHint": true
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/audit-report/v1"
+    },
+    "ui/resourceUri": "ui://testdino/audit-report/v1"
    }
   },
   {
@@ -3525,5 +3564,26 @@
    ]
   }
  },
- "guideSha256": "c8e198a5e23d046f69213449c24005208071d820d88b222e32c21d100543b9fe"
+ "guideSha256": "c8e198a5e23d046f69213449c24005208071d820d88b222e32c21d100543b9fe",
+ "resources": [
+  {
+   "name": "testdino_skills_guide",
+   "uri": "testdino://skills/guide",
+   "description": "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol. Read this before making any TestDino tool calls.",
+   "mimeType": "text/markdown"
+  },
+  {
+   "name": "testdino_audit_report_view",
+   "title": "TestDino audit scorecard",
+   "uri": "ui://testdino/audit-report/v1",
+   "description": "Scorecard view of a saved TestDino Playwright audit report.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  }
+ ]
 }

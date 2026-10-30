@@ -54,6 +54,11 @@ export {
   submitAuditReportTool,
   handleSubmitAuditReport,
 } from "./audits/submit-audit-report.js";
+export {
+  AUDIT_REPORT_URI,
+  showAuditReportTool,
+  handleShowAuditReport,
+} from "./audits/show-audit-report.js";
 
 // Manual test cases tools
 export {

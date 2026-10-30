@@ -431,6 +431,27 @@ export const endpoints = {
     return `${baseUrl}/api/mcp/${projectId}/audit-reports/${reportId}`;
   },
 
+  /**
+   * Audit scorecard: the hosted show_audit_report result, returned as the body
+   * GET /api/mcp/:projectId/audit-card?reportId=&branch=
+   */
+  showAuditReport: (params: {
+    projectId: string;
+    reportId?: string;
+    branch?: string;
+  }): string => {
+    const baseUrl = getBaseUrl();
+    const { projectId, ...queryParams } = params;
+    const queryString = buildQueryString(queryParams);
+    return `${baseUrl}/api/mcp/${projectId}/audit-card${queryString}`;
+  },
+
+  /**
+   * The audit scorecard's HTML, as resources/read contents
+   * GET /api/mcp/ui/audit-report
+   */
+  auditCardResource: (): string => `${getBaseUrl()}/api/mcp/ui/audit-report`,
+
   // ─── Releases (UI label) / Milestones (data model) ─────────────────────────
 
   /**

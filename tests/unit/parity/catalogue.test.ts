@@ -14,6 +14,7 @@ const hosted = JSON.parse(
   readFileSync(join(__dirname, "../../fixtures/hosted-catalogue.json"), "utf-8")
 ) as {
   tools: Tool[];
+  resources: unknown[];
   prompts: unknown[];
   promptSamples: Record<string, { messages: unknown[] }>;
   guideSha256: string;
@@ -84,6 +85,11 @@ describe("same catalogue as the hosted MCP", () => {
       );
       expect(extra.sort()).toEqual([...args].sort());
     }
+  });
+
+  it("lists the hosted resources, the MCP Apps card included", async () => {
+    const { resources } = await client.listResources();
+    expect(resources).toEqual(hosted.resources);
   });
 
   it("lists the hosted prompts", async () => {

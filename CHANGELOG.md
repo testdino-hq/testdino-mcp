@@ -2,6 +2,17 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.3
+
+### Added
+
+- **`show_audit_report`** — shows a saved TestDino audit as a scorecard: the
+  score and its band, where the points were lost, the top issues, and a link
+  to the report in TestDino. In an AI tool that renders MCP Apps (Claude
+  Desktop) it appears as an interactive card, the same card as the hosted
+  TestDino MCP; everywhere else it is a one-paragraph summary. The card is
+  served by the TestDino MCP, so the package never ships its own copy.
+
 ## 2.2.2
 
 ### Changed
