@@ -15,6 +15,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/health/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/health/v1"
    }
   },
   {
@@ -3577,6 +3583,19 @@
    "title": "TestDino audit scorecard",
    "uri": "ui://testdino/audit-report/v1",
    "description": "Scorecard view of a saved TestDino Playwright audit report.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_health_view",
+   "title": "TestDino health card",
+   "uri": "ui://testdino/tool/health/v1",
+   "description": "Card view of the health tool's answer.",
    "mimeType": "text/html;profile=mcp-app",
    "_meta": {
     "ui": {

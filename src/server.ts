@@ -28,6 +28,7 @@ import { fileURLToPath } from "url";
 import {
   healthTool,
   handleHealth,
+  HEALTH_CARD_URI,
   listTestRunsTool,
   handleListTestRuns,
   getRunDetailsTool,
@@ -190,6 +191,11 @@ function asHostedResult(result: {
   }
 }
 
+const CARD_RESOURCES = new Map<string, () => string>([
+  [AUDIT_REPORT_URI, endpoints.auditCardResource],
+  [HEALTH_CARD_URI, () => endpoints.toolCardResource("health")],
+]);
+
 // Tools whose route returns the hosted tool result itself, not an API body to reshape.
 const PASSTHROUGH_TOOLS = new Set(["show_audit_report"]);
 
@@ -207,7 +213,7 @@ export function createServer(): Server {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.2.3",
+      version: "2.2.4",
     },
     {
       capabilities: {
@@ -316,6 +322,19 @@ export function createServer(): Server {
             },
           },
         },
+        {
+          name: "testdino_health_view",
+          title: "TestDino health card",
+          uri: HEALTH_CARD_URI,
+          description: "Card view of the health tool's answer.",
+          mimeType: "text/html;profile=mcp-app",
+          _meta: {
+            ui: {
+              csp: {},
+              prefersBorder: false,
+            },
+          },
+        },
       ],
     };
   });
@@ -326,18 +345,18 @@ export function createServer(): Server {
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
 
-    // The card's HTML comes from the hosted MCP, so the package never carries its own copy.
-    if (uri === AUDIT_REPORT_URI) {
+    // A card's HTML comes from the hosted MCP, so the package never carries its own copy.
+    const cardUrl = CARD_RESOURCES.get(uri);
+    if (cardUrl) {
       const token = getApiKey();
       try {
-        return await apiRequestJson<{ contents: unknown[] }>(
-          endpoints.auditCardResource(),
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        return await apiRequestJson<{ contents: unknown[] }>(cardUrl(), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } catch {
         throw new McpError(
           ErrorCode.InternalError,
-          `Resource unavailable: ${AUDIT_REPORT_URI}`
+          `Resource unavailable: ${uri}`
         );
       }
     }

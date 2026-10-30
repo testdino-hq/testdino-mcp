@@ -151,6 +151,8 @@ Call it again when another tool reports a project or auth error: it shows which 
 
 Read-only. It makes no call beyond the TestDino MCP server.
 
+AI tools that render MCP Apps (Claude Desktop) also show the answer as a "Your access" card: organization, project and your role per row, the token's expiry with a warning from 7 days before it, and a link to manage tokens. The card comes from the TestDino MCP (`ui://testdino/tool/health/v1`, `GET /api/mcp/ui/tools/health`); the package does not ship a copy, and the text answer is the same either way.
+
 ### Parameters
 
 No parameters.

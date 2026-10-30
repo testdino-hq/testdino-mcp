@@ -282,6 +282,31 @@ describe("MCP Apps audit card", () => {
     expect(init.headers.Authorization).toBe("Bearer td_pat_test");
   });
 
+  it("reads the health card from the hosted MCP's tool card route", async () => {
+    const contents = [
+      {
+        uri: "ui://testdino/tool/health/v1",
+        mimeType: "text/html;profile=mcp-app",
+        text: "<html><script></script></html>",
+        _meta: { ui: { csp: {}, prefersBorder: false } },
+      },
+    ];
+    const fetchMock = respond(200, { contents });
+    const result = await client.readResource({
+      uri: "ui://testdino/tool/health/v1",
+    });
+    expect(result.contents).toEqual(contents);
+    const [url] = fetchMock.mock.calls[0] as unknown as [string];
+    expect(url).toMatch(/\/api\/mcp\/ui\/tools\/health$/);
+  });
+
+  it.each(["__proto__", "ui://testdino/tool/nope/v1"])(
+    "has no card resource for %s",
+    async (uri) => {
+      await expect(client.readResource({ uri })).rejects.toThrow();
+    }
+  );
+
   it("reports the card resource as unavailable when the hosted MCP cannot serve it", async () => {
     respond(404, { success: false, message: "Audit card is not available" });
     await expect(

@@ -2,6 +2,16 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.4
+
+### Added
+
+- **`health` shows a "Your access" card** in AI tools that render MCP Apps
+  (Claude Desktop): your organizations and projects with your role in each,
+  the token's expiry date and a warning from 7 days before it, and a link to
+  manage tokens in TestDino. It is the same card as the hosted TestDino MCP
+  and is served by it. The text answer is unchanged.
+
 ## 2.2.3
 
 ### Added
