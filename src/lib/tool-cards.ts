@@ -33,6 +33,9 @@ export const CARD_TOOLS = [
   "set_test_critical",
   "assign_test",
   "watch_test",
+  "get_org_details",
+  "get_project_details",
+  "get_pull_requests",
 ] as const;
 
 export function toolCardUri(tool: string): string {

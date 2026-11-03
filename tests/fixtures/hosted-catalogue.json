@@ -1,5 +1,5 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117).",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117). Card _meta for get_org_details, get_project_details and get_pull_requests and their resources added from feat/tdv2-1107-mcp-tool-cards @ 979804704 (TDV2-1118).",
  "tools": [
   {
    "name": "health",
@@ -3442,6 +3442,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/get_org_details/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_org_details/v1"
    }
   },
   {
@@ -3482,6 +3488,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/get_project_details/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_project_details/v1"
    }
   },
   {
@@ -3530,6 +3542,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/get_pull_requests/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_pull_requests/v1"
    }
   }
  ],
@@ -4147,6 +4165,45 @@
    "name": "testdino_watch_test_view",
    "title": "TestDino watch_test card",
    "description": "Card view of the watch_test tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "uri": "ui://testdino/tool/get_org_details/v1",
+   "name": "testdino_get_org_details_view",
+   "title": "TestDino get_org_details card",
+   "description": "Card view of the get_org_details tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "uri": "ui://testdino/tool/get_project_details/v1",
+   "name": "testdino_get_project_details_view",
+   "title": "TestDino get_project_details card",
+   "description": "Card view of the get_project_details tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "uri": "ui://testdino/tool/get_pull_requests/v1",
+   "name": "testdino_get_pull_requests_view",
+   "title": "TestDino get_pull_requests card",
+   "description": "Card view of the get_pull_requests tool's answer.",
    "mimeType": "text/html;profile=mcp-app",
    "_meta": {
     "ui": {

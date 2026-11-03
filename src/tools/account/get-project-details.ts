@@ -35,6 +35,12 @@ export const getProjectDetailsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_project_details/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_project_details/v1",
+  },
 };
 
 export async function handleGetProjectDetails(args?: Record<string, unknown>) {

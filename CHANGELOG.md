@@ -35,6 +35,12 @@ All notable changes to `@testdino/mcp` are documented here.
   `update_quarantine`, `release_quarantine`, `set_test_critical`,
   `assign_test` and `watch_test`.
 
+- **Organization, project and pull request tools show cards too**:
+  `get_org_details` (plan, executions left, seats and projects),
+  `get_project_details` (health, the most failing, flakiest and slowest tests)
+  and `get_pull_requests` (each PR with its latest run, or one PR with its
+  runs). Prices, PR authors and CI config snippets are never shown.
+
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 
