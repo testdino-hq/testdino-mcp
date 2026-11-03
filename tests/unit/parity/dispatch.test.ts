@@ -13,6 +13,7 @@ import {
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../../../src/server.js";
+import { CARD_TOOLS } from "../../../src/lib/tool-cards.js";
 
 let client: Client;
 const P = "project_x";
@@ -282,23 +283,25 @@ describe("MCP Apps audit card", () => {
     expect(init.headers.Authorization).toBe("Bearer td_pat_test");
   });
 
-  it("reads the health card from the hosted MCP's tool card route", async () => {
-    const contents = [
-      {
-        uri: "ui://testdino/tool/health/v1",
-        mimeType: "text/html;profile=mcp-app",
-        text: "<html><script></script></html>",
-        _meta: { ui: { csp: {}, prefersBorder: false } },
-      },
-    ];
-    const fetchMock = respond(200, { contents });
-    const result = await client.readResource({
-      uri: "ui://testdino/tool/health/v1",
-    });
-    expect(result.contents).toEqual(contents);
-    const [url] = fetchMock.mock.calls[0] as unknown as [string];
-    expect(url).toMatch(/\/api\/mcp\/ui\/tools\/health$/);
-  });
+  it.each(CARD_TOOLS)(
+    "reads the %s card from its own hosted tool card route",
+    async (tool) => {
+      const uri = `ui://testdino/tool/${tool}/v1`;
+      const contents = [
+        {
+          uri,
+          mimeType: "text/html;profile=mcp-app",
+          text: "<html><script></script></html>",
+          _meta: { ui: { csp: {}, prefersBorder: false } },
+        },
+      ];
+      const fetchMock = respond(200, { contents });
+      const result = await client.readResource({ uri });
+      expect(result.contents).toEqual(contents);
+      const [url] = fetchMock.mock.calls[0] as unknown as [string];
+      expect(url.endsWith(`/api/mcp/ui/tools/${tool}`)).toBe(true);
+    }
+  );
 
   it.each(["__proto__", "ui://testdino/tool/nope/v1"])(
     "has no card resource for %s",

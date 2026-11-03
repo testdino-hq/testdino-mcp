@@ -12,6 +12,12 @@ import {
 import { readFileSync } from "fs";
 import { ApiError, apiRequestJson } from "./lib/request.js";
 import { endpoints } from "./lib/endpoints.js";
+import {
+  CARD_TOOLS,
+  toolCardResources,
+  toolCardUri,
+  withToolCard,
+} from "./lib/tool-cards.js";
 import { getApiKey } from "./lib/env.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
 import {
@@ -28,7 +34,6 @@ import { fileURLToPath } from "url";
 import {
   healthTool,
   handleHealth,
-  HEALTH_CARD_URI,
   listTestRunsTool,
   handleListTestRuns,
   getRunDetailsTool,
@@ -193,7 +198,10 @@ function asHostedResult(result: {
 
 const CARD_RESOURCES = new Map<string, () => string>([
   [AUDIT_REPORT_URI, endpoints.auditCardResource],
-  [HEALTH_CARD_URI, () => endpoints.toolCardResource("health")],
+  ...CARD_TOOLS.map((tool): [string, () => string] => [
+    toolCardUri(tool),
+    () => endpoints.toolCardResource(tool),
+  ]),
 ]);
 
 // Tools whose route returns the hosted tool result itself, not an API body to reshape.
@@ -292,7 +300,7 @@ export function createServer(): Server {
    * Respond to tool listing
    */
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    return { tools };
+    return { tools: tools.map(withToolCard) };
   });
 
   /**
@@ -322,19 +330,7 @@ export function createServer(): Server {
             },
           },
         },
-        {
-          name: "testdino_health_view",
-          title: "TestDino health card",
-          uri: HEALTH_CARD_URI,
-          description: "Card view of the health tool's answer.",
-          mimeType: "text/html;profile=mcp-app",
-          _meta: {
-            ui: {
-              csp: {},
-              prefersBorder: false,
-            },
-          },
-        },
+        ...toolCardResources,
       ],
     };
   });

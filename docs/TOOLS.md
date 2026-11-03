@@ -35,10 +35,15 @@ Every tool answers the same way.
 - **No PAT, an audit report file that cannot be read, or the network failing**: `isError` is `true` with a message saying what went wrong. A read that fails on a dropped connection is retried twice first.
 - **Destructive tools** carry `destructiveHint`, so clients that honour it ask before running them: `update_manual_test_case`, `unlink_automated_test`, `update_release`, `update_manual_run`, `update_run_test_case`, `update_session`, `quarantine_tests`, `release_quarantine`, `set_test_critical`. Read-only tools carry `readOnlyHint`.
 
+## Cards in AI chats
+
+AI tools that render MCP Apps (Claude Desktop) also show some answers as a card: `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights`, `rerun_test` and `show_audit_report`. Each of these tools names its card in `_meta.ui.resourceUri` (`ui://testdino/tool/<tool>/v1`). The card HTML comes from the TestDino MCP (`GET /api/mcp/ui/tools/<tool>`), so the package ships no copy. The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links or shell commands. Clicking a run or a test case opens it in TestDino.
+
 ## Table of Contents
 
 - [Setup](#setup)
 - [Responses and errors](#responses-and-errors)
+- [Cards in AI chats](#cards-in-ai-chats)
 
 **Test Execution & Results:**
 

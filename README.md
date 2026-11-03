@@ -85,7 +85,9 @@ The server provides 58 tools across twelve domains, the same tools, prompts and 
 
 **Test Execution & Results:**
 
-1. **`health`** - Verify your connection and validate your PAT. Shows account information, available organizations, and projects with access permissions. AI tools that render MCP Apps show it as a card.
+In AI tools that render MCP Apps (Claude Desktop), several of these tools also show their answer as a card ([which ones](docs/TOOLS.md#cards-in-ai-chats)).
+
+1. **`health`** - Verify your connection and validate your PAT. Shows account information, available organizations, and projects with access permissions.
 2. **`list_testruns`** - Browse test runs with filters (branch, time interval, author, commit, environment). Supports pagination and batch operations.
 3. **`get_run_details`** - Get comprehensive details about a specific test run including statistics, test suites, test cases, and metadata. Supports batch operations (comma-separated IDs, max 20).
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.

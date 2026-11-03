@@ -6,9 +6,6 @@ import { endpoints } from "../lib/endpoints.js";
 import { apiRequestJson } from "../lib/request.js";
 import { getApiKey } from "../lib/env.js";
 
-// The MCP Apps "Your access" card, served by the hosted MCP like the audit scorecard.
-export const HEALTH_CARD_URI = "ui://testdino/tool/health/v1";
-
 export const healthTool = {
   name: "health",
   title: "Health Check",
@@ -24,12 +21,6 @@ export const healthTool = {
   },
   execution: {
     taskSupport: "forbidden",
-  },
-  _meta: {
-    ui: {
-      resourceUri: HEALTH_CARD_URI,
-    },
-    "ui/resourceUri": HEALTH_CARD_URI,
   },
 };
 

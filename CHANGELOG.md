@@ -11,6 +11,17 @@ All notable changes to `@testdino/mcp` are documented here.
   the token's expiry date and a warning from 7 days before it, and a link to
   manage tokens in TestDino. It is the same card as the hosted TestDino MCP
   and is served by it. The text answer is unchanged.
+- **Test run tools show cards too**, the same as the hosted TestDino MCP:
+  - tables for `list_testruns` and `list_testcase`, where clicking a run or a
+    test opens it in TestDino;
+  - summaries for `get_run_details`, `get_run_error_clusters`,
+    `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection` and
+    `get_ai_insights`;
+  - a receipt for `rerun_test` (started, waiting for your go-ahead, or
+    refused and why).
+
+  Cards never show emails, user ids, stack traces, logs, download links or
+  shell commands. Text answers are unchanged.
 
 ## 2.2.3
 

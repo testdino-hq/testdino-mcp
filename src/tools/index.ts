@@ -3,7 +3,7 @@
  */
 
 // Health tool
-export { healthTool, handleHealth, HEALTH_CARD_URI } from "./health.js";
+export { healthTool, handleHealth } from "./health.js";
 
 // Test runs tools
 export {
