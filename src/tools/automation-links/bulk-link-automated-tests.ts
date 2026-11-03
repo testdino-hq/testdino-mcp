@@ -77,6 +77,12 @@ export const bulkLinkAutomatedTestsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/bulk_link_automated_tests/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/bulk_link_automated_tests/v1",
+  },
 };
 
 export async function handleBulkLinkAutomatedTests(

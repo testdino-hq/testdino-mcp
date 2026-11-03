@@ -20,8 +20,16 @@ All notable changes to `@testdino/mcp` are documented here.
   - a receipt for `rerun_test` (started, waiting for your go-ahead, or
     refused and why).
 
-  Cards never show emails, user ids, stack traces, logs, download links or
-  shell commands. Text answers are unchanged.
+- **Manual test case and automation link tools show cards too**: tables for
+  `list_manual_test_cases`, `list_manual_test_suites` and
+  `list_automated_tests`; summaries for `get_manual_test_case` and
+  `get_test_case_links`; receipts for `create_manual_test_case`,
+  `update_manual_test_case`, `create_manual_test_suite`,
+  `link_automated_test`, `unlink_automated_test` and
+  `bulk_link_automated_tests` ("8 of 10 automated tests linked").
+
+  Cards never show emails, user ids, stack traces, logs, download links,
+  shell commands, descriptions or steps. Text answers are unchanged.
 
 ## 2.2.3
 

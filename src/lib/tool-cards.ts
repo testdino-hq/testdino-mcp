@@ -13,6 +13,17 @@ export const CARD_TOOLS = [
   "get_rerun_selection",
   "get_ai_insights",
   "rerun_test",
+  "list_manual_test_cases",
+  "list_manual_test_suites",
+  "list_automated_tests",
+  "get_manual_test_case",
+  "get_test_case_links",
+  "create_manual_test_case",
+  "update_manual_test_case",
+  "create_manual_test_suite",
+  "link_automated_test",
+  "unlink_automated_test",
+  "bulk_link_automated_tests",
 ] as const;
 
 export function toolCardUri(tool: string): string {

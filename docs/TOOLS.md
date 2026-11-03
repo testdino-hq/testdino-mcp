@@ -39,10 +39,10 @@ Every tool answers the same way.
 
 AI tools that render MCP Apps (Claude Desktop) also show some answers as a card. Each card tool names its card in `_meta.ui.resourceUri`, and the package fetches the card HTML from the TestDino MCP, so it ships no copy:
 
-- `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights` and `rerun_test`: `ui://testdino/tool/<tool>/v1`, from `GET /api/mcp/ui/tools/<tool>`.
+- `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights`, `rerun_test`, `list_manual_test_cases`, `list_manual_test_suites`, `list_automated_tests`, `get_manual_test_case`, `get_test_case_links`, `create_manual_test_case`, `update_manual_test_case`, `create_manual_test_suite`, `link_automated_test`, `unlink_automated_test` and `bulk_link_automated_tests`: `ui://testdino/tool/<tool>/v1`, from `GET /api/mcp/ui/tools/<tool>`.
 - `show_audit_report`: `ui://testdino/audit-report/v1`, from `GET /api/mcp/ui/audit-report` (see [show_audit_report](#show_audit_report)).
 
-The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links or shell commands. Clicking a run or a test case opens it in TestDino.
+The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links, shell commands, descriptions or steps. Clicking a run, a test case or an automated test opens it in TestDino.
 
 ## Table of Contents
 

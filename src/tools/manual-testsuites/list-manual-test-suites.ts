@@ -42,6 +42,12 @@ export const listManualTestSuitesTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_manual_test_suites/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_manual_test_suites/v1",
+  },
 };
 
 export async function handleListManualTestSuites(

@@ -1,5 +1,5 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114).",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115).",
  "tools": [
   {
    "name": "health",
@@ -799,6 +799,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/list_manual_test_cases/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_manual_test_cases/v1"
    }
   },
   {
@@ -829,6 +835,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/get_manual_test_case/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_manual_test_case/v1"
    }
   },
   {
@@ -977,6 +989,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/create_manual_test_case/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_manual_test_case/v1"
    }
   },
   {
@@ -1014,6 +1032,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/update_manual_test_case/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/update_manual_test_case/v1"
    }
   },
   {
@@ -1042,6 +1066,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/list_manual_test_suites/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_manual_test_suites/v1"
    }
   },
   {
@@ -1080,6 +1110,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/create_manual_test_suite/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_manual_test_suite/v1"
    }
   },
   {
@@ -1129,6 +1165,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/list_automated_tests/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_automated_tests/v1"
    }
   },
   {
@@ -1165,6 +1207,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/get_test_case_links/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_test_case_links/v1"
    }
   },
   {
@@ -1216,6 +1264,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/link_automated_test/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/link_automated_test/v1"
    }
   },
   {
@@ -1254,6 +1308,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/unlink_automated_test/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/unlink_automated_test/v1"
    }
   },
   {
@@ -1319,6 +1379,12 @@
    },
    "execution": {
     "taskSupport": "forbidden"
+   },
+   "_meta": {
+    "ui": {
+     "resourceUri": "ui://testdino/tool/bulk_link_automated_tests/v1"
+    },
+    "ui/resourceUri": "ui://testdino/tool/bulk_link_automated_tests/v1"
    }
   },
   {
@@ -3767,6 +3833,149 @@
    "title": "TestDino rerun_test card",
    "uri": "ui://testdino/tool/rerun_test/v1",
    "description": "Card view of the rerun_test tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_list_manual_test_cases_view",
+   "title": "TestDino list_manual_test_cases card",
+   "uri": "ui://testdino/tool/list_manual_test_cases/v1",
+   "description": "Card view of the list_manual_test_cases tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_list_manual_test_suites_view",
+   "title": "TestDino list_manual_test_suites card",
+   "uri": "ui://testdino/tool/list_manual_test_suites/v1",
+   "description": "Card view of the list_manual_test_suites tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_list_automated_tests_view",
+   "title": "TestDino list_automated_tests card",
+   "uri": "ui://testdino/tool/list_automated_tests/v1",
+   "description": "Card view of the list_automated_tests tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_get_manual_test_case_view",
+   "title": "TestDino get_manual_test_case card",
+   "uri": "ui://testdino/tool/get_manual_test_case/v1",
+   "description": "Card view of the get_manual_test_case tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_get_test_case_links_view",
+   "title": "TestDino get_test_case_links card",
+   "uri": "ui://testdino/tool/get_test_case_links/v1",
+   "description": "Card view of the get_test_case_links tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_create_manual_test_case_view",
+   "title": "TestDino create_manual_test_case card",
+   "uri": "ui://testdino/tool/create_manual_test_case/v1",
+   "description": "Card view of the create_manual_test_case tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_update_manual_test_case_view",
+   "title": "TestDino update_manual_test_case card",
+   "uri": "ui://testdino/tool/update_manual_test_case/v1",
+   "description": "Card view of the update_manual_test_case tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_create_manual_test_suite_view",
+   "title": "TestDino create_manual_test_suite card",
+   "uri": "ui://testdino/tool/create_manual_test_suite/v1",
+   "description": "Card view of the create_manual_test_suite tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_link_automated_test_view",
+   "title": "TestDino link_automated_test card",
+   "uri": "ui://testdino/tool/link_automated_test/v1",
+   "description": "Card view of the link_automated_test tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_unlink_automated_test_view",
+   "title": "TestDino unlink_automated_test card",
+   "uri": "ui://testdino/tool/unlink_automated_test/v1",
+   "description": "Card view of the unlink_automated_test tool's answer.",
+   "mimeType": "text/html;profile=mcp-app",
+   "_meta": {
+    "ui": {
+     "csp": {},
+     "prefersBorder": false
+    }
+   }
+  },
+  {
+   "name": "testdino_bulk_link_automated_tests_view",
+   "title": "TestDino bulk_link_automated_tests card",
+   "uri": "ui://testdino/tool/bulk_link_automated_tests/v1",
+   "description": "Card view of the bulk_link_automated_tests tool's answer.",
    "mimeType": "text/html;profile=mcp-app",
    "_meta": {
     "ui": {
