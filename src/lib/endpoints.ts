@@ -452,6 +452,13 @@ export const endpoints = {
    */
   auditCardResource: (): string => `${getBaseUrl()}/api/mcp/ui/audit-report`,
 
+  /**
+   * A tool card's HTML, as resources/read contents
+   * GET /api/mcp/ui/tools/:tool
+   */
+  toolCardResource: (tool: string): string =>
+    `${getBaseUrl()}/api/mcp/ui/tools/${encodeURIComponent(tool)}`,
+
   // ─── Releases (UI label) / Milestones (data model) ─────────────────────────
 
   /**

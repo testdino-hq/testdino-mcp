@@ -61,6 +61,12 @@ export const getExternalIssueTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_external_issue/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_external_issue/v1",
+  },
 };
 
 export async function handleGetExternalIssue(args?: GetExternalIssueArgs) {

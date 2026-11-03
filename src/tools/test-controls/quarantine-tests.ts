@@ -61,6 +61,12 @@ export const quarantineTestsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/quarantine_tests/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/quarantine_tests/v1",
+  },
 };
 
 export async function handleQuarantineTests(args?: Record<string, unknown>) {

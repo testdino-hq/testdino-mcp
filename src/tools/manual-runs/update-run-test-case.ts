@@ -53,6 +53,12 @@ export const updateRunTestCaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/update_run_test_case/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/update_run_test_case/v1",
+  },
 };
 
 export async function handleUpdateRunTestCase(args?: UpdateRunTestCaseArgs) {

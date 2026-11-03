@@ -64,6 +64,12 @@ export const getRerunSelectionTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_rerun_selection/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_rerun_selection/v1",
+  },
 };
 
 export async function handleGetRerunSelection(args?: GetRerunSelectionArgs) {

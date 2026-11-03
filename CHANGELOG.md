@@ -2,6 +2,62 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.4
+
+### Added
+
+- **`health` shows a "Your access" card** in AI tools that render MCP Apps
+  (Claude Desktop): your organizations and projects with your role in each,
+  the token's expiry date and a warning from 7 days before it, and a link to
+  manage tokens in TestDino. It is the same card as the hosted TestDino MCP
+  and is served by it. The text answer is unchanged.
+- **Test run tools show cards too**, the same as the hosted TestDino MCP:
+  - tables for `list_testruns` and `list_testcase`, where clicking a run or a
+    test opens it in TestDino;
+  - summaries for `get_run_details`, `get_run_error_clusters`,
+    `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection` and
+    `get_ai_insights`;
+  - a receipt for `rerun_test` (started, waiting for your go-ahead, or
+    refused and why).
+
+- **Manual test case and automation link tools show cards too**: tables for
+  `list_manual_test_cases`, `list_manual_test_suites` and
+  `list_automated_tests`; summaries for `get_manual_test_case` and
+  `get_test_case_links`; receipts for `create_manual_test_case`,
+  `update_manual_test_case`, `create_manual_test_suite`,
+  `link_automated_test`, `unlink_automated_test` and
+  `bulk_link_automated_tests` ("8 of 10 automated tests linked").
+
+- **Test Controls tools show cards too**: tables for each `list_test_controls`
+  view (quarantined, released, critical, watched, candidates); summaries for
+  `get_test_controls` and `get_quarantine`; receipts for `quarantine_tests`
+  (including whether a dry run fits the quarantine limit),
+  `update_quarantine`, `release_quarantine`, `set_test_critical`,
+  `assign_test` and `watch_test`.
+
+- **Organization, project and pull request tools show cards too**:
+  `get_org_details` (plan, executions left, seats and projects),
+  `get_project_details` (health, the most failing, flakiest and slowest tests)
+  and `get_pull_requests` (each PR with its latest run, or one PR with its
+  runs). Prices and CI config snippets are never shown.
+
+- **Release, manual run and session tools show cards too**: tables for
+  `list_releases`, `list_manual_runs`, `list_run_test_cases` and
+  `list_sessions`; summaries for `get_release`, `get_manual_run` and
+  `get_session`; receipts for `create_release`, `update_release`,
+  `create_manual_run`, `update_manual_run`, `update_run_test_case`,
+  `create_session` and `update_session`.
+
+- **Integration tools show cards too**: `get_integration_status` (connected,
+  and the default site and project), `connect_integration` (already connected,
+  or open the link in the chat; the link itself is never drawn),
+  `get_external_issue` (Jira, Linear and Asana issues in one table) and
+  `create_external_issue` (the new issue, a draft preview, or created but not
+  linked back).
+
+  Cards never show emails, user ids, stack traces, logs, download links,
+  shell commands, descriptions or steps. Text answers are unchanged.
+
 ## 2.2.3
 
 ### Added

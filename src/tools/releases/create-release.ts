@@ -173,6 +173,12 @@ export const createReleaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/create_release/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_release/v1",
+  },
 };
 
 export async function handleCreateRelease(args?: CreateReleaseArgs) {

@@ -80,6 +80,12 @@ export const listReleasesTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_releases/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_releases/v1",
+  },
 };
 
 export async function handleListReleases(args?: ListReleasesArgs) {

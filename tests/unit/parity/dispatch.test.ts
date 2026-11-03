@@ -13,6 +13,7 @@ import {
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../../../src/server.js";
+import { CARD_TOOLS } from "../../../src/lib/tool-cards.js";
 
 let client: Client;
 const P = "project_x";
@@ -281,6 +282,63 @@ describe("MCP Apps audit card", () => {
     expect(url).toMatch(/\/api\/mcp\/ui\/audit-report$/);
     expect(init.headers.Authorization).toBe("Bearer td_pat_test");
   });
+
+  it.each(CARD_TOOLS)(
+    "reads the %s card from its own hosted tool card route",
+    async (tool) => {
+      const uri = `ui://testdino/tool/${tool}/v1`;
+      const contents = [
+        {
+          uri,
+          mimeType: "text/html;profile=mcp-app",
+          text: "<html><script></script></html>",
+          _meta: { ui: { csp: {}, prefersBorder: false } },
+        },
+      ];
+      const fetchMock = respond(200, { contents });
+      const result = await client.readResource({ uri });
+      expect(result.contents).toEqual(contents);
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { headers: Record<string, string> },
+      ];
+      expect(url.endsWith(`/api/mcp/ui/tools/${tool}`)).toBe(true);
+      expect(init.headers.Authorization).toBe("Bearer td_pat_test");
+    }
+  );
+
+  it("serves a card for exactly the tools whose copied definition names one", async () => {
+    const { tools } = await client.listTools();
+    const named = tools
+      .map(
+        (t) =>
+          (t._meta as { ui?: { resourceUri?: string } } | undefined)?.ui
+            ?.resourceUri
+      )
+      .filter(
+        (uri): uri is string =>
+          typeof uri === "string" && uri.startsWith("ui://testdino/tool/")
+      );
+    expect(named.sort()).toEqual(
+      CARD_TOOLS.map((t) => `ui://testdino/tool/${t}/v1`).sort()
+    );
+  });
+
+  it("asks for the PAT instead of reading a card without one", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      client.readResource({ uri: "ui://testdino/tool/list_testruns/v1" })
+    ).rejects.toThrow(/Missing TESTDINO_PAT/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["__proto__", "ui://testdino/tool/nope/v1"])(
+    "has no card resource for %s",
+    async (uri) => {
+      await expect(client.readResource({ uri })).rejects.toThrow();
+    }
+  );
 
   it("reports the card resource as unavailable when the hosted MCP cannot serve it", async () => {
     respond(404, { success: false, message: "Audit card is not available" });

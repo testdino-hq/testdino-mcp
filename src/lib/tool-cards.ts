@@ -1,0 +1,70 @@
+/**
+ * The card resources of the hosted MCP's tool cards (services/mcp/node CARD_TOOLS). Each tool's
+ * definition names its card in its copied _meta; the card HTML is fetched from the hosted MCP.
+ */
+export const CARD_TOOLS = [
+  "health",
+  "list_testruns",
+  "list_testcase",
+  "get_run_details",
+  "get_run_error_clusters",
+  "get_testcase_details",
+  "get_flake_verdict",
+  "get_rerun_selection",
+  "get_ai_insights",
+  "rerun_test",
+  "list_manual_test_cases",
+  "list_manual_test_suites",
+  "list_automated_tests",
+  "get_manual_test_case",
+  "get_test_case_links",
+  "create_manual_test_case",
+  "update_manual_test_case",
+  "create_manual_test_suite",
+  "link_automated_test",
+  "unlink_automated_test",
+  "bulk_link_automated_tests",
+  "list_test_controls",
+  "get_test_controls",
+  "get_quarantine",
+  "quarantine_tests",
+  "update_quarantine",
+  "release_quarantine",
+  "set_test_critical",
+  "assign_test",
+  "watch_test",
+  "list_releases",
+  "get_release",
+  "create_release",
+  "update_release",
+  "list_manual_runs",
+  "get_manual_run",
+  "create_manual_run",
+  "update_manual_run",
+  "list_run_test_cases",
+  "update_run_test_case",
+  "list_sessions",
+  "get_session",
+  "create_session",
+  "update_session",
+  "get_org_details",
+  "get_project_details",
+  "get_pull_requests",
+  "get_integration_status",
+  "connect_integration",
+  "create_external_issue",
+  "get_external_issue",
+] as const;
+
+export function toolCardUri(tool: string): string {
+  return `ui://testdino/tool/${tool}/v1`;
+}
+
+export const toolCardResources = CARD_TOOLS.map((tool) => ({
+  name: `testdino_${tool}_view`,
+  title: `TestDino ${tool} card`,
+  uri: toolCardUri(tool),
+  description: `Card view of the ${tool} tool's answer.`,
+  mimeType: "text/html;profile=mcp-app",
+  _meta: { ui: { csp: {}, prefersBorder: false } },
+}));

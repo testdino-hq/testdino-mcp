@@ -49,6 +49,12 @@ export const getIntegrationStatusTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_integration_status/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_integration_status/v1",
+  },
 };
 
 export async function handleGetIntegrationStatus(

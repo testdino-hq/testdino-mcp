@@ -47,6 +47,12 @@ export const unlinkAutomatedTestTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/unlink_automated_test/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/unlink_automated_test/v1",
+  },
 };
 
 export async function handleUnlinkAutomatedTest(

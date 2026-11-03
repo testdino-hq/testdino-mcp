@@ -30,6 +30,12 @@ export const releaseQuarantineTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/release_quarantine/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/release_quarantine/v1",
+  },
 };
 
 export async function handleReleaseQuarantine(args?: Record<string, unknown>) {

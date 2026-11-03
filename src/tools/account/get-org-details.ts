@@ -30,6 +30,12 @@ export const getOrgDetailsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_org_details/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_org_details/v1",
+  },
 };
 
 export async function handleGetOrgDetails(args?: Record<string, unknown>) {

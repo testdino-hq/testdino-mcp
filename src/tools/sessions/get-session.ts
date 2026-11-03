@@ -38,6 +38,12 @@ export const getSessionTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_session/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_session/v1",
+  },
 };
 
 export async function handleGetSession(args?: GetSessionArgs) {
