@@ -124,6 +124,12 @@ export const createSessionTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/create_session/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_session/v1",
+  },
 };
 
 export async function handleCreateSession(args?: CreateSessionArgs) {

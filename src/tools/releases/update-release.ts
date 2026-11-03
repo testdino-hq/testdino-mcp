@@ -46,6 +46,12 @@ export const updateReleaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/update_release/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/update_release/v1",
+  },
 };
 
 export async function handleUpdateRelease(args?: UpdateReleaseArgs) {

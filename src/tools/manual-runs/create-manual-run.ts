@@ -157,6 +157,12 @@ export const createManualRunTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/create_manual_run/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_manual_run/v1",
+  },
 };
 
 export async function handleCreateManualRun(args?: CreateManualRunArgs) {

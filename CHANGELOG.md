@@ -41,6 +41,13 @@ All notable changes to `@testdino/mcp` are documented here.
   and `get_pull_requests` (each PR with its latest run, or one PR with its
   runs). Prices, PR authors and CI config snippets are never shown.
 
+- **Release, manual run and session tools show cards too**: tables for
+  `list_releases`, `list_manual_runs`, `list_run_test_cases` and
+  `list_sessions`; summaries for `get_release`, `get_manual_run` and
+  `get_session`; receipts for `create_release`, `update_release`,
+  `create_manual_run`, `update_manual_run`, `update_run_test_case`,
+  `create_session` and `update_session`.
+
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 
