@@ -48,6 +48,13 @@ All notable changes to `@testdino/mcp` are documented here.
   `create_manual_run`, `update_manual_run`, `update_run_test_case`,
   `create_session` and `update_session`.
 
+- **Integration tools show cards too**: `get_integration_status` (connected,
+  and the default site and project), `connect_integration` (already connected,
+  or open the link in the chat; the link itself is never drawn),
+  `get_external_issue` (Jira, Linear and Asana issues in one table) and
+  `create_external_issue` (the new issue, a draft preview, or created but not
+  linked back).
+
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 

@@ -50,6 +50,10 @@ export const CARD_TOOLS = [
   "get_org_details",
   "get_project_details",
   "get_pull_requests",
+  "get_integration_status",
+  "connect_integration",
+  "create_external_issue",
+  "get_external_issue",
 ] as const;
 
 export function toolCardUri(tool: string): string {
