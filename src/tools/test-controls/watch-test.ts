@@ -33,6 +33,12 @@ export const watchTestTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/watch_test/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/watch_test/v1",
+  },
 };
 
 export async function handleWatchTest(args?: Record<string, unknown>) {

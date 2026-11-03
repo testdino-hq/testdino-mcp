@@ -28,6 +28,13 @@ All notable changes to `@testdino/mcp` are documented here.
   `link_automated_test`, `unlink_automated_test` and
   `bulk_link_automated_tests` ("8 of 10 automated tests linked").
 
+- **Test Controls tools show cards too**: tables for each `list_test_controls`
+  view (quarantined, released, critical, watched, candidates); summaries for
+  `get_test_controls` and `get_quarantine`; receipts for `quarantine_tests`
+  (including whether a dry run fits the quarantine limit),
+  `update_quarantine`, `release_quarantine`, `set_test_critical`,
+  `assign_test` and `watch_test`.
+
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 

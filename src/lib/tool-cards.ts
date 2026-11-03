@@ -24,6 +24,15 @@ export const CARD_TOOLS = [
   "link_automated_test",
   "unlink_automated_test",
   "bulk_link_automated_tests",
+  "list_test_controls",
+  "get_test_controls",
+  "get_quarantine",
+  "quarantine_tests",
+  "update_quarantine",
+  "release_quarantine",
+  "set_test_critical",
+  "assign_test",
+  "watch_test",
 ] as const;
 
 export function toolCardUri(tool: string): string {

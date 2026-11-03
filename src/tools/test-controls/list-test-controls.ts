@@ -64,6 +64,12 @@ export const listTestControlsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_test_controls/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_test_controls/v1",
+  },
 };
 
 export async function handleListTestControls(args?: Record<string, unknown>) {
