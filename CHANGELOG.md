@@ -39,7 +39,7 @@ All notable changes to `@testdino/mcp` are documented here.
   `get_org_details` (plan, executions left, seats and projects),
   `get_project_details` (health, the most failing, flakiest and slowest tests)
   and `get_pull_requests` (each PR with its latest run, or one PR with its
-  runs). Prices, PR authors and CI config snippets are never shown.
+  runs). Prices and CI config snippets are never shown.
 
 - **Release, manual run and session tools show cards too**: tables for
   `list_releases`, `list_manual_runs`, `list_run_test_cases` and
