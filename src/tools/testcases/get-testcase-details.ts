@@ -98,6 +98,12 @@ export const getTestCaseDetailsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_testcase_details/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_testcase_details/v1",
+  },
 };
 
 export async function handleGetTestCaseDetails(args?: GetTestCaseDetailsArgs) {

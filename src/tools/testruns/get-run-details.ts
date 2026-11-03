@@ -57,6 +57,12 @@ export const getRunDetailsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_run_details/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_run_details/v1",
+  },
 };
 
 export async function handleGetRunDetails(args?: GetRunDetailsArgs) {

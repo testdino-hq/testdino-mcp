@@ -22,6 +22,12 @@ export const healthTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/health/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/health/v1",
+  },
 };
 
 export async function handleHealth(args?: Record<string, unknown>) {

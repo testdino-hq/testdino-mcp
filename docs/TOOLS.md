@@ -37,7 +37,12 @@ Every tool answers the same way.
 
 ## Cards in AI chats
 
-AI tools that render MCP Apps (Claude Desktop) also show some answers as a card: `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights`, `rerun_test` and `show_audit_report`. Each of these tools names its card in `_meta.ui.resourceUri` (`ui://testdino/tool/<tool>/v1`). The card HTML comes from the TestDino MCP (`GET /api/mcp/ui/tools/<tool>`), so the package ships no copy. The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links or shell commands. Clicking a run or a test case opens it in TestDino.
+AI tools that render MCP Apps (Claude Desktop) also show some answers as a card. Each card tool names its card in `_meta.ui.resourceUri`, and the package fetches the card HTML from the TestDino MCP, so it ships no copy:
+
+- `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights` and `rerun_test`: `ui://testdino/tool/<tool>/v1`, from `GET /api/mcp/ui/tools/<tool>`.
+- `show_audit_report`: `ui://testdino/audit-report/v1`, from `GET /api/mcp/ui/audit-report` (see [show_audit_report](#show_audit_report)).
+
+The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links or shell commands. Clicking a run or a test case opens it in TestDino.
 
 ## Table of Contents
 
@@ -156,7 +161,7 @@ Call it again when another tool reports a project or auth error: it shows which 
 
 Read-only. It makes no call beyond the TestDino MCP server.
 
-AI tools that render MCP Apps (Claude Desktop) also show the answer as a "Your access" card: organization, project and your role per row, the token's expiry with a warning from 7 days before it, and a link to manage tokens. The card comes from the TestDino MCP (`ui://testdino/tool/health/v1`, `GET /api/mcp/ui/tools/health`); the package does not ship a copy, and the text answer is the same either way.
+Its card is "Your access": organization, project and your role per row, the token's expiry with a warning from 7 days before it, and a link to manage tokens ([Cards in AI chats](#cards-in-ai-chats)).
 
 ### Parameters
 

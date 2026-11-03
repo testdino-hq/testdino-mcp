@@ -298,10 +298,40 @@ describe("MCP Apps audit card", () => {
       const fetchMock = respond(200, { contents });
       const result = await client.readResource({ uri });
       expect(result.contents).toEqual(contents);
-      const [url] = fetchMock.mock.calls[0] as unknown as [string];
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { headers: Record<string, string> },
+      ];
       expect(url.endsWith(`/api/mcp/ui/tools/${tool}`)).toBe(true);
+      expect(init.headers.Authorization).toBe("Bearer td_pat_test");
     }
   );
+
+  it("serves a card for exactly the tools whose copied definition names one", async () => {
+    const { tools } = await client.listTools();
+    const named = tools
+      .map(
+        (t) =>
+          (t._meta as { ui?: { resourceUri?: string } } | undefined)?.ui
+            ?.resourceUri
+      )
+      .filter(
+        (uri): uri is string =>
+          typeof uri === "string" && uri.startsWith("ui://testdino/tool/")
+      );
+    expect(named.sort()).toEqual(
+      CARD_TOOLS.map((t) => `ui://testdino/tool/${t}/v1`).sort()
+    );
+  });
+
+  it("asks for the PAT instead of reading a card without one", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      client.readResource({ uri: "ui://testdino/tool/list_testruns/v1" })
+    ).rejects.toThrow(/Missing TESTDINO_PAT/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   it.each(["__proto__", "ui://testdino/tool/nope/v1"])(
     "has no card resource for %s",

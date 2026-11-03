@@ -43,6 +43,12 @@ export const getRunErrorClustersTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_run_error_clusters/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_run_error_clusters/v1",
+  },
 };
 
 export async function handleGetRunErrorClusters(

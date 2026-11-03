@@ -16,7 +16,6 @@ import {
   CARD_TOOLS,
   toolCardResources,
   toolCardUri,
-  withToolCard,
 } from "./lib/tool-cards.js";
 import { getApiKey } from "./lib/env.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
@@ -300,7 +299,7 @@ export function createServer(): Server {
    * Respond to tool listing
    */
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    return { tools: tools.map(withToolCard) };
+    return { tools };
   });
 
   /**
@@ -319,7 +318,7 @@ export function createServer(): Server {
         {
           name: "testdino_audit_report_view",
           title: "TestDino audit scorecard",
-          uri: "ui://testdino/audit-report/v1",
+          uri: AUDIT_REPORT_URI,
           description:
             "Scorecard view of a saved TestDino Playwright audit report.",
           mimeType: "text/html;profile=mcp-app",
@@ -345,6 +344,12 @@ export function createServer(): Server {
     const cardUrl = CARD_RESOURCES.get(uri);
     if (cardUrl) {
       const token = getApiKey();
+      if (!token) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          "Missing TESTDINO_PAT environment variable. Please configure it in your .cursor/mcp.json file under the 'env' section."
+        );
+      }
       try {
         return await apiRequestJson<{ contents: unknown[] }>(cardUrl(), {
           headers: { Authorization: `Bearer ${token}` },

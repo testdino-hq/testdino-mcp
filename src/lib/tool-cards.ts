@@ -1,7 +1,6 @@
 /**
- * MCP Apps tool cards: the tools whose answer the hosted MCP draws as a card. Same list, URIs,
- * names and _meta as the hosted server (services/mcp/node CARD_TOOLS); the catalogue parity
- * test fails when they drift. The card HTML itself is fetched from the hosted MCP.
+ * The card resources of the hosted MCP's tool cards (services/mcp/node CARD_TOOLS). Each tool's
+ * definition names its card in its copied _meta; the card HTML is fetched from the hosted MCP.
  */
 export const CARD_TOOLS = [
   "health",
@@ -16,20 +15,8 @@ export const CARD_TOOLS = [
   "rerun_test",
 ] as const;
 
-const CARD_TOOL_SET = new Set<string>(CARD_TOOLS);
-
 export function toolCardUri(tool: string): string {
   return `ui://testdino/tool/${tool}/v1`;
-}
-
-/** A tool definition with its card named, exactly as the hosted tools/list shows it. */
-export function withToolCard<T extends { name: string }>(tool: T): T {
-  if (!CARD_TOOL_SET.has(tool.name)) return tool;
-  const uri = toolCardUri(tool.name);
-  return {
-    ...tool,
-    _meta: { ui: { resourceUri: uri }, "ui/resourceUri": uri },
-  };
 }
 
 export const toolCardResources = CARD_TOOLS.map((tool) => ({
