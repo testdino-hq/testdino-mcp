@@ -1,6 +1,6 @@
 /**
  * Get Debug Evidence tool — one call for the cheap tier of the debug ladder:
- * flake verdict, regression boundary, and every artifact link. Mirrors the
+ * flake verdict, regression boundary, and the artifact links. Mirrors the
  * streaming `get_debug_evidence` tool; the composition runs on the gateway.
  */
 
@@ -17,6 +17,7 @@ interface GetDebugEvidenceArgs {
   projectId: string;
   testcase_name?: string;
   testcase_id?: string;
+  testcase_ids?: string[] | null;
   testrun_id?: string;
   suite_file_path?: string;
   format?: "json" | "md";
@@ -28,7 +29,7 @@ export const getDebugEvidenceTool = {
   name: "get_debug_evidence",
   title: "Get Debug Evidence",
   description:
-    'Start every failing-test investigation here. One call returns the whole cheap tier of the evidence ladder: the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for every stored artifact — trace, screenshots, and the expected/actual/diff images on a visual failure. Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why, so it rules fixes out rather than pointing at a cause; the boundary turns "why does this fail" into "what changed between these two runs", which is a far smaller question. Artifact links are minutes-scale: download what you need immediately, and call this again to mint fresh ones rather than treating an expired link as a missing artifact.',
+    'Start every failing-test investigation here. One call returns the whole cheap tier of the evidence ladder: the full error message, the computed flake verdict with its per-attempt failure signatures, the regression boundary (the last run this test passed and the first it failed), and download links for the trace, error-context and the expected/actual/diff images on a visual failure. Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why, so it rules fixes out rather than pointing at a cause; the boundary turns "why does this fail" into "what changed between these two runs", which is a far smaller question. Artifact links are minutes-scale: download what you need immediately, and call this again to mint fresh ones rather than treating an expired link as a missing artifact. Debugging several failures from one run? Pass them all in testcase_ids with testrun_id: one call, with the shared rules and environment sent once.',
   inputSchema: {
     type: "object",
     properties: {
@@ -43,6 +44,23 @@ export const getDebugEvidenceTool = {
       testcase_id: {
         type: "string",
         description: "The case's pw_test_id — exact, so prefer it when known.",
+      },
+      testcase_ids: {
+        anyOf: [
+          {
+            type: "array",
+            items: {
+              type: "string",
+              minLength: 1,
+            },
+            maxItems: 10,
+          },
+          {
+            type: "null",
+          },
+        ],
+        description:
+          "Several pw_test_ids from one run, instead of testcase_id. Needs testrun_id. Always JSON, under `tests`.",
       },
       testrun_id: {
         type: "string",
@@ -63,7 +81,7 @@ export const getDebugEvidenceTool = {
       include_instructions: {
         type: "boolean",
         description:
-          "Default true. The procedure and the trace runbook are identical on every call and about half the response — set false on repeat calls once you have read them.",
+          "Default false: the response carries short debugging rules. Set true for the full procedure and the trace runbook.",
       },
       maxLength: {
         type: "integer",
@@ -98,7 +116,10 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
     throw new Error("projectId is required");
   }
 
+  const testcaseIds = args.testcase_ids ?? [];
   const format = args.format === "md" ? "md" : "json";
+  // A batch is always JSON, so it must not take the raw-text path below.
+  const isMarkdown = format === "md" && testcaseIds.length === 0;
 
   try {
     const url = endpoints.getDebugEvidence({
@@ -107,14 +128,17 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
         ? { testcase_name: String(args.testcase_name) }
         : {}),
       ...(args.testcase_id ? { testcase_id: String(args.testcase_id) } : {}),
+      ...(testcaseIds.length > 0
+        ? { testcase_ids: testcaseIds.join(",") }
+        : {}),
       ...(args.testrun_id ? { testrun_id: String(args.testrun_id) } : {}),
       ...(args.suite_file_path
         ? { suite_file_path: String(args.suite_file_path) }
         : {}),
       ...(format === "md" ? { format } : {}),
-      // Query-string boolean: only an explicit false is worth sending.
-      ...(args.include_instructions === false
-        ? { include_instructions: "false" }
+      // Query-string boolean: only an explicit true opts in.
+      ...(args.include_instructions === true
+        ? { include_instructions: "true" }
         : {}),
       ...(typeof args.maxLength === "number" && args.maxLength > 0
         ? { maxLength: Math.floor(args.maxLength) }
@@ -123,7 +147,7 @@ export async function handleGetDebugEvidence(args?: GetDebugEvidenceArgs) {
     const headers = { Authorization: `Bearer ${token}` };
 
     // Markdown must reach the agent as raw text; parsing it as JSON would fail.
-    if (format === "md") {
+    if (isMarkdown) {
       const response = await apiRequest(url, { headers });
       const text = await response.text();
       if (!response.ok) {

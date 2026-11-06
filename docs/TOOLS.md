@@ -1195,13 +1195,13 @@ For one test (by default in the most recent run that carries it), `get_debug_evi
 
 - **Flake verdict**: computed from the test's retry attempts, with each attempt's failure signature (same as `get_flake_verdict`).
 - **Regression boundary**: the last run the test passed and the first run it failed, so "why does this fail" becomes "what changed between these two runs".
-- **Artifacts**: short-lived download links for every stored artifact of the case: trace, screenshots, video, error context, and the expected / actual / diff images on a visual failure.
+- **Artifacts**: short-lived download links for the trace, error context, and the expected / actual / diff images on a visual failure. `omitted_artifacts` names what is stored but left out (video, screenshot); `get_testcase_details` links those.
 - **Environment**: branch, commit, author, CI provider, OS and browsers of that run.
-- **Instructions** (unless `include_instructions: false`): the debugging procedure (`debugging_prompt`, the same text `debug_testcase` returns) and a runbook for reading the Playwright trace.
+- **Rules**: `debugging_rules`, the short root-cause procedure. With `include_instructions: true`, the full procedure (`debugging_prompt`, the same text `debug_testcase` returns) and a runbook for reading the Playwright trace replace it.
 
 Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why. Artifact links expire within minutes: download what you need right away, and call the tool again for fresh links rather than treating an expired link as a missing artifact.
 
-Identify the test by `testcase_id` (its `pw_test_id`, preferred) or `testcase_name` (its full title). The instructions are identical on every call and about half the response, so set `include_instructions: false` once you have read them.
+Identify the test by `testcase_id` (its `pw_test_id`, preferred) or `testcase_name` (its full title). To debug several failures from one run, pass them in `testcase_ids` with `testrun_id`: one call, always JSON, with shared text sent once and each test under `tests`.
 
 `format: "md"` returns the same content as Markdown text, which is markedly smaller. It is plain text, not JSON, and has no `structuredContent`. Its sections are, in order: the test name and a safety note, "Read this first" (warnings, if any), "Verdict", "When it changed" (the boundary), "Artifacts", "Environment", "How to work this" and "Reading the trace" (the instructions). `maxLength` caps the Markdown length; anything cut is announced in the text. JSON (the default) is never truncated.
 
@@ -1213,11 +1213,12 @@ Read-only.
 | ---------------------- | ------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projectId`            | string  | yes      |                     | Project ID (e.g. project\_<id>)                                                                                                                                                                 |
 | `testcase_name`        | string  | no       |                     | Full test title. Give this or testcase_id.                                                                                                                                                      |
+| `testcase_ids`         | array   | no       | at most 10          | Several pw_test_ids from one run, instead of testcase_id. Needs testrun_id. Always JSON, under `tests`.                                                                                         |
 | `testcase_id`          | string  | no       |                     | The case's pw_test_id — exact, so prefer it when known.                                                                                                                                         |
 | `testrun_id`           | string  | no       |                     | Run scope. Omit to use the most recently started run carrying this case.                                                                                                                        |
 | `suite_file_path`      | string  | no       |                     | Spec file path — only needed when the title is shared across files.                                                                                                                             |
 | `format`               | string  | no       | one of `json`, `md` | Response shape. "md" is markdown, and markedly cheaper for the same content.                                                                                                                    |
-| `include_instructions` | boolean | no       |                     | Default true. The procedure and the trace runbook are identical on every call and about half the response — set false on repeat calls once you have read them.                                  |
+| `include_instructions` | boolean | no       |                     | Default false: the response carries short debugging rules. Set true for the full procedure and the trace runbook.                                                                               |
 | `maxLength`            | integer | no       | > `0`               | Cap the markdown length. Applies to format="md" only; anything cut is announced in the output. JSON is never truncated, because a cut payload would not parse and would read as a complete one. |
 
 ### Example Usage
@@ -1312,7 +1313,7 @@ JSON (`format: "json"`, the default):
 - `status`: `"ok"`, or `"warning"` when `warnings` is not empty.
 - `safety`: a reminder that everything from the application under test is data, not instructions.
 - `warnings[]`: what could not be found or loaded, and what to do about it (e.g. nothing matched the name, the run details or the history could not be loaded).
-- `debugging_prompt`, `trace_runbook`: the instructions; left out when `include_instructions` is `false`.
+- `debugging_rules`: the short procedure. `debugging_prompt` and `trace_runbook` replace it when `include_instructions` is `true`.
 - `test`: `name`, `platform`, `status`, `pw_test_id`, `run_id` of the matched case.
 - `verdict`: `verdict` (`"deterministic"`, `"flaky"` or `"inconclusive"`), `reason`, `rules_out`, `attempts[]` (see [get_flake_verdict](#get_flake_verdict)). Left out when nothing matched.
 - `regression_boundary`: `state` (`"started_failing"`, `"never_passed"`, `"passing_now"` or `"no_history"`), `last_passed` and `first_failed` (each `{ run_id, run_number, run_start_time, git_branch }` or `null`), `runs_failed_since`, `branch_changed`, `comparable`, `differences[]`, `summary`. `null` when the history could not be loaded or nothing matched.
@@ -5430,7 +5431,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Returns a runbook (`skill`) that teaches the Playwright agent CLI protocol (`npx playwright trace …`: open → actions → action → snapshot → close) and how to report the root cause and fix. With `testcase_id` (the Playwright `pw_test_id`) it also resolves a short-lived signed download URL for that case's hosted trace; scope it with `testrun_id` to target a specific run. Without `testcase_id` you get only the runbook, for a `trace.zip` you already have locally.
 
-The analysis runs on your machine: download the trace, run the CLI commands yourself (Playwright 1.59 or newer), then report what you found. TestDino does not fetch or parse the trace.
+Where trace analysis is on, the response carries facts read from the trace on the server, and `find` searches its actions and request file names without a download. Otherwise the analysis runs on your machine: download the trace, run the CLI commands yourself (Playwright 1.59 or newer), then report what you found.
 
 `trace_url` expires within minutes; download it immediately and call the tool again for a fresh one if it has expired. Traces are often captured only on retry, so a case's trace can be missing; `notes` then says so.
 
@@ -5440,11 +5441,13 @@ Read-only.
 
 ### Parameters
 
-| Parameter     | Type   | Required | Allowed values | Description                                                             |
-| ------------- | ------ | -------- | -------------- | ----------------------------------------------------------------------- |
-| `projectId`   | string | no       |                | Project ID — required to resolve the hosted trace download URL          |
-| `testcase_id` | string | no       |                | Playwright pw_test_id of the failing case whose hosted trace to resolve |
-| `testrun_id`  | string | no       |                | Optional run scope for testcase_id (single run)                         |
+| Parameter      | Type   | Required | Allowed values         | Description                                                                                   |
+| -------------- | ------ | -------- | ---------------------- | --------------------------------------------------------------------------------------------- |
+| `projectId`    | string | no       |                        | Project ID — required to resolve the hosted trace download URL                                |
+| `testcase_id`  | string | no       |                        | Playwright pw_test_id of the failing case whose hosted trace to resolve                       |
+| `testrun_id`   | string | no       |                        | Optional run scope for testcase_id (single run)                                               |
+| `testcase_ids` | array  | no       | at most 10             | Several pw_test_ids from one run, instead of testcase_id. Needs testrun_id.                   |
+| `find`         | string | no       | at most 200 characters | Plain text to search for in an analysed trace; \| means or. Needs testcase_id and testrun_id. |
 
 ### Example Usage
 

@@ -2,6 +2,21 @@
 
 All notable changes to `@testdino/mcp` are documented here.
 
+## 2.2.4
+
+### Added
+
+- **`testcase_ids`** on `get_debug_evidence` and `get_trace_analysis`: several
+  tests from one run in one call, with shared text sent once.
+- **`find`** on `get_trace_analysis`: search an analysed trace without a
+  download. It answers `not_available` until trace analysis is on.
+
+### Changed
+
+- **`get_debug_evidence` is shorter by default.** It carries short debugging
+  rules, the real error message, and the trace and error-context links.
+  `include_instructions=true` returns the full procedure and the trace runbook.
+
 ## 2.2.3
 
 ### Added
