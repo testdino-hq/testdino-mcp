@@ -58,6 +58,11 @@ All notable changes to `@testdino/mcp` are documented here.
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 
+- **`testcase_ids`** on `get_debug_evidence` and `get_trace_analysis`: several
+  tests from one run in one call, with shared text sent once.
+- **`find`** on `get_trace_analysis`: search an analysed trace without a
+  download. It answers `not_available` until trace analysis is on.
+
 ### Changed
 
 - **Every tool now says plainly whether it reads, changes or deletes data,
@@ -93,6 +98,9 @@ All notable changes to `@testdino/mcp` are documented here.
   silently returning a different set.
 - `update_manual_run` and `update_session` now say first that closing a run
   or session is permanent and only happens when you ask for it.
+- **`get_debug_evidence` is shorter by default.** It carries short debugging
+  rules, the real error message, and the trace and error-context links.
+  `include_instructions=true` returns the full procedure and the trace runbook.
 
 ### Removed
 

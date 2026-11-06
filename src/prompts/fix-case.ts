@@ -1,6 +1,6 @@
 // Copied from the hosted MCP (test-runs/prompts/fixCase.prompt.ts); keep the two identical.
 // Carries scope only, so the agent always reads fresh state. The root-cause
-// procedure rides on get_debug_evidence's `debugging_prompt` — pointed at,
+// procedure rides on get_debug_evidence's `debugging_rules` — pointed at,
 // never restated.
 
 import { HUMAN_APPROVAL_GATE } from "./approval-gate.js";
@@ -73,7 +73,7 @@ Call get_debug_evidence(projectId='${quoteIdentifier(args.projectId)}'${args.tes
 The verdict is computed from the attempts, not inferred, so do not argue with it and do not pre-judge it from how the error reads. It tells you which fixes the evidence can support, not which cause is impossible.
 The boundary names the last run this test passed and the first it failed. That turns "why does this fail" into "what changed between these two runs" — call list_testruns(projectId='${quoteIdentifier(args.projectId)}') for the \`git_commit_hash\`, \`git_branch\` and author on that pair and read the range. If the boundary says the test never passed, treat it as new or always-broken and stop looking for a commit that broke it.
 
-Step 1's response also carries \`debugging_prompt\` — the root-cause procedure, which owns the tier ordering, how to weigh evidence, and when a finding is reportable. Follow it rather than substituting your own. \`trace_runbook\` in the same response tells you how to read the traces it linked. You do not need a separate call for either.
+Step 1's response also carries \`debugging_rules\` — the short root-cause procedure: where to look next and when a finding is reportable. Follow it rather than substituting your own. If you need the full \`debugging_prompt\` or the \`trace_runbook\`, call step 1 again with include_instructions=true.
 
 2. Only when you need more than step 1 gave you.
 ${identityStep(args)}

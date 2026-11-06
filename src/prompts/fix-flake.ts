@@ -39,7 +39,7 @@ export function buildFixFlakeMessage(args: FixFlakeArgs): string {
 
 1. Get the verdict. Do not form your own first.
 ${verdictStep}
-One call returns the computed \`verdict\` with the per-attempt failure signatures behind it, the regression boundary, and download links for every stored artifact. Read the verdict before you look at any code, and do not override it with an impression from the error text. Its own \`reason\` says what was seen and \`rules_out\` says which fixes the evidence cannot support. The verdict tells you whether the behaviour repeats — it does not tell you the cause, so do not treat it as one.
+One call returns the computed \`verdict\` with the per-attempt failure signatures behind it, the regression boundary, and download links for the trace and error-context, with \`omitted_artifacts\` naming anything left out. Read the verdict before you look at any code, and do not override it with an impression from the error text. Its own \`reason\` says what was seen and \`rules_out\` says which fixes the evidence cannot support. The verdict tells you whether the behaviour repeats — it does not tell you the cause, so do not treat it as one.
 
 2. Respect what each verdict rules OUT.
 The verdict constrains which fixes the evidence can support. It does not tell you the cause is impossible, so keep the unlikely branch open if later evidence contradicts it.
@@ -48,7 +48,7 @@ The verdict constrains which fixes the evidence can support. It does not tell yo
 - \`inconclusive\` — do not guess, and do not pick the likelier-sounding branch. The response says why. Too few attempts means the test needs a run with retries enabled; differing signatures means comparing this test across other runs before changing anything, since that pattern often points at shared state rather than a defect in this test.
 
 3. Look at what the test actually saw.
-For \`flaky\` and \`inconclusive\`, the error text is the weakest evidence available. Step 1 returned the trace for the attempt that FAILED and, when one exists, the trace for the attempt that passed. Compare them: what the page actually looked like at the moment of failure separates a race from a wrong locator far more reliably than a stack trace does. The same response carries \`trace_runbook\` with the instructions for reading them, so no further call is needed.
+For \`flaky\` and \`inconclusive\`, the error text is the weakest evidence available. Step 1 returned the trace for the attempt that FAILED and, when one exists, the trace for the attempt that passed. Compare them: what the page actually looked like at the moment of failure separates a race from a wrong locator far more reliably than a stack trace does. Call step 1 again with include_instructions=true for the \`trace_runbook\`, which explains how to read them.
 
 4. Propose one change, and say what it proves.
 Name the file and line, state which verdict it follows from, and state what the next run should show if you are right. Do not change retry counts or timeouts to make a test pass — that hides the signal this verdict is built on.

@@ -60,7 +60,7 @@ describe("handleGetDebugEvidence", () => {
     });
   });
 
-  it("forwards every identifier and only an explicit include_instructions=false", async () => {
+  it("forwards every identifier and only an explicit include_instructions=true", async () => {
     mockFetchSuccess({});
 
     await handleGetDebugEvidence(
@@ -69,7 +69,7 @@ describe("handleGetDebugEvidence", () => {
         testcase_id: "pw-1",
         testrun_id: "run-1",
         suite_file_path: "e2e/login.spec.ts",
-        include_instructions: false,
+        include_instructions: true,
       }) as never
     );
 
@@ -77,7 +77,34 @@ describe("handleGetDebugEvidence", () => {
     expect(url).toContain("testcase_id=pw-1");
     expect(url).toContain("testrun_id=run-1");
     expect(url).toContain("suite_file_path=e2e%2Flogin.spec.ts");
-    expect(url).toContain("include_instructions=false");
+    expect(url).toContain("include_instructions=true");
+  });
+
+  it("sends nothing for include_instructions=false, which is the default", async () => {
+    mockFetchSuccess({});
+    await handleGetDebugEvidence(
+      createArgs({
+        projectId: "proj-1",
+        testcase_id: "pw-1",
+        include_instructions: false,
+      }) as never
+    );
+    expect(getLastFetchUrl()).not.toContain("include_instructions");
+  });
+
+  it("sends a batch as one call and reads it as JSON even if md was asked for", async () => {
+    mockFetchSuccess({ tests: [] });
+    const result = await handleGetDebugEvidence(
+      createArgs({
+        projectId: "proj-1",
+        testrun_id: "run-1",
+        testcase_ids: ["pw-1", "pw-2"],
+        format: "md",
+      }) as never
+    );
+    const url = getLastFetchUrl();
+    expect(url).toContain("testcase_ids=pw-1%2Cpw-2");
+    expect(JSON.parse(result.content[0].text)).toEqual({ tests: [] });
   });
 
   it("returns markdown as raw text (not JSON-parsed) and forwards maxLength", async () => {
