@@ -766,7 +766,9 @@ export const endpoints = {
   getTraceAnalysis: (params: {
     projectId: string;
     testcase_id?: string;
+    testcase_ids?: string;
     testrun_id?: string;
+    find?: string;
   }): string => {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;
@@ -830,6 +832,7 @@ export const endpoints = {
     projectId: string;
     testcase_name?: string;
     testcase_id?: string;
+    testcase_ids?: string;
     testrun_id?: string;
     suite_file_path?: string;
     format?: "json" | "md";

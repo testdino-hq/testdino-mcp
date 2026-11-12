@@ -32,6 +32,29 @@ describe("handleGetTraceAnalysis", () => {
     expect(url).not.toContain("testrun_id");
   });
 
+  it("forwards find and testcase_ids", async () => {
+    mockFetchSuccess({ find: { status: "searched" } });
+    await handleGetTraceAnalysis(
+      createArgs({
+        projectId: "proj-1",
+        testcase_id: "pw-abc",
+        testrun_id: "run-1",
+        find: "cart",
+      }) as never
+    );
+    expect(getLastFetchUrl()).toContain("find=cart");
+
+    mockFetchSuccess({ tests: [] });
+    await handleGetTraceAnalysis(
+      createArgs({
+        projectId: "proj-1",
+        testrun_id: "run-1",
+        testcase_ids: ["pw-1", "pw-2"],
+      }) as never
+    );
+    expect(getLastFetchUrl()).toContain("testcase_ids=pw-1%2Cpw-2");
+  });
+
   it("forwards testcase_id and testrun_id when resolving a hosted trace", async () => {
     mockFetchSuccess({ skill: "runbook", trace_url: "https://x/trace.zip" });
 
