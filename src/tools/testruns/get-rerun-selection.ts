@@ -60,6 +60,8 @@ export const getRerunSelectionTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

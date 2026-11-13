@@ -34,6 +34,8 @@ export const getManualTestCaseTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

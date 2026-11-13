@@ -170,8 +170,7 @@ const SKILLS_GUIDE_URI = "testdino://skills/guide";
 const SKILLS_PROMPT_NAME = "testdino_guide";
 const SKILLS_DESCRIPTION =
   "TestDino AI agent skills guide — tool selection rules, decision trees, " +
-  "workflow patterns, and the TestDino audit protocol. Read this before " +
-  "making any TestDino tool calls.";
+  "workflow patterns, and the TestDino audit protocol.";
 
 function readSkillsGuide(): string {
   const skillPath = join(__dirname, "..", "docs", "skill.md");

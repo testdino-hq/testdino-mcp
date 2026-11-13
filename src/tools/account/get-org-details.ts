@@ -26,6 +26,8 @@ export const getOrgDetailsTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

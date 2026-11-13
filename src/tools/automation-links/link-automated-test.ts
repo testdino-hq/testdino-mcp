@@ -59,6 +59,7 @@ export const linkAutomatedTestTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

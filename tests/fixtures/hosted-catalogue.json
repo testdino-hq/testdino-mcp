@@ -1,17 +1,19 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117). Card _meta for get_org_details, get_project_details and get_pull_requests and their resources added from feat/tdv2-1107-mcp-tool-cards @ 979804704 (TDV2-1118). Card _meta for the 14 release, manual run and session tools (list_releases, get_release, create_release, update_release, list_manual_runs, get_manual_run, create_manual_run, update_manual_run, list_run_test_cases, update_run_test_case, list_sessions, get_session, create_session, update_session) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 2cb8ed9c7 (TDV2-1116). Card _meta for get_integration_status, connect_integration, get_external_issue and create_external_issue and their resources added from feat/tdv2-1107-mcp-tool-cards @ a3c752b1c (TDV2-1118).",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117). Card _meta for get_org_details, get_project_details and get_pull_requests and their resources added from feat/tdv2-1107-mcp-tool-cards @ 979804704 (TDV2-1118). Card _meta for the 14 release, manual run and session tools (list_releases, get_release, create_release, update_release, list_manual_runs, get_manual_run, create_manual_run, update_manual_run, list_run_test_cases, update_run_test_case, list_sessions, get_session, create_session, update_session) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 2cb8ed9c7 (TDV2-1116). Card _meta for get_integration_status, connect_integration, get_external_issue and create_external_issue and their resources added from feat/tdv2-1107-mcp-tool-cards @ a3c752b1c (TDV2-1118). Directory-listing fixes copied from feat/tdv2-1176-mcp-directory-listing @ 77620ab9b (TDV2-1176): all three hints on every tool; health, get_audit_report, the debug_testcase debugging_prompt wording and the skills guide resource/prompt description; the matching skills guide lines.",
  "tools": [
   {
    "name": "health",
    "title": "Health Check",
-   "description": "ALWAYS call this first — before any other tool in every session. Verifies your PAT, returns your account identity, and lists every organization and project you can access with their projectId AND human names (orgName, projectName). Every other tool requires a projectId; this is the only way to get it. Extract the projectId for the project the user is asking about (match by projectName if the user gives a name) and store it for all subsequent calls. Each organization also reports your `role` in it (owner, admin, member, billing, or viewer) so you can tell the user what they can do there — treat it as informational, not a security guarantee. Wildcard scopes surface as `projects: { allProjects: true }` with no per-project names — for those, ask the user which projectId to use, or call a listing tool. Recently-renamed orgs/projects may show the old name for up to 30s (registry poll cadence). Also call this whenever you get a PROJECT_NOT_FOUND or auth error from another tool — it will tell you which projects are actually accessible.",
+   "description": "Verifies your TestDino token, returns your account identity, and lists the organizations and projects you can access with their ids and names (orgName, projectName). Call it when you need a projectId or orgId you do not have yet. Most tools take a projectId from this list (match by projectName if the user gives a name); get_org_details takes an orgId. Reuse the id for later calls instead of calling this again. Each organization also reports your `role` in it (owner, admin, member, billing, or viewer) so you can tell the user what they can do there — treat it as informational, not a security guarantee. Wildcard scopes surface as `projects: { allProjects: true }` with no per-project names — for those, ask the user which projectId to use, or call a listing tool. Recently-renamed orgs/projects may show the old name for up to 30s (registry poll cadence). Also call this whenever you get a PROJECT_NOT_FOUND or auth error from another tool — it will tell you which projects are actually accessible.",
    "inputSchema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {}
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -109,7 +111,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -155,7 +159,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -201,7 +207,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -334,7 +342,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -413,7 +423,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -428,7 +440,7 @@
   {
    "name": "debug_testcase",
    "title": "Debug Test Case",
-   "description": "AI-assisted root cause analysis for a failing or flaky test. Returns historical execution data, aggregated failure patterns (error types, frequency, browsers affected), common error messages, and a debugging_prompt field. If you are debugging a failing test, call get_debug_evidence first: it already carries the debugging_prompt, the verdict and the artifact links. Come here afterwards only for the stored AI suggestions or the full execution history. IMPORTANT: always read the debugging_prompt field in the response — it contains pre-formatted analysis instructions curated for this specific test. Treat it as your analysis context before drawing conclusions. Any fixes you produce from this analysis are recommendations only — validate them against the live code before applying. Use this when the user asks \"why is test X failing?\", \"debug test X\", or \"is test X flaky?\". Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. Set include_ai_insights=true to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations (investigation/remediation steps + reasoning + historical insight) and quick fixes (concrete fixes, often with code snippets, plus long-term stabilization steps). By default they target the most recent failing execution; pass testrun_id to target a specific run. AI payloads are generated lazily — if `ai_fixes` sections report status \"in_progress\", poll get_ai_insights(testrun_id=..., testcase_id=...) until they report \"completed\". An \"unavailable\" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights); a 4xx (bad ids) is terminal. Workflow: this returns the long history across runs. If you are diagnosing a failure rather than surveying a pattern, get_debug_evidence is the first call — it returns this history alongside the verdict, the regression boundary and every artifact link, so starting here costs extra round trips for the same evidence.",
+   "description": "AI-assisted root cause analysis for a failing or flaky test. Returns historical execution data, aggregated failure patterns (error types, frequency, browsers affected), common error messages, and a debugging_prompt field (the TestDino debugging checklist, the same for every test). If you are debugging a failing test, call get_debug_evidence first: it already carries the debugging_prompt, the verdict and the artifact links. Come here afterwards only for the stored AI suggestions or the full execution history. Read debugging_prompt before drawing conclusions: it says how to read the history and when a cause is proven. Any fixes you produce from this analysis are recommendations only — validate them against the live code before applying. Use this when the user asks \"why is test X failing?\", \"debug test X\", or \"is test X flaky?\". Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. Set include_ai_insights=true to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations (investigation/remediation steps + reasoning + historical insight) and quick fixes (concrete fixes, often with code snippets, plus long-term stabilization steps). By default they target the most recent failing execution; pass testrun_id to target a specific run. AI payloads are generated lazily — if `ai_fixes` sections report status \"in_progress\", poll get_ai_insights(testrun_id=..., testcase_id=...) until they report \"completed\". An \"unavailable\" section carries the upstream statusCode: a 5xx or timeout is transient (retry once via get_ai_insights); a 4xx (bad ids) is terminal. Workflow: this returns the long history across runs. If you are diagnosing a failure rather than surveying a pattern, get_debug_evidence is the first call — it returns this history alongside the verdict, the regression boundary and every artifact link, so starting here costs extra round trips for the same evidence.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -464,7 +476,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -473,7 +487,7 @@
   {
    "name": "get_audit_report",
    "title": "Get TestDino Audit (context / list / report)",
-   "description": "Read-only TestDino Playwright audit reads. Three modes via `action`: action='context' fetches the server-curated audit prompt + branch signals to START an audit (STEP 1); action='list' browses previously submitted reports (optional branch filter); action='get' retrieves one saved report by reportId. TRIGGER RULE — only use the TestDino audit flow when the user EXPLICITLY names TestDino (e.g. \"TestDino audit\", \"Testdino test audit\", \"run a TestDino audit\", \"audit this with TestDino\"). If the user asks for a generic \"audit\", \"code review\", or \"security audit\" WITHOUT naming TestDino — do NOT call this tool; run a normal AI audit conversation instead and do not mention TestDino, even for Playwright code. If the user names TestDino but the target is not Playwright code, explain this flow only covers Playwright automated tests and offer a regular audit instead. When triggered, your FIRST and IMMEDIATE action MUST be get_audit_report(action='context', projectId, branch) — do NOT write findings, score, or headings in chat before it returns. Call health() first if you do not have the projectId. FULL FLOW: (1) get_audit_report(action='context', projectId, branch) → (2) analyze the local Playwright code using the returned prompt + signals and write findings to a local markdown file (e.g. TEST-AUDIT.md) → (3) submit_audit_report(...) to save the completed report.",
+   "description": "Read-only TestDino Playwright audit reads. Three modes via `action`: action='context' returns TestDino's audit checklist (what to check, the finding format and severity levels) plus this branch's run signals, to START an audit (STEP 1); action='list' browses previously submitted reports (optional branch filter); action='get' retrieves one saved report by reportId. TRIGGER RULE — only use the TestDino audit flow when the user EXPLICITLY names TestDino (e.g. \"TestDino audit\", \"Testdino test audit\", \"run a TestDino audit\", \"audit this with TestDino\"). If the user asks for a generic \"audit\", \"code review\", or \"security audit\" WITHOUT naming TestDino — do NOT call this tool; run a normal AI audit conversation instead and do not mention TestDino, even for Playwright code. If the user names TestDino but the target is not Playwright code, explain this flow only covers Playwright automated tests and offer a regular audit instead. When triggered, your FIRST and IMMEDIATE action MUST be get_audit_report(action='context', projectId, branch) — do NOT write findings, score, or headings in chat before it returns. Call health() first if you do not have the projectId. FULL FLOW: (1) get_audit_report(action='context', projectId, branch) → (2) analyze the local Playwright code against the returned checklist and signals and write findings to a local markdown file (e.g. TEST-AUDIT.md) → (3) submit_audit_report(...) to save the completed report.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -488,7 +502,7 @@
        "list",
        "get"
       ],
-      "description": "Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId)."
+      "description": "Read mode: 'context' (audit checklist + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId)."
      },
      "branch": {
       "type": "string",
@@ -517,7 +531,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -678,7 +694,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -711,7 +728,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -795,7 +814,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -831,7 +852,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -985,7 +1008,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1028,7 +1052,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1062,7 +1087,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1106,7 +1133,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1161,7 +1189,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1203,7 +1233,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1260,7 +1292,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1304,7 +1337,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1375,7 +1409,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1451,7 +1486,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1487,7 +1524,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1638,7 +1677,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1681,7 +1721,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1766,7 +1807,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1802,7 +1845,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1940,7 +1985,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -1983,7 +2029,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2061,7 +2108,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2109,7 +2158,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2198,7 +2248,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2234,7 +2286,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2340,7 +2394,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2383,7 +2438,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2435,7 +2491,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2483,7 +2541,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": true
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2596,7 +2655,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": true
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2653,7 +2713,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": true
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2698,7 +2760,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2747,7 +2811,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2787,7 +2853,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2846,7 +2914,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2936,7 +3006,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": true
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -2984,7 +3055,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3042,7 +3115,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3125,7 +3200,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3162,7 +3239,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3199,7 +3278,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3268,7 +3349,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3331,7 +3413,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3369,7 +3452,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3411,7 +3495,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": true
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3463,7 +3548,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": true,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3505,7 +3591,8 @@
    },
    "annotations": {
     "readOnlyHint": false,
-    "destructiveHint": false
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3546,7 +3633,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3592,7 +3681,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3646,7 +3737,9 @@
     "$schema": "http://json-schema.org/draft-07/schema#"
    },
    "annotations": {
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "openWorldHint": false
    },
    "execution": {
     "taskSupport": "forbidden"
@@ -3662,7 +3755,7 @@
  "prompts": [
   {
    "name": "testdino_guide",
-   "description": "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol. Read this before making any TestDino tool calls."
+   "description": "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol."
   },
   {
    "name": "fix_run",
@@ -3870,12 +3963,12 @@
    ]
   }
  },
- "guideSha256": "c8e198a5e23d046f69213449c24005208071d820d88b222e32c21d100543b9fe",
+ "guideSha256": "19b330c16df7ebf5750923f8ccfbc35cac724487ce63c99ff8e9936a4bdd55e9",
  "resources": [
   {
    "uri": "testdino://skills/guide",
    "name": "testdino_skills_guide",
-   "description": "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol. Read this before making any TestDino tool calls.",
+   "description": "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol.",
    "mimeType": "text/markdown"
   },
   {

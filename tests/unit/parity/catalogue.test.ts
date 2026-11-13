@@ -21,8 +21,8 @@ const hosted = JSON.parse(
 };
 
 // The only additions: audit report files only a local package can read or write.
+// get_audit_report has none: it is read-only, so it never writes a file.
 const LOCAL_ARGS: Record<string, string[]> = {
-  get_audit_report: ["writeMarkdown", "outputPath"],
   submit_audit_report: ["markdownReportPath", "writeMarkdown", "outputPath"],
 };
 

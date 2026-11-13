@@ -180,6 +180,8 @@ export const listTestCasesTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

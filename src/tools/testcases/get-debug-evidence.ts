@@ -78,6 +78,8 @@ export const getDebugEvidenceTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

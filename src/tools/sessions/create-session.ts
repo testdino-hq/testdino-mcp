@@ -120,6 +120,7 @@ export const createSessionTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

@@ -93,6 +93,7 @@ export const rerunTestTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: true,
   },
   execution: {
     taskSupport: "forbidden",

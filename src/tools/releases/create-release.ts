@@ -169,6 +169,7 @@ export const createReleaseTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

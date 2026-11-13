@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This guide covers every tool and prompt in the `@testdino/mcp` server. From 2.2.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
+This guide covers every tool and prompt in the `@testdino/mcp` server. From 2.2.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` arguments of `submit_audit_report`.
 
 > **Platform Support**: The tools work with any MCP-compatible client. Setup is verified on **Cursor**, **Claude Desktop**, **VS Code**, and **JetBrains** IDEs. Paths below use Cursor's `.cursor/mcp.json` — substitute the equivalent file for your client.
 
@@ -153,7 +153,7 @@ The card reads the same `structuredContent` described above, so the text answer 
 
 ### Description
 
-Call `health` first in every session. It confirms that `TESTDINO_PAT` is accepted and returns your user ID, the token's expiry, and every organization and project the token is scoped to, by ID and name. Every other tool needs a `projectId`; this is where you get it. Match the project the user names against `projectName` and reuse its `projectId` for later calls.
+Call `health` when you need a `projectId` or `orgId` you don't have yet. It confirms that `TESTDINO_PAT` is accepted and returns your user ID, the token's expiry, and every organization and project the token is scoped to, by ID and name. Most tools take a `projectId` from this list; `get_org_details` takes an `orgId`. Match the project the user names against `projectName` and reuse its `projectId` for later calls.
 
 Each organization also carries your `role` there (owner, admin, member, billing or viewer). It is informational, not a permission check; the server enforces real permissions on every call. A token scoped to all projects of an organization shows `projects: { "allProjects": true }` with no names, so ask the user which `projectId` to use. A recently renamed organization or project can show its old name for up to 30 seconds.
 
@@ -200,8 +200,7 @@ No parameters.
     }
   ],
   "expiresAt": "2027-01-10T04:57:25.274Z",
-  "createdAt": "2026-10-12T04:57:25.274Z",
-  "_skills_guide": "Read the testdino://skills/guide resource (MCP resource) before making any tool calls. It contains tool selection rules, required parameter lists, decision trees, and the full TestDino audit protocol."
+  "createdAt": "2026-10-12T04:57:25.274Z"
 }
 ```
 
@@ -216,7 +215,6 @@ No parameters.
   - `role`: your role in that organization, or `null` if you are no longer a member
   - `projects`: either a list of `{ projectId, projectName }` (`projectName` may be `null`), or `{ "allProjects": true }` for an all-projects scope
 - `expiresAt`, `createdAt`: the token's expiry and creation time (ISO 8601), or `null` when `patValid` is `false`.
-- `_skills_guide`: a pointer to the `testdino://skills/guide` resource.
 
 ### Error Handling
 
@@ -1936,7 +1934,7 @@ Read-only. One tool, three modes selected by `action`:
 
 | `action`  | Returns                                                                                                                                                                   |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `context` | The server-curated audit prompt, branch signals (recent runs, top failing / flaky / slow tests), CI suggestions and the last audit on that branch. Step 1 of an audit.    |
+| `context` | The audit checklist, branch signals (recent runs, top failing / flaky / slow tests), CI suggestions and the last audit on that branch. Step 1 of an audit.                |
 | `list`    | Previously submitted reports, paginated, optionally filtered by `branch`. Reports come without their content (`findings`, `recommendations`, `markdownReport` are empty). |
 | `get`     | One saved report by `reportId`, with its full content.                                                                                                                    |
 
@@ -1947,22 +1945,20 @@ The audit flow is only for an explicit request that names TestDino ("run a TestD
 **Local package only**:
 
 - When `branch` is omitted, the package fills it from `git branch --show-current`, run in `TESTDINO_MCP_WORKSPACE` (or the process working directory). The branch is sent for `context` only; `list` sends only an explicit `branch`.
-- `writeMarkdown` and `outputPath` apply to `action="get"`: when `writeMarkdown` is true and the report has markdown, the package also saves it to `outputPath` (default `TEST-AUDIT.md`). `outputPath` must be a relative path inside `TESTDINO_MCP_WORKSPACE` (or the working directory). The outcome is added to the body as `localReportWrite`. The hosted MCP does not take these arguments.
+- The tool is read-only and never writes a file. To keep a report locally, save its `markdownReport` yourself, or pass `writeMarkdown` to `submit_audit_report`.
 
 Deleting a report is not possible through MCP; use the TestDino web UI.
 
 ### Parameters
 
-| Parameter       | Type    | Required | Allowed values                  | Description                                                                                                                        |
-| --------------- | ------- | -------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`     | string  | yes      |                                 | Project ID (required)                                                                                                              |
-| `action`        | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId). |
-| `branch`        | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter.  |
-| `reportId`      | string  | no       |                                 | Report ID. Required for action='get'.                                                                                              |
-| `limit`         | integer | no       | > `0`                           | Page size for action='list'.                                                                                                       |
-| `page`          | integer | no       | > `0`                           | Page number for action='list'.                                                                                                     |
-| `writeMarkdown` | boolean | no       |                                 | Local package only: when true and action is "get", also save the report to a local file.                                           |
-| `outputPath`    | string  | no       |                                 | Local package only: where to save it, relative to TESTDINO_MCP_WORKSPACE (or the working directory). Default TEST-AUDIT.md.        |
+| Parameter   | Type    | Required | Allowed values                  | Description                                                                                                                        |
+| ----------- | ------- | -------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string  | yes      |                                 | Project ID (required)                                                                                                              |
+| `action`    | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId). |
+| `branch`    | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter.  |
+| `reportId`  | string  | no       |                                 | Report ID. Required for action='get'.                                                                                              |
+| `limit`     | integer | no       | > `0`                           | Page size for action='list'.                                                                                                       |
+| `page`      | integer | no       | > `0`                           | Page number for action='list'.                                                                                                     |
 
 ### Example Usage
 
@@ -2019,9 +2015,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
   "arguments": {
     "projectId": "project_0000000000000000000a0001",
     "action": "get",
-    "reportId": "audit_0000000000000000000a0001",
-    "writeMarkdown": true,
-    "outputPath": "reports/TEST-AUDIT.md"
+    "reportId": "audit_0000000000000000000a0001"
   }
 }
 ```
@@ -2031,7 +2025,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
 Every mode returns `{ success, message, data }`.
 
 - **`context`** (`message`: `Audit context retrieved successfully`): `data` has
-  - `prompt`: the audit instructions to follow.
+  - `prompt`: the audit checklist (what to check, the finding format and severity levels).
   - `branchSignals`: `branch` (or `null`), `totalRuns`, `recentRuns` (up to 10), `topFailingTests`, `topFlakyTests`, `topSlowTests`.
   - `ciSuggestions`: CI facts the score uses, or `{ "status": "unavailable" }` when they could not be read.
   - `lastAudit`: the latest report on this project and branch (same shape as a listed report, with slim `findings`), or `null`.
@@ -2039,8 +2033,6 @@ Every mode returns `{ success, message, data }`.
 - **`get`** (`message`: `Audit report retrieved`): `data` is one report.
 
 A report has: `_id`, `branch`, `scope`, `score`, `scoreBreakdown`, `ciSuggestions`, `createdAt`, `categoryVersion`, `findings`, `recommendations`, `overview`, `markdownReport`, `organization`, `project`, `reportName`, `requestedBy.displayName`, `target`, `categoryCounts`, `severityCounts`, `topCategories[]` (`category`, `count`, `label`, `description`), `highSeverityFindingsCount`, `findingsCount`, `recommendationCount`.
-
-With `writeMarkdown` (local package), the body also has `localReportWrite`: `{ "saved": true, "path": "<absolute path>" }`, or `{ "saved": false, "reason": "..." }` when the file could not be written (the read itself still succeeds).
 
 ### Error Handling
 

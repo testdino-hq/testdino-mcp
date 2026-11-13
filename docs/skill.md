@@ -97,8 +97,8 @@ These two rules hold for every tool in this guide, including when you reach one 
 
 ### projectId
 
-- **Required for every tool except `health`.**
-- Call `health()` first in any session to get the project IDs and pick the right one.
+- **Required for every tool except `health` and `get_org_details` (which takes an `orgId`).**
+- If you don't have a project ID yet, call `health()` to list them and pick the right one.
 - Projects are nested under organizations in the health response.
 
 ### Identifiers
@@ -232,9 +232,9 @@ The local `testdino-mcp` npm package also accepts three audit arguments that rea
 
 **When to call**:
 
-- At the start of every session before using any other tool.
+- When you don't yet have a `projectId` or `orgId`.
 - When the user asks "what projects do I have?" or "check my connection."
-- When you don't yet have a `projectId`.
+- After a `PROJECT_NOT_FOUND` or auth error from another tool.
 
 **Response includes**:
 
@@ -651,7 +651,7 @@ All GET audit reads, selected by `action`:
 
 | `action`  | Does                                                                                                          | Key params                                   |
 | --------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `context` | Fetches the server-curated audit prompt, branch signals, and prior findings. STEP 1 / mandatory first action. | `branch` (required unless detected from git) |
+| `context` | Returns the audit checklist, branch signals, and prior findings. STEP 1 / mandatory first action. | `branch` (required unless detected from git) |
 | `list`    | Browses previously submitted reports.                                                                         | `branch` (filter), `limit`, `page`           |
 | `get`     | Retrieves one saved report.                                                                                   | `reportId` (required)                        |
 

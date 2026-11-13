@@ -50,7 +50,8 @@ export const updateQuarantineTool = {
   },
   annotations: {
     readOnlyHint: false,
-    destructiveHint: false,
+    destructiveHint: true,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

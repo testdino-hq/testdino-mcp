@@ -39,7 +39,8 @@ export const assignTestTool = {
   },
   annotations: {
     readOnlyHint: false,
-    destructiveHint: false,
+    destructiveHint: true,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

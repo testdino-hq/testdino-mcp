@@ -205,6 +205,7 @@ export const createManualTestCaseTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

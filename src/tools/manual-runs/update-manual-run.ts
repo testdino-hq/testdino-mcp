@@ -42,6 +42,7 @@ export const updateManualRunTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

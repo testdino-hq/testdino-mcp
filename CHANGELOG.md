@@ -58,6 +58,28 @@ All notable changes to `@testdino/mcp` are documented here.
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 
+### Changed
+
+- **Every tool now says plainly whether it reads, changes or deletes data,
+  and whether it reaches outside TestDino.** `update_quarantine` and
+  `assign_test` are now marked as changes that can overwrite what someone
+  else set. Only `rerun_test`, `connect_integration`,
+  `create_external_issue` and `get_external_issue` are marked as reaching
+  another system.
+- **`health` no longer asks to be called first in every session**, and no
+  longer tells the AI tool to read the skills guide before any call. Call
+  it when you need a project or organization ID. The guide is still there
+  to open.
+- Clearer wording for the audit context and the `debug_testcase` debugging
+  checklist, the same as the hosted TestDino MCP.
+
+### Removed
+
+- **`get_audit_report` no longer saves a report to a file** (`writeMarkdown`
+  and `outputPath` are gone from it), so it stays read-only. Save the
+  report's `markdownReport` yourself, or use `writeMarkdown` on
+  `submit_audit_report`, which is unchanged.
+
 ## 2.2.3
 
 ### Added
