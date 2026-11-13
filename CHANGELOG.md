@@ -72,6 +72,9 @@ All notable changes to `@testdino/mcp` are documented here.
   to open.
 - Clearer wording for the audit context and the `debug_testcase` debugging
   checklist, the same as the hosted TestDino MCP.
+- **An audit is saved to TestDino only after you agree.** The AI tool shows
+  the findings and asks before calling `submit_audit_report`, unless you
+  already asked it to save the audit.
 
 ### Removed
 

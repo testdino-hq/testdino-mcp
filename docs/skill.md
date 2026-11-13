@@ -197,8 +197,8 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 **When both conditions hold (explicit TestDino + Playwright target), run the full flow**:
 
 1. `get_audit_report(action="context", projectId=..., branch="...")` — IMMEDIATE first action (read-only). Use `health()` first if you don't have a `projectId` yet.
-2. Only after Step 1 returns, analyze the local Playwright code using the returned prompt + signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
-3. Call `submit_audit_report` with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
+2. Only after Step 1 returns, analyze the local Playwright code against the returned checklist and signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
+3. Show the user the findings and ask whether to save the audit to TestDino (that is when the score is computed). On a yes, or if they already asked to save it, call `submit_audit_report` with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
 
 **Other principles for Scenario 2**:
 
@@ -665,7 +665,7 @@ All GET audit reads, selected by `action`:
 
 #### `submit_audit_report` (write — requires write permission)
 
-Submits the completed report. STEP 3, after you have analyzed the code locally.
+Saves the completed report and returns its score. STEP 3: only after you have shown the user the findings and they agreed to save, or when they asked to save it.
 
 | Parameter                     | Type   | Description                                                         |
 | ----------------------------- | ------ | ------------------------------------------------------------------- |
@@ -688,7 +688,7 @@ Deletion is not available via MCP — use the TestDino web UI.
 3. In scoped audits, spend most findings on feature-specific validation gaps and missing scenarios; generic waits/logging/duplication issues are secondary unless they materially invalidate confidence in that slice.
 4. If `get_audit_report(action="context")` fails because the project is missing or access is denied, call `health()` and resolve the right `projectId` before continuing. Do not write a fallback local-only audit and present it as a TestDino audit.
 5. Convert the audit into `findings` and `recommendations`, choose a short `reportName`, and write the markdown report (no score line; it is not known until submission).
-6. Submit the completed report with `submit_audit_report(branch="...", reportName="...", findings=[...], markdownReport="...")` and quote the returned `score` + top `scoreBreakdown` categories to the user.
+6. Show the user the findings and ask whether to save the audit; on a yes, submit it with `submit_audit_report(branch="...", reportName="...", findings=[...], markdownReport="...")` and quote the returned `score` + top `scoreBreakdown` categories to the user.
 7. Use `get_audit_report(action="list")` to browse all saved reports (add `branch="..."` for branch-specific history) and `get_audit_report(action="get", reportId="...")` to retrieve a specific one.
 
 **Token efficiency rules**:
@@ -703,9 +703,10 @@ Deletion is not available via MCP — use the TestDino web UI.
 
 ```
 get_audit_report(action="context", branch="main")
-→ Receive prompt + branchSignals + ciSuggestions + lastAudit
+→ Receive the checklist (prompt) + branchSignals + ciSuggestions + lastAudit
 → Read only the relevant auth/login files plus shared setup/helpers
 → Build findings + recommendations + reportName, then write TEST-AUDIT.md
+→ Show the findings, ask "Save this audit to TestDino?", and on a yes:
 → submit_audit_report(branch="main", scope="feature", target={ featureName: "Auth / Login" }, reportName="Login Flow Tests", findings=[...], markdownReport="<TEST-AUDIT.md contents>") → returns score + scoreBreakdown
 → Optionally: get_audit_report(action="list") or get_audit_report(action="get", reportId="<id>")
 ```
