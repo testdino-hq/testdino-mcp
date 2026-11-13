@@ -29,6 +29,12 @@ export const getTestControlsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_test_controls/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_test_controls/v1",
+  },
 };
 
 export async function handleGetTestControls(args?: Record<string, unknown>) {

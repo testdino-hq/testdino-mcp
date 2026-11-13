@@ -35,10 +35,20 @@ Every tool answers the same way.
 - **No PAT, an audit report file that cannot be read, or the network failing**: `isError` is `true` with a message saying what went wrong. A read that fails on a dropped connection is retried twice first.
 - **Destructive tools** carry `destructiveHint`, so clients that honour it ask before running them: `update_manual_test_case`, `unlink_automated_test`, `update_release`, `update_manual_run`, `update_run_test_case`, `update_session`, `quarantine_tests`, `release_quarantine`, `set_test_critical`. Read-only tools carry `readOnlyHint`.
 
+## Cards in AI chats
+
+AI tools that render MCP Apps (Claude Desktop) also show some answers as a card. Each card tool names its card in `_meta.ui.resourceUri`, and the package fetches the card HTML from the TestDino MCP, so it ships no copy:
+
+- `health`, `list_testruns`, `list_testcase`, `get_run_details`, `get_run_error_clusters`, `get_testcase_details`, `get_flake_verdict`, `get_rerun_selection`, `get_ai_insights`, `rerun_test`, `list_manual_test_cases`, `list_manual_test_suites`, `list_automated_tests`, `get_manual_test_case`, `get_test_case_links`, `create_manual_test_case`, `update_manual_test_case`, `create_manual_test_suite`, `link_automated_test`, `unlink_automated_test`, `bulk_link_automated_tests`, `list_test_controls`, `get_test_controls`, `get_quarantine`, `quarantine_tests`, `update_quarantine`, `release_quarantine`, `set_test_critical`, `assign_test`, `watch_test`, `get_org_details`, `get_project_details`, `get_pull_requests`, `list_releases`, `get_release`, `create_release`, `update_release`, `list_manual_runs`, `get_manual_run`, `create_manual_run`, `update_manual_run`, `list_run_test_cases`, `update_run_test_case`, `list_sessions`, `get_session`, `create_session`, `update_session`, `get_integration_status`, `connect_integration`, `create_external_issue` and `get_external_issue`: `ui://testdino/tool/<tool>/v1`, from `GET /api/mcp/ui/tools/<tool>`.
+- `show_audit_report`: `ui://testdino/audit-report/v1`, from `GET /api/mcp/ui/audit-report` (see [show_audit_report](#show_audit_report)).
+
+The card reads the same `structuredContent` described above, so the text answer is the same with or without it. Cards never show emails, user ids, stack traces, logs, download links, shell commands, descriptions or steps. Clicking a run, a test case or an automated test opens it in TestDino; Test Controls cards open the Test Controls page on the matching tab.
+
 ## Table of Contents
 
 - [Setup](#setup)
 - [Responses and errors](#responses-and-errors)
+- [Cards in AI chats](#cards-in-ai-chats)
 
 **Test Execution & Results:**
 
@@ -150,6 +160,8 @@ Each organization also carries your `role` there (owner, admin, member, billing 
 Call it again when another tool reports a project or auth error: it shows which projects the token can actually reach.
 
 Read-only. It makes no call beyond the TestDino MCP server.
+
+Its card is "Your access": organization, project and your role per row, the token's expiry with a warning from 7 days before it, and a link to manage tokens ([Cards in AI chats](#cards-in-ai-chats)).
 
 ### Parameters
 

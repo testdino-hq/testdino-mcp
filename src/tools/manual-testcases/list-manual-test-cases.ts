@@ -138,6 +138,12 @@ export const listManualTestCasesTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_manual_test_cases/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_manual_test_cases/v1",
+  },
 };
 
 export async function handleListManualTestCases(

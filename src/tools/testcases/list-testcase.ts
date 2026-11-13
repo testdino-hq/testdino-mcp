@@ -184,6 +184,12 @@ export const listTestCasesTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_testcase/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_testcase/v1",
+  },
 };
 
 export async function handleListTestCases(args?: ListTestCasesArgs) {

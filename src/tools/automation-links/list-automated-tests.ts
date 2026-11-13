@@ -60,6 +60,12 @@ export const listAutomatedTestsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_automated_tests/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_automated_tests/v1",
+  },
 };
 
 export async function handleListAutomatedTests(args?: ListAutomatedTestsArgs) {

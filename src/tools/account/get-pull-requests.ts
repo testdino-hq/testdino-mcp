@@ -42,6 +42,12 @@ export const getPullRequestsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_pull_requests/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_pull_requests/v1",
+  },
 };
 
 export async function handleGetPullRequests(args?: Record<string, unknown>) {

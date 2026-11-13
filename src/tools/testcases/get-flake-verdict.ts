@@ -46,6 +46,12 @@ export const getFlakeVerdictTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_flake_verdict/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_flake_verdict/v1",
+  },
 };
 
 export async function handleGetFlakeVerdict(args?: GetFlakeVerdictArgs) {

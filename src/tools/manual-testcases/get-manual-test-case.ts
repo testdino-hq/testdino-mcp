@@ -38,6 +38,12 @@ export const getManualTestCaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_manual_test_case/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_manual_test_case/v1",
+  },
 };
 
 export async function handleGetManualTestCase(args?: GetManualTestCaseArgs) {

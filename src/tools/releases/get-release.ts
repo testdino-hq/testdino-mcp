@@ -38,6 +38,12 @@ export const getReleaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_release/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_release/v1",
+  },
 };
 
 export async function handleGetRelease(args?: GetReleaseArgs) {

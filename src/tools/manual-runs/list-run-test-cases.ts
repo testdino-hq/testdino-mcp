@@ -83,6 +83,12 @@ export const listRunTestCasesTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/list_run_test_cases/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/list_run_test_cases/v1",
+  },
 };
 
 export async function handleListRunTestCases(args?: ListRunTestCasesArgs) {

@@ -69,6 +69,12 @@ export const getAiInsightsTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_ai_insights/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_ai_insights/v1",
+  },
 };
 
 export async function handleGetAiInsights(args?: GetAiInsightsArgs) {

@@ -209,6 +209,12 @@ export const createManualTestCaseTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/create_manual_test_case/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/create_manual_test_case/v1",
+  },
 };
 
 export async function handleCreateManualTestCase(

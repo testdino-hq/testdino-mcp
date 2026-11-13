@@ -55,6 +55,12 @@ export const updateQuarantineTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/update_quarantine/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/update_quarantine/v1",
+  },
 };
 
 export async function handleUpdateQuarantine(args?: Record<string, unknown>) {

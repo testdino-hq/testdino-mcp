@@ -47,6 +47,12 @@ export const getTestCaseLinksTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/get_test_case_links/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/get_test_case_links/v1",
+  },
 };
 
 export async function handleGetTestCaseLinks(args?: GetTestCaseLinksArgs) {

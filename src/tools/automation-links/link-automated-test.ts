@@ -63,6 +63,12 @@ export const linkAutomatedTestTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/link_automated_test/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/link_automated_test/v1",
+  },
 };
 
 export async function handleLinkAutomatedTest(args?: LinkAutomatedTestArgs) {

@@ -46,6 +46,12 @@ export const updateManualRunTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/update_manual_run/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/update_manual_run/v1",
+  },
 };
 
 export async function handleUpdateManualRun(args?: UpdateManualRunArgs) {

@@ -44,6 +44,12 @@ export const assignTestTool = {
   execution: {
     taskSupport: "forbidden",
   },
+  _meta: {
+    ui: {
+      resourceUri: "ui://testdino/tool/assign_test/v1",
+    },
+    "ui/resourceUri": "ui://testdino/tool/assign_test/v1",
+  },
 };
 
 export async function handleAssignTest(args?: Record<string, unknown>) {

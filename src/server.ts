@@ -12,6 +12,11 @@ import {
 import { readFileSync } from "fs";
 import { ApiError, apiRequestJson } from "./lib/request.js";
 import { endpoints } from "./lib/endpoints.js";
+import {
+  CARD_TOOLS,
+  toolCardResources,
+  toolCardUri,
+} from "./lib/tool-cards.js";
 import { getApiKey } from "./lib/env.js";
 import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
 import {
@@ -190,6 +195,14 @@ function asHostedResult(result: {
   }
 }
 
+const CARD_RESOURCES = new Map<string, () => string>([
+  [AUDIT_REPORT_URI, endpoints.auditCardResource],
+  ...CARD_TOOLS.map((tool): [string, () => string] => [
+    toolCardUri(tool),
+    () => endpoints.toolCardResource(tool),
+  ]),
+]);
+
 // Tools whose route returns the hosted tool result itself, not an API body to reshape.
 const PASSTHROUGH_TOOLS = new Set(["show_audit_report"]);
 
@@ -207,7 +220,7 @@ export function createServer(): Server {
   const server = new Server(
     {
       name: "@testdino/mcp",
-      version: "2.2.3",
+      version: "2.2.4",
     },
     {
       capabilities: {
@@ -305,7 +318,7 @@ export function createServer(): Server {
         {
           name: "testdino_audit_report_view",
           title: "TestDino audit scorecard",
-          uri: "ui://testdino/audit-report/v1",
+          uri: AUDIT_REPORT_URI,
           description:
             "Scorecard view of a saved TestDino Playwright audit report.",
           mimeType: "text/html;profile=mcp-app",
@@ -316,6 +329,7 @@ export function createServer(): Server {
             },
           },
         },
+        ...toolCardResources,
       ],
     };
   });
@@ -326,18 +340,24 @@ export function createServer(): Server {
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
 
-    // The card's HTML comes from the hosted MCP, so the package never carries its own copy.
-    if (uri === AUDIT_REPORT_URI) {
+    // A card's HTML comes from the hosted MCP, so the package never carries its own copy.
+    const cardUrl = CARD_RESOURCES.get(uri);
+    if (cardUrl) {
       const token = getApiKey();
-      try {
-        return await apiRequestJson<{ contents: unknown[] }>(
-          endpoints.auditCardResource(),
-          { headers: { Authorization: `Bearer ${token}` } }
+      if (!token) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          "Missing TESTDINO_PAT environment variable. Please configure it in your .cursor/mcp.json file under the 'env' section."
         );
+      }
+      try {
+        return await apiRequestJson<{ contents: unknown[] }>(cardUrl(), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } catch {
         throw new McpError(
           ErrorCode.InternalError,
-          `Resource unavailable: ${AUDIT_REPORT_URI}`
+          `Resource unavailable: ${uri}`
         );
       }
     }
