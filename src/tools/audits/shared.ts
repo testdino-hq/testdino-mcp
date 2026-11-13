@@ -1,7 +1,7 @@
 /**
  * Shared helpers for the audit tools.
  *
- * `get_audit_report` and `submit_audit_report` reuse this module: filesystem
+ * `get_audit_report` and `submit_audit_report` reuse this module (only submit writes a file): filesystem
  * plumbing, git branch detection, markdown cleanup and error-message
  * normalization.
  */

@@ -2,7 +2,7 @@
  * get_audit_report — read-only TestDino Playwright audit reads.
  *
  * Three modes via `action`:
- *   context → fetches the server-curated audit prompt + branchSignals
+ *   context → returns the audit checklist + branchSignals
  *             (topFailingTests, topFlakyTests, topSlowTests, recentRuns).
  *             STEP 1 of the audit flow.
  *   list    → browses previously submitted audit reports.

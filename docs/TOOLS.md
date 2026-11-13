@@ -1926,7 +1926,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_audit_report
 
-**Purpose**: Read TestDino Playwright audits: fetch the audit prompt and branch signals to start an audit, list past reports, or fetch one report.
+**Purpose**: Read TestDino Playwright audits: get the audit checklist and branch signals to start an audit, list past reports, or fetch one report.
 
 ### Description
 
@@ -1951,14 +1951,14 @@ Deleting a report is not possible through MCP; use the TestDino web UI.
 
 ### Parameters
 
-| Parameter   | Type    | Required | Allowed values                  | Description                                                                                                                        |
-| ----------- | ------- | -------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId` | string  | yes      |                                 | Project ID (required)                                                                                                              |
-| `action`    | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId). |
-| `branch`    | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter.  |
-| `reportId`  | string  | no       |                                 | Report ID. Required for action='get'.                                                                                              |
-| `limit`     | integer | no       | > `0`                           | Page size for action='list'.                                                                                                       |
-| `page`      | integer | no       | > `0`                           | Page number for action='list'.                                                                                                     |
+| Parameter   | Type    | Required | Allowed values                  | Description                                                                                                                       |
+| ----------- | ------- | -------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string  | yes      |                                 | Project ID (required)                                                                                                             |
+| `action`    | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (audit checklist + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId).   |
+| `branch`    | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter. |
+| `reportId`  | string  | no       |                                 | Report ID. Required for action='get'.                                                                                             |
+| `limit`     | integer | no       | > `0`                           | Page size for action='list'.                                                                                                      |
+| `page`      | integer | no       | > `0`                           | Page number for action='list'.                                                                                                    |
 
 ### Example Usage
 

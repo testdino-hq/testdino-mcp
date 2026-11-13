@@ -8,7 +8,11 @@ import {
   getLastFetchOptions,
 } from "../../../helpers/mockFetch.js";
 import { createArgs, parseToolResponse } from "../../../helpers/mockTypes.js";
-import { handleGetAuditReport } from "../../../../src/tools/audits/get-audit-report.js";
+import {
+  getAuditReportTool,
+  handleGetAuditReport,
+} from "../../../../src/tools/audits/get-audit-report.js";
+import { compileValidators } from "../../../../src/lib/validate.js";
 
 describe("handleGetAuditReport", () => {
   afterEach(() => {
@@ -149,5 +153,21 @@ describe("handleGetAuditReport", () => {
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
+  });
+
+  // What a real caller hits first: the server validates before any handler runs.
+  it("accepts an old call that still passes writeMarkdown, and drops it", () => {
+    const validate = compileValidators([getAuditReportTool]).get(
+      "get_audit_report"
+    )!;
+    const args: Record<string, unknown> = {
+      projectId: "p",
+      action: "get",
+      reportId: "r",
+      writeMarkdown: true,
+      outputPath: "TEST-AUDIT.md",
+    };
+    expect(validate(args)).toBe(true);
+    expect(args).toEqual({ projectId: "p", action: "get", reportId: "r" });
   });
 });

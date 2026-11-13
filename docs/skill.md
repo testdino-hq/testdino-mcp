@@ -97,7 +97,7 @@ These two rules hold for every tool in this guide, including when you reach one 
 
 ### projectId
 
-- **Required for every tool except `health` and `get_org_details` (which takes an `orgId`).**
+- **Required for most tools.** Not needed for `health`, for `get_org_details` (it takes an `orgId`), or for `get_trace_analysis` when you only want the trace runbook.
 - If you don't have a project ID yet, call `health()` to list them and pick the right one.
 - Projects are nested under organizations in the health response.
 
@@ -216,7 +216,7 @@ Don't refuse the operation — the hosted path still works. Just flag the cost w
 
 ### Local package only — audit report files
 
-The local `testdino-mcp` npm package also accepts three audit arguments that read or write files on the user's machine: `markdownReportPath` on `submit_audit_report` (submit a report saved to a local file instead of inlining it), and `writeMarkdown` + `outputPath` on `get_audit_report` / `submit_audit_report` (also save the report locally, `TEST-AUDIT.md` by default). Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process's working directory. The hosted MCP has no access to the user's files, so it does not take them — pass `markdownReport` inline there.
+The local `testdino-mcp` npm package also accepts three audit arguments that read or write files on the user's machine: `markdownReportPath` on `submit_audit_report` (submit a report saved to a local file instead of inlining it), and `writeMarkdown` + `outputPath` on `submit_audit_report` (also save the submitted report locally, `TEST-AUDIT.md` by default). `get_audit_report` is read-only and saves nothing. Relative paths resolve from `TESTDINO_MCP_WORKSPACE` when set, otherwise from the MCP process's working directory. The hosted MCP has no access to the user's files, so it does not take them — pass `markdownReport` inline there.
 
 ---
 
@@ -359,7 +359,7 @@ get_rerun_selection(projectId, runId)
 1. **`mode`** has no default. An omitted mode comes back as `MODE_REQUIRED`, carrying both options and `rerun_mechanism` so you can put the choice to them properly.
 2. **`confirm`** must be literally `true`, and only after they said so. This costs CI minutes.
 
-**Reading `rerun_mechanism` out loud**: `same_commit: "in-run"` means the re-run happens inside the run's own GitHub run, so that red check can turn green — say so, it is usually what the user wants. `"new-workflow"` means a separate run starts and the original stays red; the `reason` tells you whether changing the selection would help (`flaky-only`, `hand-picked`) or not (`not-github-actions`, `environment`).
+**Reading `rerun_mechanism` out loud**: `same_commit: "in-run"` means the re-run happens inside the run's own GitHub run, so that red check can turn green — say so, it is usually what the user wants. `"new-workflow"` means a separate run starts and the original stays red; the `reason` tells you whether changing the selection would help (`flaky-only`, `hand-picked`) or not (`not-github-actions`, `environment`). For "in-run", `only_failed_tests` says whether each job runs just its failed tests or repeats in full. `rerun_mechanism` is absent when nothing is selected or the answer could not be established.
 
 **Every refusal is free**: nothing is dispatched before a refusal, and where running it locally is an option the refusal hands you the `command` to offer instead.
 

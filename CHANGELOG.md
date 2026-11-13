@@ -64,8 +64,8 @@ All notable changes to `@testdino/mcp` are documented here.
   and whether it reaches outside TestDino.** `update_quarantine` and
   `assign_test` are now marked as changes that can overwrite what someone
   else set. Only `rerun_test`, `connect_integration`,
-  `create_external_issue` and `get_external_issue` are marked as reaching
-  another system.
+  `get_integration_status`, `create_external_issue` and
+  `get_external_issue` are marked as reaching another system.
 - **`health` no longer asks to be called first in every session**, and no
   longer tells the AI tool to read the skills guide before any call. Call
   it when you need a project or organization ID. The guide is still there
@@ -76,7 +76,8 @@ All notable changes to `@testdino/mcp` are documented here.
 ### Removed
 
 - **`get_audit_report` no longer saves a report to a file** (`writeMarkdown`
-  and `outputPath` are gone from it), so it stays read-only. Save the
+  and `outputPath` are gone from it), so it stays read-only. A call that
+  still passes them works as before, except that nothing is saved. Save the
   report's `markdownReport` yourself, or use `writeMarkdown` on
   `submit_audit_report`, which is unchanged.
 
