@@ -153,7 +153,7 @@ The `debug_testcase` tool is particularly powerful for debugging failing tests. 
 - Aggregates historical execution data across multiple test runs
 - Identifies failure patterns, error categories, and common error messages
 - Provides file and line numbers for error locations
-- Returns pre-formatted debugging prompts for AI analysis
+- Returns the TestDino debugging checklist with the data
 - Helps identify flaky test behavior and browser-specific issues
 
 For complete documentation with all parameters and detailed examples, see [TOOLS.md](./TOOLS.md).

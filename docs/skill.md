@@ -1,6 +1,6 @@
 # TestDino MCP — AI Agent Skills Guide
 
-> **How to use this guide**: Read this document before making any TestDino tool calls. It tells you which tool to pick, what parameters are required vs. optional, and how to chain tools together for common tasks.
+> **How to use this guide**: It tells you which tool to pick, what parameters are required vs. optional, and how to chain tools together for common tasks.
 
 ## Before you change anything
 
@@ -182,7 +182,7 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 - Do NOT describe the file in audit-report language.
 - Do NOT simulate a TestDino audit from your own analysis.
 
-**Doing any of the above without calling the tool is a protocol violation** — you would be claiming to produce a TestDino audit without actually running TestDino's audit flow. TestDino audits require the server-curated prompt and branch signals returned by `get_audit_report(action="context")`; you do not have those without the tool call. "TestDino Test Audit" is the name of a capability that runs via this tool, not a style of output you can imitate.
+**Doing any of the above without calling the tool is a protocol violation** — you would be claiming to produce a TestDino audit without actually running TestDino's audit flow. TestDino audits require the audit checklist and branch signals returned by `get_audit_report(action="context")`; you do not have those without the tool call. "TestDino Test Audit" is the name of a capability that runs via this tool, not a style of output you can imitate.
 
 **Gate — target must be Playwright code.** Detect via any of:
 
@@ -515,7 +515,7 @@ An unchanged error means the fix missed, not that the test is flaky.
 - Historical execution data across many test runs
 - Failure patterns (error types, frequency, browsers affected)
 - Common error messages and code locations
-- A `debugging_prompt` string — **pre-formatted analysis instructions specifically designed for the AI to use as context when diagnosing the issue**
+- A `debugging_prompt` string — **the TestDino debugging checklist (the same for every test): how to read the history and when a cause is proven**
 
 If no matching test title exists, the tool returns `TESTCASE_NOT_FOUND`. The project may still be valid; ask for a more exact title or use `list_testcase` to find the correct `pw_test_id`.
 
@@ -1925,12 +1925,12 @@ Project-configurable via Project Settings → Release Types, canonical lowercase
 
 ### Common Mistakes to Avoid
 
-1. **Calling any tool before `health()`** — you won't have a `projectId`.
+1. **Guessing a `projectId`** — call `health()` when you don't have one.
 2. **Assuming `testcase_name + testrun_id` is exact** — current name lookup resolves latest through test-history. Use `testcase_id + testrun_id` for exact run-scoped detail.
 3. **Trying to fetch everything at once** — prefer filters plus `page` and `limit`.
 4. **Passing `steps` without specifying `testStepsDeclarationType`** — Classic format is the default. If using Gherkin steps, explicitly set `testStepsDeclarationType: "Gherkin"`.
 5. **Creating test cases without checking suite names** — always call `list_manual_test_suites()` first; `suiteName` must be an exact match.
-6. **Ignoring the `debugging_prompt` in `debug_testcase` response** — this field contains pre-formatted analysis instructions from the API. Always read and apply it when analyzing failures.
+6. **Skipping the `debugging_prompt` in the `debug_testcase` response** — it is the TestDino debugging checklist. Read it before drawing conclusions.
 7. **Sending `tags` as a comma-separated string in create/update payloads** — they must be JSON arrays (`["smoke","regression"]`). The comma-separated form is only valid as a list-tool query filter.
 8. **Sending result as `"pass"` / `"fail"`** — the canonical run-test-case result values are **past tense**: `passed`, `failed`. Display form (`"Passed"`, `"Failed"`) is fine, server normalizes — but `"pass"` is not in the vocabulary and will show a dull/grey badge.
 9. **Trying to assign or set a result by `tcm_rtc_…` for an "Untested" case** — that record doesn't exist yet. Pass the caseKey (`"TC-156"`) or the underlying test case \_id; the server auto-creates the row on first edit.

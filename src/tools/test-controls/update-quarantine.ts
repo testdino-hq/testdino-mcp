@@ -5,7 +5,7 @@ export const updateQuarantineTool = {
   name: "update_quarantine",
   title: "Update Quarantine",
   description:
-    "Change an active quarantine: its end date (ends_in_days, counted from today), assignee, note, or linked ticket (issue_key, issue_url). Only the fields you pass change; the others stay as they are, even if someone edits them at the same time. A quarantine always has an assignee.",
+    "Call this only when the user asks for it. Change an active quarantine: its end date (ends_in_days, counted from today), assignee, note, or linked ticket (issue_key, issue_url). Only the fields you pass change; the others stay as they are, even if someone edits them at the same time. A quarantine always has an assignee.",
   inputSchema: {
     type: "object",
     properties: {

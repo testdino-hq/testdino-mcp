@@ -66,7 +66,7 @@ All through simple conversational commands.
 - **📊 Test Run Management**: List and retrieve detailed information about your test runs with filtering options (branch, time, author, commit, environment).
 - **🧪 Test Case Analysis**: Get comprehensive details about individual test cases, including errors, logs, execution steps, and artifacts (screenshots, videos, traces).
 - **🐛 AI-Assisted Debugging**: Debug test case failures with historical data aggregation, failure pattern analysis, and AI-friendly debugging prompts. Analyze patterns across multiple executions to identify root causes.
-- **🧭 Test Quality Audit**: Fetch a server-curated audit prompt plus branch signals, analyze your local test code, and store the completed report back in TestDino without uploading raw source files.
+- **🧭 Test Quality Audit**: Fetch the TestDino audit checklist plus branch signals, analyze your local test code, and store the completed report back in TestDino without uploading raw source files.
 - **📝 Test Case Management**: Create, update, list, and retrieve manual test cases with comprehensive filtering and organization (status, priority, severity, type, layer, behavior, tags).
 - **📁 Test Suite Organization**: Create and manage test suite hierarchies to organize your manual test cases.
 - **🚀 Release Planning**: Create, browse, and update releases (a.k.a. milestones), nest them up to 3 levels deep, and track rolled-up progress stats across all runs in a release.
@@ -92,11 +92,11 @@ In AI tools that render MCP Apps (Claude Desktop), several of these tools also s
 3. **`get_run_details`** - Get comprehensive details about a specific test run including statistics, test suites, test cases, and metadata. Supports batch operations (comma-separated IDs, max 20).
 4. **`list_testcase`** - List test cases with comprehensive filtering (by test run, status, browser, error category, branch, environment, commit, author, spec file, tags, runtime, artifacts, and more). Can filter by test run criteria or directly by test case properties.
 5. **`get_testcase_details`** - Get detailed information about a specific test case including error messages, stack traces, test steps, console logs, and artifacts. Can identify by testcase_id alone or by testcase_name with testrun_id/counter.
-6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and a pre-formatted debugging prompt for AI analysis. Perfect for root-cause analysis and identifying flaky test behavior.
+6. **`debug_testcase`** - Debug a test case by aggregating historical failure data across multiple executions. Returns failure patterns, error categories, common error messages, error locations, browser-specific issues, and the TestDino debugging checklist. Perfect for root-cause analysis and identifying flaky test behavior.
 7. **`get_debug_evidence`** - Start every failing-test investigation here: one call returns the flake verdict with per-attempt signatures, the regression boundary (last pass → first fail), and short-lived download links for every stored artifact (trace, screenshots, visual diff images). JSON or markdown.
 8. **`get_flake_verdict`** - Compare a test's retry attempts within one run and say whether the failure repeats: `deterministic`, `flaky`, or `inconclusive`.
 9. **`verify_fix`** - After a new run lands, check whether a fix held against the run you saw the failure in: `fixed`, `not_fixed`, `changed_failure`, `still_failing`, `unstable`, `no_runs_since_baseline`, or `baseline_not_found`.
-10. **`get_audit_report`** - Fetch the audit context (server-curated prompt + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
+10. **`get_audit_report`** - Fetch the audit context (the audit checklist + top failing / flaky / slow tests for the branch) to start a new audit, browse historical reports, or retrieve one by `reportId`.
 11. **`submit_audit_report`** - Submit a completed audit report (score, findings, recommendations, markdown) to TestDino.
 12. **`show_audit_report`** - Show a saved audit as a scorecard: score and band, where the points were lost, the top issues, and a link to the report. AI tools that render MCP Apps show it as a card; others get a one-paragraph summary.
 
@@ -425,7 +425,7 @@ The `debug_testcase` tool helps you understand why tests are failing by analyzin
 - **Failure Patterns**: Identifies common error categories, messages, and locations
 - **Browser-Specific Issues**: Detects browser-specific failure patterns
 - **Flaky Test Detection**: Analyzes retry patterns and flakiness indicators
-- **AI-Friendly Output**: Returns pre-formatted debugging prompts for AI analysis
+- **AI-Friendly Output**: Returns the TestDino debugging checklist with the data
 - **Code Correlation**: Provides file and line numbers for error locations, enabling AI to correlate with source code
 
 **Example Workflow:**
