@@ -521,7 +521,7 @@ If no matching test title exists, the tool returns `TESTCASE_NOT_FOUND`. The pro
 
 **How to use the response**:
 
-1. Read the `debugging_prompt` field — treat it as domain-specific instructions for your analysis.
+1. Read the `debugging_prompt` field: the TestDino debugging checklist for reading the history and deciding when a cause is proven.
 2. Examine the historical failure data to identify patterns.
 3. Look for: consistent error messages, browser-specific failures, time-of-day patterns, correlations with specific branches or commits.
 4. Optionally follow up with `get_testcase_details(testcase_id=..., steps_filter="failed_only")` for a specific failing execution.
@@ -537,7 +537,7 @@ If no matching test title exists, the tool returns `TESTCASE_NOT_FOUND`. The pro
 ```
 debug_testcase(projectId, "Verify user login")
 → Read debugging_prompt from response
-→ Analyze historical data using the debugging_prompt as context
+→ Analyze historical data against the debugging_prompt checklist
 → Identify pattern: always fails? flaky? browser-specific? recent regression?
 ```
 
