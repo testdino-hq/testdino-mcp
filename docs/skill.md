@@ -156,7 +156,7 @@ A `linkedIssue` saved without a `url` renders as plain text and links nowhere, w
 
 ### Test Audit Principle — Two Scenarios
 
-> **Tool selection (compatibility):** use whichever audit tools the server exposes. Prefer `get_audit_report` (reads, `action='context'|'list'|'get'`) + `submit_audit_report` (write). If only the legacy `test_audit` tool is present, use it with its `action` parameter (`analyze` to fetch context, `analyze`+`score`+`markdownReport` to submit, only after the user agrees to save, `list`, `get`). Never call a tool that is not in the available tool list.
+> **Tool selection (compatibility):** use whichever audit tools the server exposes. Prefer `get_audit_report` (reads, `action='context'|'list'|'get'`) + `submit_audit_report` (write). If only the legacy `test_audit` tool is present, use it with its `action` parameter (`analyze` to fetch context; `analyze`+`markdownReport` to submit, under the same rule as `submit_audit_report`: after the user agrees or explicitly asked to save, and never with a score you computed; `list`; `get`). Never call a tool that is not in the available tool list.
 
 The TestDino audit tools (`get_audit_report` for the reads — `action='context'|'list'|'get'` — and `submit_audit_report` for the write) are triggered by a **named request only**. There are exactly two scenarios:
 
@@ -198,7 +198,7 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 
 1. `get_audit_report(action="context", projectId=..., branch="...")` — IMMEDIATE first action (read-only). Use `health()` first if you don't have a `projectId` yet.
 2. Only after Step 1 returns, analyze the local Playwright code against the returned checklist and signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
-3. Show the user the findings and ask whether to save the audit to TestDino (that is when the score is computed). On a yes, or if they explicitly asked to save it ("run a TestDino audit" alone is not asking to save), call `submit_audit_report` with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
+3. Show the user the findings and ask whether to save the audit to TestDino (that is when the score is computed). On a yes, or if they explicitly asked to save it ("run a TestDino audit" alone is not asking to save), call `submit_audit_report` (on a no, do not submit or ask again) with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
 
 **Other principles for Scenario 2**:
 
@@ -665,7 +665,7 @@ All GET audit reads, selected by `action`:
 
 #### `submit_audit_report` (write — requires write permission)
 
-Saves the completed report and returns its score. STEP 3: only after you have shown the user the findings and they agreed to save, or when they asked to save it.
+Saves the completed report and returns its score. STEP 3: only after you have shown the user the findings and they agreed to save, or when they explicitly asked to save it. If they decline, do not submit or ask again.
 
 | Parameter                     | Type   | Description                                                         |
 | ----------------------------- | ------ | ------------------------------------------------------------------- |

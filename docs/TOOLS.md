@@ -2060,7 +2060,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Description
 
-Write (creates a report; not destructive). The last step of the audit flow, and it waits for the user: call it only after `get_audit_report(action="context")`, after you have analyzed the local Playwright code and written the report, and after the user has seen the findings and agreed to save them (or already asked to). It returns the score. Requires write permission.
+Write (creates a report; not destructive). The last step of the audit flow, and it waits for the user: call it only after `get_audit_report(action="context")`, after you have analyzed the local Playwright code and written the report, and after the user has seen the findings and agreed to save them (or explicitly asked to save them). If they decline, it is not called and they are not asked again. It returns the score. Requires write permission.
 
 - **Do not compute a score.** TestDino derives it from the findings and returns it with a per-category `scoreBreakdown`. `score` is still accepted so older clients keep working, but it is ignored.
 - **`orgId` is required by the server.** Get it from `health`.
