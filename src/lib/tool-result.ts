@@ -19,7 +19,7 @@ export const INTERNAL_ERROR_HINT =
 const TEMPORARY_STATUSES = new Set([500, 502, 503, 504]);
 
 // Real markup, not an angle-bracket placeholder such as "Expected <runId> in path".
-const HTML_PAGE = /<(?:!doctype|\/?(?:html|head|body|title|h1|pre|div)\b)/i;
+const HTML_PAGE = /<(?:!doctype|\?xml|\/?(?:html|head|body|title|h1|pre|div)\b)/i;
 
 // A non-JSON error body (an HTML gateway page, a bare string) becomes a coded error, never raw markup.
 function plainErrorBody(

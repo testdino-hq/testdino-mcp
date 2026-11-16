@@ -26,6 +26,15 @@ describe("toolResultFromCaptured — actionable errors", () => {
     });
   });
 
+  it("drops an XML error page too", () => {
+    const r = toolResultFromCaptured(
+      403,
+      '<?xml version="1.0"?><Error><Code>AuthenticationFailed</Code></Error>'
+    );
+    expect(r.content[0].text).not.toMatch(/<\?xml|AuthenticationFailed/);
+    expect(parse(r)).toMatchObject({ error: { code: "REQUEST_FAILED" } });
+  });
+
   it("keeps a short plain-text error message", () => {
     expect(
       parse(toolResultFromCaptured(400, "branch is required"))
