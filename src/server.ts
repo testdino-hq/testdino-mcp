@@ -18,7 +18,11 @@ import {
   toolCardUri,
 } from "./lib/tool-cards.js";
 import { getApiKey } from "./lib/env.js";
-import { toolResultFromCaptured, type ToolResult } from "./lib/tool-result.js";
+import {
+  INTERNAL_ERROR_HINT,
+  toolResultFromCaptured,
+  type ToolResult,
+} from "./lib/tool-result.js";
 import {
   applyHostedTransforms,
   compileValidators,
@@ -205,12 +209,44 @@ const CARD_RESOURCES = new Map<string, () => string>([
 // Tools whose route returns the hosted tool result itself, not an API body to reshape.
 const PASSTHROUGH_TOOLS = new Set(["show_audit_report"]);
 
-function errorResult(error: unknown): ToolResult {
+function errorResult(name: string, error: unknown): ToolResult {
+  let root: unknown = error;
   for (let e: unknown = error; e instanceof Error; e = e.cause) {
     if (e instanceof ApiError) {
       return toolResultFromCaptured(e.statusCode, e.body);
     }
+    root = e;
   }
+  // TestDino unreachable or too slow: temporary, as on the hosted MCP.
+  if (
+    root instanceof Error &&
+    ((root instanceof TypeError && root.message === "fetch failed") ||
+      root.message.startsWith("API request timed out"))
+  ) {
+    return toolResultFromCaptured(502, {
+      success: false,
+      error: {
+        code: "UPSTREAM_ERROR",
+        message: "TestDino could not be reached.",
+      },
+    });
+  }
+  // A bug in this package's own code: coded like the hosted MCP, never the raw JS message.
+  if (
+    root instanceof TypeError ||
+    root instanceof ReferenceError ||
+    root instanceof RangeError
+  ) {
+    return toolResultFromCaptured(500, {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: `TestDino hit an error running ${name}.`,
+      },
+      hint: INTERNAL_ERROR_HINT,
+    });
+  }
+  // The package's own refusals (missing TESTDINO_PAT, a required argument) are written for the user.
   const message = error instanceof Error ? error.message : String(error);
   return { content: [{ type: "text", text: message }], isError: true };
 }
@@ -773,7 +809,7 @@ export function createServer(): Server {
       }
       return asHostedResult(await dispatch(name, args));
     } catch (error) {
-      return errorResult(error);
+      return errorResult(name, error);
     }
   });
 

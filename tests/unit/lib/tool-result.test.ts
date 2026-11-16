@@ -44,3 +44,18 @@ describe("toolResultFromCaptured — actionable errors", () => {
     ).not.toHaveProperty("hint");
   });
 });
+
+describe("toolResultFromCaptured — review fixes", () => {
+  it("keeps a message that only has an angle-bracket placeholder", () => {
+    const r = toolResultFromCaptured(400, "Expected <runId> in path");
+    expect(parse(r)).toMatchObject({
+      error: { message: "Expected <runId> in path" },
+    });
+  });
+
+  it("gives no retry hint to a 501", () => {
+    expect(
+      parse(toolResultFromCaptured(501, { error: { code: "NOT_IMPLEMENTED" } }))
+    ).not.toHaveProperty("hint");
+  });
+});
