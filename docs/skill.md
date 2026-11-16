@@ -297,7 +297,7 @@ Call health()
 | `counter` | number/string | Test run counter number, or comma-separated counters as a string (max 20): `'47,48,49'` |
 | `include_ai_insights` | boolean | Attach the run's AI Insights under `ai_insights` (single `testrun_id` only). Poll `get_ai_insights(testrun_id)` if a section is still `processing`. |
 
-**Response includes**: full summary, test statistics by status, error category breakdown, test suites, and all test cases in the run.
+**Response includes**: the run summary (result counts, timing, git branch and commit, CI pipeline, Playwright settings, shards, re-runs, quarantine). It does not list the tests; use `list_testcase` with `by_testrun_id` for those.
 
 **Workflow**:
 

@@ -69,6 +69,12 @@ All notable changes to `@testdino/mcp` are documented here.
 - Every card names a ChatGPT widget origin (`openai/widgetDomain`), which
   ChatGPT needs before an app with cards can be listed. Cards in Claude are
   unchanged.
+- **`get_testcase_details` answers stay a readable size.** A batch stops at
+  about 100,000 characters and lists the tests left to ask for
+  (`remaining_testcase_ids`), instead of returning an answer too big for the
+  AI tool to read.
+- `get_run_details` now says what it returns: the run summary, not the list
+  of tests (use `list_testcase` for those).
 - **`health` no longer asks to be called first in every session**, and no
   longer tells the AI tool to read the skills guide before any call. Call
   it when you need a project or organization ID. The guide is still there
