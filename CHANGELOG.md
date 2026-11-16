@@ -79,6 +79,8 @@ All notable changes to `@testdino/mcp` are documented here.
   10, 25, 50 or 100 is rounded to the nearest, and a filter it can't use is
   dropped; the answer now starts with `warnings` saying so, instead of
   silently returning a different set.
+- `update_manual_run` and `update_session` now say first that closing a run
+  or session is permanent and only happens when you ask for it.
 
 ### Removed
 

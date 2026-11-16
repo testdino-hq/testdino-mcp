@@ -1057,7 +1057,7 @@ get_audit_report(action="context", branch="main")
 
 `updates` accepts: `name`, `note`, `environment`, `releaseId`, `state`, `forecast`, `tags`, `linkedIssues`, `links`, `selectionMode`. Files cannot be added over MCP.
 
-**Close a run**: pass `updates.status: "closed"` — same as the UI "Close run" button (freezes the run, snapshots remaining cases for `'all'` runs, snaps state to the project's "Done" option). **Not reversible via MCP.**
+**Close a run** (only when the user asks to close it, never as part of another edit): pass `updates.status: "closed"` — same as the UI "Close run" button (freezes the run, snapshots remaining cases for `'all'` runs, snaps state to the project's "Done" option). **Not reversible via MCP.**
 
 **Closed runs are read-only EXCEPT for `releaseId`** — so a closed run can be re-attached to a different release without re-opening it.
 
@@ -1175,7 +1175,7 @@ get_audit_report(action="context", branch="main")
 
 `updates` accepts: `name`, `mission`, `sessionType`, `config`, `environment`, `releaseId`, `assigneeUserId`, `state`, `estimate`, `tags`, `linkedIssues`. Files cannot be added over MCP.
 
-**Close a session**: pass `updates.status: "closed"` — same as the UI "Close session" button (freezes it, snaps state to the project's "Done" option). **Not reversible via MCP.** Findings are not available via MCP — manage them in the UI.
+**Close a session** (only when the user asks to close it, never as part of another edit): pass `updates.status: "closed"` — same as the UI "Close session" button (freezes it, snaps state to the project's "Done" option). **Not reversible via MCP.** Findings are not available via MCP — manage them in the UI.
 
 ---
 
