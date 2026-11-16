@@ -156,7 +156,7 @@ A `linkedIssue` saved without a `url` renders as plain text and links nowhere, w
 
 ### Test Audit Principle — Two Scenarios
 
-> **Tool selection (compatibility):** use whichever audit tools the server exposes. Prefer `get_audit_report` (reads, `action='context'|'list'|'get'`) + `submit_audit_report` (write). If only the legacy `test_audit` tool is present, use it with its `action` parameter (`analyze` to fetch context, `analyze`+`score`+`markdownReport` to submit, `list`, `get`). Never call a tool that is not in the available tool list.
+> **Tool selection (compatibility):** use whichever audit tools the server exposes. Prefer `get_audit_report` (reads, `action='context'|'list'|'get'`) + `submit_audit_report` (write). If only the legacy `test_audit` tool is present, use it with its `action` parameter (`analyze` to fetch context, `analyze`+`score`+`markdownReport` to submit, only after the user agrees to save, `list`, `get`). Never call a tool that is not in the available tool list.
 
 The TestDino audit tools (`get_audit_report` for the reads — `action='context'|'list'|'get'` — and `submit_audit_report` for the write) are triggered by a **named request only**. There are exactly two scenarios:
 
@@ -198,7 +198,7 @@ The moment a trigger phrase is detected, your **first and immediate action** MUS
 
 1. `get_audit_report(action="context", projectId=..., branch="...")` — IMMEDIATE first action (read-only). Use `health()` first if you don't have a `projectId` yet.
 2. Only after Step 1 returns, analyze the local Playwright code against the returned checklist and signals, and write the audit to a local markdown file (e.g. `TEST-AUDIT.md`).
-3. Show the user the findings and ask whether to save the audit to TestDino (that is when the score is computed). On a yes, or if they already asked to save it, call `submit_audit_report` with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
+3. Show the user the findings and ask whether to save the audit to TestDino (that is when the score is computed). On a yes, or if they explicitly asked to save it ("run a TestDino audit" alone is not asking to save), call `submit_audit_report` with `markdownReport` (or the file contents), plus `findings`, `recommendations`, `reportName`, and the same `branch`/`scope`/`target` to submit to TestDino. Do not send or invent a `score`: TestDino computes it from the findings and returns it with a per-category `scoreBreakdown`; report the returned score to the user.
 
 **Other principles for Scenario 2**:
 
@@ -688,7 +688,7 @@ Deletion is not available via MCP — use the TestDino web UI.
 3. In scoped audits, spend most findings on feature-specific validation gaps and missing scenarios; generic waits/logging/duplication issues are secondary unless they materially invalidate confidence in that slice.
 4. If `get_audit_report(action="context")` fails because the project is missing or access is denied, call `health()` and resolve the right `projectId` before continuing. Do not write a fallback local-only audit and present it as a TestDino audit.
 5. Convert the audit into `findings` and `recommendations`, choose a short `reportName`, and write the markdown report (no score line; it is not known until submission).
-6. Show the user the findings and ask whether to save the audit; on a yes, submit it with `submit_audit_report(branch="...", reportName="...", findings=[...], markdownReport="...")` and quote the returned `score` + top `scoreBreakdown` categories to the user.
+6. Show the user the findings and ask whether to save the audit (skip the question only if they explicitly asked to save it; on a no, do not submit or ask again); on a yes, submit it with `submit_audit_report(branch="...", reportName="...", findings=[...], markdownReport="...")` and quote the returned `score` + top `scoreBreakdown` categories to the user.
 7. Use `get_audit_report(action="list")` to browse all saved reports (add `branch="..."` for branch-specific history) and `get_audit_report(action="get", reportId="...")` to retrieve a specific one.
 
 **Token efficiency rules**:

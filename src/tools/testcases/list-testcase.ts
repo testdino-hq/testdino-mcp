@@ -171,7 +171,8 @@ export const listTestCasesTool = {
       },
       limit: {
         type: "integer",
-        description: "Items per page. Data Handler accepts 10, 25, 50, or 100.",
+        description:
+          "Items per page: 10, 25, 50 or 100. Any other value is rounded to the nearest, and the answer's `warnings` says so.",
       },
     },
     required: ["projectId"],

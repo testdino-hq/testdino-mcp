@@ -74,7 +74,11 @@ All notable changes to `@testdino/mcp` are documented here.
   checklist, the same as the hosted TestDino MCP.
 - **An audit is saved to TestDino only after you agree.** The AI tool shows
   the findings and asks before calling `submit_audit_report`, unless you
-  already asked it to save the audit.
+  explicitly asked it to save the audit. If you say no, it doesn't ask again.
+- **`list_testruns` says when it changed your request.** A `limit` other than
+  10, 25, 50 or 100 is rounded to the nearest, and a filter it can't use is
+  dropped; the answer now starts with `warnings` saying so, instead of
+  silently returning a different set.
 
 ### Removed
 
