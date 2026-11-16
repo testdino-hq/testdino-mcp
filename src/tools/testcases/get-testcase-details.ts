@@ -36,7 +36,7 @@ export const getTestCaseDetailsTool = {
       testcase_id: {
         type: "string",
         description:
-          "Exact test case ID(s) — Playwright pw_test_id, comma-separated (max 50).",
+          "Exact test case ID(s) — Playwright pw_test_id, comma-separated (max 20).",
       },
       testcase_name: {
         type: "string",
