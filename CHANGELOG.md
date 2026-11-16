@@ -75,6 +75,9 @@ All notable changes to `@testdino/mcp` are documented here.
   read.
 - `get_run_details` now says what it returns: the run summary, not the list
   of tests (use `list_testcase` for those).
+- **Errors say what to do.** A server error now carries a short hint (try
+  again; contact support if it keeps failing), and an error page from a
+  gateway is shown as a plain message instead of raw HTML.
 - **`health` no longer asks to be called first in every session**, and no
   longer tells the AI tool to read the skills guide before any call. Call
   it when you need a project or organization ID. The guide is still there

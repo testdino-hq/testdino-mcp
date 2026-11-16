@@ -9,11 +9,44 @@ export interface ToolResult {
   isError: boolean;
 }
 
-export function toolResultFromCaptured(
+// Shown on every 5xx so the agent can tell the user what to do (copied from the hosted MCP).
+export const SERVER_ERROR_HINT =
+  "Usually temporary: try again in a moment. If it keeps failing, contact support@testdino.com.";
+
+// A non-JSON error body (an HTML gateway page, a bare string) becomes a coded error, never raw markup.
+function plainErrorBody(
   statusCode: number,
   body: unknown
+): Record<string, unknown> {
+  const raw = typeof body === "string" ? body.trim() : "";
+  const usable = raw !== "" && !/<[a-z!/][^>]*>/i.test(raw);
+  return {
+    success: false,
+    error: {
+      code: statusCode >= 500 ? "UPSTREAM_ERROR" : "REQUEST_FAILED",
+      message: usable
+        ? raw.slice(0, 300)
+        : `TestDino could not complete the request (HTTP ${statusCode}).`,
+    },
+  };
+}
+
+export function toolResultFromCaptured(
+  statusCode: number,
+  rawBody: unknown
 ): ToolResult {
   const isError = statusCode >= 400;
+  let body = rawBody;
+  if (isError && (body === null || typeof body !== "object")) {
+    body = plainErrorBody(statusCode, body);
+  }
+  if (
+    statusCode >= 500 &&
+    !Array.isArray(body) &&
+    !("hint" in (body as object))
+  ) {
+    body = { ...(body as Record<string, unknown>), hint: SERVER_ERROR_HINT };
+  }
   const isObject = body !== null && typeof body === "object";
 
   if (isObject) {
