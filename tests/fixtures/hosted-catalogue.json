@@ -1,5 +1,5 @@
 {
- "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117). Card _meta for get_org_details, get_project_details and get_pull_requests and their resources added from feat/tdv2-1107-mcp-tool-cards @ 979804704 (TDV2-1118). Card _meta for the 14 release, manual run and session tools (list_releases, get_release, create_release, update_release, list_manual_runs, get_manual_run, create_manual_run, update_manual_run, list_run_test_cases, update_run_test_case, list_sessions, get_session, create_session, update_session) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 2cb8ed9c7 (TDV2-1116). Card _meta for get_integration_status, connect_integration, get_external_issue and create_external_issue and their resources added from feat/tdv2-1107-mcp-tool-cards @ a3c752b1c (TDV2-1118). Directory-listing fixes copied from feat/tdv2-1176-mcp-directory-listing @ afea21f58 (TDV2-1176): all three hints on every tool; health, get_audit_report, the debug_testcase debugging_prompt wording and the skills guide resource/prompt description; the matching skills guide lines. Ask-before-submit audit wording (B9) copied from fix/tdv2-1176-audit-submit-on-ask @ de305778b. B9 review fixes and the list limit wording (B11) from fix/tdv2-1176-audit-submit-on-ask @ d625b6533. B10 close-rule wording from fix/tdv2-1176-audit-submit-on-ask @ 9fd9e8eb2. Review fixes for B9–B11 from fix/tdv2-1176-audit-submit-on-ask @ c114e4739.",
+ "_source": "tools/list, prompts/list, prompts/get samples and the skills guide of the hosted MCP (testdino-hq/microservices feat/tdv2-1016-mcp-org-project-details @ 5a50633c9), copied on sync day; 11 tool definitions and the skills guide refreshed from docs/tcm-issue-sync @ 90193bcd0 (PR #1446). show_audit_report (with its MCP Apps _meta) and resources/list added from feat/tdv2-1105-mcp-apps-audit-scorecard-master @ 39e34fc20 (PR #1471). Card _meta for the 9 test run tools (list_testruns, list_testcase, get_run_details, get_run_error_clusters, get_testcase_details, get_flake_verdict, get_rerun_selection, get_ai_insights, rerun_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 7f29f7e35 (TDV2-1114). Card _meta for the 11 manual test case and automation link tools and their resources added from feat/tdv2-1107-mcp-tool-cards @ aaa5ac493 (TDV2-1115). Card _meta for the 9 Test Controls tools (list_test_controls, get_test_controls, get_quarantine, quarantine_tests, update_quarantine, release_quarantine, set_test_critical, assign_test, watch_test) and their resources added from feat/tdv2-1107-mcp-tool-cards @ bcb3d7e95 (TDV2-1117). Card _meta for get_org_details, get_project_details and get_pull_requests and their resources added from feat/tdv2-1107-mcp-tool-cards @ 979804704 (TDV2-1118). Card _meta for the 14 release, manual run and session tools (list_releases, get_release, create_release, update_release, list_manual_runs, get_manual_run, create_manual_run, update_manual_run, list_run_test_cases, update_run_test_case, list_sessions, get_session, create_session, update_session) and their resources added from feat/tdv2-1107-mcp-tool-cards @ 2cb8ed9c7 (TDV2-1116). Card _meta for get_integration_status, connect_integration, get_external_issue and create_external_issue and their resources added from feat/tdv2-1107-mcp-tool-cards @ a3c752b1c (TDV2-1118). Directory-listing fixes copied from feat/tdv2-1176-mcp-directory-listing @ afea21f58 (TDV2-1176): all three hints on every tool; health, get_audit_report, the debug_testcase debugging_prompt wording and the skills guide resource/prompt description; the matching skills guide lines. Ask-before-submit audit wording (B9) copied from fix/tdv2-1176-audit-submit-on-ask @ de305778b. B9 review fixes and the list limit wording (B11) from fix/tdv2-1176-audit-submit-on-ask @ d625b6533. B10 close-rule wording from fix/tdv2-1176-audit-submit-on-ask @ 9fd9e8eb2. Review fixes for B9–B11 from fix/tdv2-1176-audit-submit-on-ask @ c114e4739. openai/widgetDomain on every card resource (C1) from feat/tdv2-1176-openai-widget-domain @ 0b47c19ed.",
  "tools": [
   {
    "name": "health",
@@ -3981,7 +3981,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -3994,7 +3995,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4007,7 +4009,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4020,7 +4023,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4033,7 +4037,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4046,7 +4051,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4059,7 +4065,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4072,7 +4079,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4085,7 +4093,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4098,7 +4107,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4111,7 +4121,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4124,7 +4135,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4137,7 +4149,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4150,7 +4163,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4163,7 +4177,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4176,7 +4191,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4189,7 +4205,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4202,7 +4219,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4215,7 +4233,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4228,7 +4247,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4241,7 +4261,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4254,7 +4275,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4267,7 +4289,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4280,7 +4303,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4293,7 +4317,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4306,7 +4331,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4319,7 +4345,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4332,7 +4359,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4345,7 +4373,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4358,7 +4387,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4371,7 +4401,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4384,7 +4415,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4397,7 +4429,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4410,7 +4443,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4423,7 +4457,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4436,7 +4471,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4449,7 +4485,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4462,7 +4499,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4475,7 +4513,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4488,7 +4527,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4501,7 +4541,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4514,7 +4555,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4527,7 +4569,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4540,7 +4583,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4553,7 +4597,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4566,7 +4611,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4579,7 +4625,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4592,7 +4639,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4605,7 +4653,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4618,7 +4667,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4631,7 +4681,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   },
   {
@@ -4644,7 +4695,8 @@
     "ui": {
      "csp": {},
      "prefersBorder": false
-    }
+    },
+    "openai/widgetDomain": "https://mcp.testdino.com"
    }
   }
  ]

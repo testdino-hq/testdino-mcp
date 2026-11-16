@@ -66,6 +66,9 @@ All notable changes to `@testdino/mcp` are documented here.
   else set. Only `rerun_test`, `connect_integration`,
   `get_integration_status`, `create_external_issue` and
   `get_external_issue` are marked as reaching another system.
+- Every card names a ChatGPT widget origin (`openai/widgetDomain`), which
+  ChatGPT needs before an app with cards can be listed. Cards in Claude are
+  unchanged.
 - **`health` no longer asks to be called first in every session**, and no
   longer tells the AI tool to read the skills guide before any call. Call
   it when you need a project or organization ID. The guide is still there

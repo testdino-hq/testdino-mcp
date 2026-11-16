@@ -326,6 +326,7 @@ export function createServer(): Server {
               csp: {},
               prefersBorder: false,
             },
+            "openai/widgetDomain": "https://mcp.testdino.com",
           },
         },
         ...toolCardResources,
