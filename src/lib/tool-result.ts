@@ -12,14 +12,15 @@ export interface ToolResult {
 // Every error the agent sees is coded and says what to do next (copied from the hosted MCP).
 // Only failures that pass on their own get "try again": 500/502/503/504, never a 501 that never will.
 export const SERVER_ERROR_HINT =
-  "Usually temporary: try again in a moment. If it keeps failing, contact support@testdino.com.";
+  "Usually temporary: try again in a moment. If this call creates or changes something, first check whether it went through, or a retry may apply it twice. If it keeps failing, contact support@testdino.com.";
 // A tool whose own code throws fails the same way on every retry.
 export const INTERNAL_ERROR_HINT =
   "This is a problem on TestDino’s side, so the same call will likely fail again. Contact support@testdino.com.";
 const TEMPORARY_STATUSES = new Set([500, 502, 503, 504]);
 
 // Real markup, not an angle-bracket placeholder such as "Expected <runId> in path".
-const HTML_PAGE = /<(?:!doctype|\?xml|\/?(?:html|head|body|title|h1|pre|div)\b)/i;
+const HTML_PAGE =
+  /<(?:!doctype|\?xml|\/?(?:html|head|body|title|h1|pre|div)\b)/i;
 
 // A non-JSON error body (an HTML gateway page, a bare string) becomes a coded error, never raw markup.
 function plainErrorBody(

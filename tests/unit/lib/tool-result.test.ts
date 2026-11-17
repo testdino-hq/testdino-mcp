@@ -43,14 +43,22 @@ describe("toolResultFromCaptured — actionable errors", () => {
     });
   });
 
-  it("adds the retry hint to every 5xx, but not to a 4xx", () => {
-    expect(
-      parse(toolResultFromCaptured(502, { error: { code: "UPSTREAM_ERROR" } }))
-        .hint
-    ).toBe(SERVER_ERROR_HINT);
+  it("adds the retry hint to 500/502/503/504, not to a 4xx", () => {
+    for (const status of [500, 502, 503, 504]) {
+      expect(
+        parse(toolResultFromCaptured(status, { error: { code: "UPSTREAM_ERROR" } }))
+          .hint,
+        String(status)
+      ).toBe(SERVER_ERROR_HINT);
+    }
     expect(
       parse(toolResultFromCaptured(404, { error: "not found" }))
     ).not.toHaveProperty("hint");
+  });
+
+  // The create tools send no Idempotency-Key, so a blind retry can create twice.
+  it("the retry hint tells the agent to check a write went through first", () => {
+    expect(SERVER_ERROR_HINT).toMatch(/first check whether it went through/);
   });
 });
 
