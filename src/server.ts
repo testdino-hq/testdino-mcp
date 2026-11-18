@@ -211,18 +211,22 @@ const PASSTHROUGH_TOOLS = new Set(["show_audit_report"]);
 
 function errorResult(name: string, error: unknown): ToolResult {
   let root: unknown = error;
+  let unreachable = false;
   for (let e: unknown = error; e instanceof Error; e = e.cause) {
     if (e instanceof ApiError) {
       return toolResultFromCaptured(e.statusCode, e.body);
     }
+    // undici's "fetch failed" carries the socket error as its own cause, so it is never the root.
+    if (
+      (e instanceof TypeError && e.message === "fetch failed") ||
+      e.message.startsWith("API request timed out")
+    ) {
+      unreachable = true;
+    }
     root = e;
   }
   // TestDino unreachable or too slow: temporary, as on the hosted MCP.
-  if (
-    root instanceof Error &&
-    ((root instanceof TypeError && root.message === "fetch failed") ||
-      root.message.startsWith("API request timed out"))
-  ) {
+  if (unreachable) {
     return toolResultFromCaptured(502, {
       success: false,
       error: {

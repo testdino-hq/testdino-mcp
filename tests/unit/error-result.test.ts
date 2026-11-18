@@ -41,7 +41,10 @@ describe("errors from the package itself", () => {
   it("TestDino unreachable: coded UPSTREAM_ERROR with the retry hint", async () => {
     process.env.TESTDINO_PAT = "td_pat_test";
     globalThis.fetch = vi.fn(async () => {
-      throw new TypeError("fetch failed");
+      // As undici throws it: the socket error is the cause, so "fetch failed" is never the root.
+      throw new TypeError("fetch failed", {
+        cause: new Error("connect ECONNREFUSED 127.0.0.1:443"),
+      });
     }) as unknown as typeof fetch;
     const r = await client.callTool({
       name: "list_testruns",
@@ -54,6 +57,54 @@ describe("errors from the package itself", () => {
       hint: SERVER_ERROR_HINT,
     });
   }, 20_000);
+
+  it("TestDino unreachable on a write, with Node's real fetch: coded, with the check-first hint", async () => {
+    process.env.TESTDINO_PAT = "td_pat_test";
+    process.env.TESTDINO_API_URL = "http://127.0.0.1:1";
+    try {
+      const r = await client.callTool({
+        name: "create_release",
+        arguments: { projectId: "p1", name: "r1" },
+      });
+      expect(r.isError).toBe(true);
+      expect(JSON.parse(text(r))).toMatchObject({
+        statusCode: 502,
+        error: { code: "UPSTREAM_ERROR" },
+        hint: SERVER_ERROR_HINT,
+      });
+    } finally {
+      delete process.env.TESTDINO_API_URL;
+    }
+  });
+
+  it("TestDino too slow: a timed-out write is coded, with the check-first hint", async () => {
+    process.env.TESTDINO_PAT = "td_pat_test";
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    globalThis.fetch = vi.fn(
+      (_url: unknown, init?: { signal?: AbortSignal }) =>
+        new Promise((_, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError"))
+          );
+        })
+    ) as unknown as typeof fetch;
+    try {
+      const pending = client.callTool({
+        name: "create_release",
+        arguments: { projectId: "p1", name: "r1" },
+      });
+      await vi.advanceTimersByTimeAsync(15_000);
+      const r = await pending;
+      expect(r.isError).toBe(true);
+      expect(JSON.parse(text(r))).toMatchObject({
+        statusCode: 502,
+        error: { code: "UPSTREAM_ERROR" },
+        hint: SERVER_ERROR_HINT,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
   it("a code bug: coded INTERNAL_ERROR, never the raw JS message", async () => {
     process.env.TESTDINO_PAT = "td_pat_test";

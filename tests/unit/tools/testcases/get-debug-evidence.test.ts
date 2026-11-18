@@ -104,7 +104,8 @@ describe("handleGetDebugEvidence", () => {
     );
     const url = getLastFetchUrl();
     expect(url).toContain("testcase_ids=pw-1%2Cpw-2");
-    expect(JSON.parse(result.content[0].text)).toEqual({ tests: [] });
+    // Read as JSON (re-serialised), not passed through as the raw markdown text.
+    expect(result.content[0].text).toBe(JSON.stringify({ tests: [] }, null, 2));
   });
 
   it("returns markdown as raw text (not JSON-parsed) and forwards maxLength", async () => {
