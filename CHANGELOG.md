@@ -62,6 +62,9 @@ All notable changes to `@testdino/mcp` are documented here.
   tests from one run in one call, with shared text sent once.
 - **`find`** on `get_trace_analysis`: search an analysed trace without a
   download. It answers `not_available` until trace analysis is on.
+- **`playwright_project`** on `debug_testcase` and `verify_fix`: picks one
+  test when the same title runs under several Playwright projects. A `409
+AMBIGUOUS_IDENTITY` now says to call again with it.
 
 ### Changed
 
@@ -101,6 +104,9 @@ All notable changes to `@testdino/mcp` are documented here.
 - **`get_debug_evidence` is shorter by default.** It carries short debugging
   rules, the real error message, and the trace and error-context links.
   `include_instructions=true` returns the full procedure and the trace runbook.
+- `get_run_error_clusters` names the new `setup` category (an e2e run that
+  could not get started), and `get_trace_analysis` says `find` matches
+  requests by file name and that no match does not prove the text is absent.
 
 ### Removed
 

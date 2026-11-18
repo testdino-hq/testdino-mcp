@@ -13,6 +13,7 @@ interface DebugTestCaseArgs {
   testcase_id?: string;
   testcase_name?: string;
   suite_file_path?: string;
+  playwright_project?: string;
   include_ai_insights?: boolean;
   testrun_id?: string;
 }
@@ -21,7 +22,7 @@ export const debugTestCaseTool = {
   name: "debug_testcase",
   title: "Debug Test Case",
   description:
-    'AI-assisted root cause analysis for a failing or flaky test. Returns historical execution data, aggregated failure patterns (error types, frequency, browsers affected), common error messages, and a debugging_prompt field (the TestDino debugging checklist, the same for every test). If you are debugging a failing test, call get_debug_evidence first: it already carries the debugging_prompt, the verdict and the artifact links. Come here afterwards only for the stored AI suggestions or the full execution history. Read debugging_prompt before drawing conclusions: it says how to read the history and when a cause is proven. Any fixes you produce from this analysis are recommendations only — validate them against the live code before applying. Use this when the user asks "why is test X failing?", "debug test X", or "is test X flaky?". Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with suite_file_path, and if the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with testcase_id set to the pw_test_id of the one you mean. Set include_ai_insights=true to also get TestDino\'s stored AI analysis under `ai_fixes` (recommendations and quick fixes, often with code), for the most recent failing execution or the testrun_id you pass. AI payloads are generated lazily: while an `ai_fixes` section reports "in_progress", poll get_ai_insights(testrun_id=..., testcase_id=...) until it reports "completed". An "unavailable" section carries the upstream statusCode: retry a 5xx or timeout once via get_ai_insights; a 4xx (bad ids) is final.',
+    'AI-assisted root cause analysis for a failing or flaky test. Returns historical execution data, aggregated failure patterns (error types, frequency, browsers affected), common error messages, and a debugging_prompt field (the TestDino debugging checklist, the same for every test). If you are debugging a failing test, call get_debug_evidence first: it already carries the debugging rules, the verdict and the artifact links. Come here afterwards only for the stored AI suggestions or the full execution history. Read debugging_prompt before drawing conclusions: it says how to read the history and when a cause is proven. Any fixes you produce from this analysis are recommendations only — validate them against the live code before applying. Use this when the user asks "why is test X failing?", "debug test X", or "is test X flaky?". Identify the test by testcase_id (its pw_test_id, exact) or testcase_name (its title). A title can match several tests (the same test under several Playwright projects, or the same title in several files): pair it with playwright_project and/or suite_file_path. If the response is 409 AMBIGUOUS_IDENTITY, its candidates name the Playwright project of each — call again with playwright_project set to the one you mean, or testcase_id set to its pw_test_id. Set include_ai_insights=true to also get TestDino\'s stored AI analysis under `ai_fixes` (recommendations and quick fixes, often with code), for the most recent failing execution or the testrun_id you pass. AI payloads are generated lazily: while an `ai_fixes` section reports "in_progress", poll get_ai_insights(testrun_id=..., testcase_id=...) until it reports "completed". An "unavailable" section carries the upstream statusCode: retry a 5xx or timeout once via get_ai_insights; a 4xx (bad ids) is final.',
   inputSchema: {
     type: "object",
     properties: {
@@ -42,7 +43,12 @@ export const debugTestCaseTool = {
       suite_file_path: {
         type: "string",
         description:
-          'Optional spec file path — disambiguates when several tests share the same title. Example: "tests/checkout.spec.ts".',
+          'Optional spec file path — disambiguates when several tests share the same title in different files. A path with leading folders or only the file name also matches. Example: "tests/checkout.spec.ts".',
+      },
+      playwright_project: {
+        type: "string",
+        description:
+          'Optional Playwright project name (from playwright.config, e.g. "chromium") — picks one test when the same title runs under several projects. Ignored with testcase_id.',
       },
       include_ai_insights: {
         type: "boolean",
@@ -107,6 +113,9 @@ export async function handleDebugTestCase(args?: DebugTestCaseArgs) {
         : {}),
       ...(args.suite_file_path
         ? { suite_file_path: String(args.suite_file_path) }
+        : {}),
+      ...(args.playwright_project
+        ? { playwright_project: String(args.playwright_project) }
         : {}),
       ...(args.include_ai_insights === true
         ? { include_ai_insights: true }

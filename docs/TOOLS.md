@@ -1043,7 +1043,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Use it to survey a pattern across many runs ("is this test flaky?", "how long has it been failing?"). If you are diagnosing one failure, call `get_debug_evidence` first: it carries the same `debugging_prompt` plus the flake verdict, the regression boundary and the artifact links. Come here afterwards for the full history or the stored AI suggestions.
 
-Identify the test by `testcase_id` (its `pw_test_id`, exact) or by `testcase_name` (its title). A title can match several tests, such as the same test under several Playwright projects or the same title in several files; add `suite_file_path`, and if the call still returns `409 AMBIGUOUS_IDENTITY`, pick a candidate and call again with its `pw_test_id` as `testcase_id`.
+Identify the test by `testcase_id` (its `pw_test_id`, exact) or by `testcase_name` (its title). A title can match several tests, such as the same test under several Playwright projects or the same title in several files; add `playwright_project` and/or `suite_file_path`. If the call returns `409 AMBIGUOUS_IDENTITY`, its candidates name each Playwright project: call again with `playwright_project` set to the one you mean, or its `pw_test_id` as `testcase_id`.
 
 Set `include_ai_insights: true` to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations and quick fixes. They target the most recent failing execution unless you pass `testrun_id` (which is used only for this). AI payloads are generated lazily: if a section reports `in_progress`, poll `get_ai_insights(testrun_id, testcase_id)` instead of calling this again. An `unavailable` section carries the upstream `statusCode`; a 5xx or timeout is worth one retry through `get_ai_insights`, a 4xx is final. When there is no failing or flaky execution to analyze, `ai_fixes` is `{ "status": "skipped", "reason": "..." }`.
 
@@ -1053,14 +1053,15 @@ Read-only.
 
 ### Parameters
 
-| Parameter             | Type    | Required | Allowed values | Description                                                                                                                                  |
-| --------------------- | ------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`           | string  | yes      |                | Project ID                                                                                                                                   |
-| `testcase_name`       | string  | no       |                | Test case name / title to debug. Required unless testcase_id is given.                                                                       |
-| `testcase_id`         | string  | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name and suite_file_path.                                                 |
-| `suite_file_path`     | string  | no       |                | Optional spec file path — disambiguates when several tests share the same title. Example: "tests/checkout.spec.ts".                          |
-| `include_ai_insights` | boolean | no       |                | Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set). |
-| `testrun_id`          | string  | no       |                | Only with include_ai_insights: fetch the AI analysis for this specific run instead of the most recent failure.                               |
+| Parameter             | Type    | Required | Allowed values | Description                                                                                                                                                                                            |
+| --------------------- | ------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `projectId`           | string  | yes      |                | Project ID                                                                                                                                                                                             |
+| `testcase_name`       | string  | no       |                | Test case name / title to debug. Required unless testcase_id is given.                                                                                                                                 |
+| `testcase_id`         | string  | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name and suite_file_path.                                                                                                           |
+| `suite_file_path`     | string  | no       |                | Optional spec file path — disambiguates when several tests share the same title in different files. A path with leading folders or only the file name also matches. Example: "tests/checkout.spec.ts". |
+| `playwright_project`  | string  | no       |                | Optional Playwright project name (from playwright.config, e.g. "chromium") — picks one test when the same title runs under several projects. Ignored with testcase_id.                                 |
+| `include_ai_insights` | boolean | no       |                | Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set).                                                           |
+| `testrun_id`          | string  | no       |                | Only with include_ai_insights: fetch the AI analysis for this specific run instead of the most recent failure.                                                                                         |
 
 ### Example Usage
 
@@ -1182,7 +1183,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/debug-testcase?testcase_id=...&testcase_name=...&suite_file_path=...&include_ai_insights=true&testrun_id=...` (only the arguments given are sent)
+- **Route**: `GET /api/mcp/:projectId/debug-testcase?testcase_id=...&testcase_name=...&suite_file_path=...&playwright_project=...&include_ai_insights=true&testrun_id=...` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ### Related
@@ -1342,7 +1343,7 @@ Errors are JSON in both formats. Other failures follow [Responses and errors](#r
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=false&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `false`)
+- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=true&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `true`)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ### Related
@@ -1482,13 +1483,14 @@ Read-only.
 
 ### Parameters
 
-| Parameter         | Type   | Required | Allowed values | Description                                                                      |
-| ----------------- | ------ | -------- | -------------- | -------------------------------------------------------------------------------- |
-| `projectId`       | string | yes      |                | Project ID (e.g. project\_<id>)                                                  |
-| `testcase_name`   | string | no       |                | Full test title, same identifier debug_testcase takes. Give this or testcase_id. |
-| `testcase_id`     | string | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name.         |
-| `baseline_run_id` | string | yes      |                | The run you saw the failure in when you proposed the fix                         |
-| `suite_file_path` | string | no       |                | Spec file path — only needed when the title is shared across files               |
+| Parameter            | Type   | Required | Allowed values | Description                                                                                                                        |
+| -------------------- | ------ | -------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`          | string | yes      |                | Project ID (e.g. project\_<id>)                                                                                                    |
+| `testcase_name`      | string | no       |                | Full test title, same identifier debug_testcase takes. Give this or testcase_id.                                                   |
+| `testcase_id`        | string | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name.                                                           |
+| `baseline_run_id`    | string | yes      |                | The run you saw the failure in when you proposed the fix                                                                           |
+| `suite_file_path`    | string | no       |                | Spec file path — only needed when the title is shared across files                                                                 |
+| `playwright_project` | string | no       |                | Playwright project name (e.g. "chromium") — only needed when the same title runs under several projects. Ignored with testcase_id. |
 
 ### Example Usage
 
@@ -1562,7 +1564,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/verify-fix?testcase_id=...&testcase_name=...&baseline_run_id=...&suite_file_path=...` (only the arguments given are sent)
+- **Route**: `GET /api/mcp/:projectId/verify-fix?testcase_id=...&testcase_name=...&baseline_run_id=...&suite_file_path=...&playwright_project=...` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ---
@@ -1577,7 +1579,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Returns the run's error clusters. Each cluster is one normalized error signature (a fingerprint), its error category, how many tests hit it, and those tests. Errors that are blank or cannot be fingerprinted go into a separate `unclustered` bucket. The result also carries a per-category rollup and the run's totals.
 
-Failed and timed-out tests cluster on their final-attempt error. Flaky tests cluster on the error they recovered from (the attempt before the passing retry). Categories are `assertion`, `timeout`, `element_not_found`, `network`, `filesystem` and `other`.
+Failed and timed-out tests cluster on their final-attempt error. Flaky tests cluster on the error they recovered from (the attempt before the passing retry). Categories are `assertion`, `timeout`, `element_not_found`, `network`, `filesystem`, `setup` (an e2e run that could not get started) and `other`.
 
 Use it to answer "what are the distinct failures in this run?" or "which error affected the most tests?". It covers one run only; it is far cheaper than paging every failed case with `list_testcase`. Typical flow: `list_testruns` → pick a `testrun_id` → `get_run_error_clusters`. Narrow with `status: "failed"` or `status: "flaky"` (default `"all"`).
 
@@ -1665,7 +1667,7 @@ Read-only.
   - `fingerprint`: the signature's hex id.
   - `template`: the normalized error shape the fingerprint is built from.
   - `example_message`: the raw error of the first member. Error text is Playwright's own and can contain ANSI colour codes.
-  - `error_category`: `assertion`, `element_not_found`, `timeout`, `network`, `filesystem` or `other`.
+  - `error_category`: `assertion`, `element_not_found`, `timeout`, `network`, `filesystem`, `setup` or `other`.
   - `test_count`: the true number of tests in the cluster (never capped).
   - `tests[]`: up to 200 members, each with `pw_test_id`, `title`, `title_path`, `status` (`failed` or `flaky`), `duration_ms`, `attempt_count`, `error_message`, `stacktrace`, `file_path`, `start_time`, `tags`, `platform`.
   - `tests_truncated`: `true` when `tests` was capped at 200.

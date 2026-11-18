@@ -14,6 +14,7 @@ interface VerifyFixArgs {
   testcase_name?: string;
   baseline_run_id: string;
   suite_file_path?: string;
+  playwright_project?: string;
 }
 
 export const verifyFixTool = {
@@ -46,6 +47,11 @@ export const verifyFixTool = {
         type: "string",
         description:
           "Spec file path — only needed when the title is shared across files",
+      },
+      playwright_project: {
+        type: "string",
+        description:
+          'Playwright project name (e.g. "chromium") — only needed when the same title runs under several projects. Ignored with testcase_id.',
       },
     },
     required: ["projectId", "baseline_run_id"],
@@ -102,6 +108,9 @@ export async function handleVerifyFix(args?: VerifyFixArgs) {
       baseline_run_id: String(args.baseline_run_id),
       ...(args.suite_file_path
         ? { suite_file_path: String(args.suite_file_path) }
+        : {}),
+      ...(args.playwright_project
+        ? { playwright_project: String(args.playwright_project) }
         : {}),
     });
 

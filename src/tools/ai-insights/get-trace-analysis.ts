@@ -24,7 +24,7 @@ export const getTraceAnalysisTool = {
   name: "get_trace_analysis",
   title: "Get Trace Analysis",
   description:
-    "See what happened inside a failing test. Where trace analysis is on, this is the failing action, errors, console errors, failed requests and the page near the failure, with where to start and what each further step costs. If no analysis is available it returns a runbook for reading the trace with the Playwright CLI (Playwright 1.59+). Pass projectId + testcase_id (the Playwright pw_test_id) for that case's analysis and a short-lived trace download URL; optionally scope with testrun_id. Omit the ids to just get the runbook for a trace.zip you already have locally. If analysis_status is processing, call again shortly. To check anything else in an analysed trace, pass find with testcase_id and testrun_id: it searches actions and request file names without a download. Several failures from one run? Pass testcase_ids with testrun_id: one call, with the shared text sent once. Report the root cause and fix.",
+    "See what happened inside a failing test. Where trace analysis is on, this is the failing action, errors, console errors, failed requests and the page near the failure, with where to start and what each further step costs. If no analysis is available it returns a runbook for reading the trace with the Playwright CLI (Playwright 1.59+). Pass projectId + testcase_id (the Playwright pw_test_id) for that case's analysis and a short-lived trace download URL; optionally scope with testrun_id. For an e2e test the trace is a markdown page, and the runbook returned says how to read it. Omit the ids to just get the runbook for a trace.zip you already have locally. If analysis_status is processing, call again shortly. To check anything else in an analysed trace, pass find with testcase_id and testrun_id: it searches actions and request file names without a download. Several failures from one run? Pass testcase_ids with testrun_id: one call, with the shared text sent once. Report the root cause and fix.",
   inputSchema: {
     type: "object",
     properties: {
@@ -66,7 +66,7 @@ export const getTraceAnalysisTool = {
           },
         ],
         description:
-          'Plain text to search for in this test\'s actions and requests, for example "quantity" or "cart|checkout" (| means or). Needs testcase_id and testrun_id, and a completed analysis.',
+          'Plain text to search for in this test\'s actions, and its requests by file name (not full URL), for example "quantity" or "cart|checkout" (| means or). Needs testcase_id and testrun_id, and a completed analysis. No match never proves the text is absent from the trace.',
       },
       testrun_id: {
         type: ["string", "null"],

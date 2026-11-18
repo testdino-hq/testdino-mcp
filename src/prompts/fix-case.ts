@@ -27,7 +27,7 @@ function identityStep(args: FixCaseArgs): string {
     const suite = args.suite_file_path
       ? `, suite_file_path='${quoteIdentifier(args.suite_file_path)}'`
       : "";
-    return `Call debug_testcase(projectId='${quoteIdentifier(args.projectId)}', testcase_name='${quoteIdentifier(args.testcase_name)}'${suite}, include_ai_insights=true). If it returns 409 AMBIGUOUS_IDENTITY, pick the candidate by its project and call it again with testcase_id set to that pw_test_id — step 1's \`test\` block carries this test's pw_test_id.`;
+    return `Call debug_testcase(projectId='${quoteIdentifier(args.projectId)}', testcase_name='${quoteIdentifier(args.testcase_name)}'${suite}, include_ai_insights=true). If it returns 409 AMBIGUOUS_IDENTITY, pick the candidate by its project and call it again with playwright_project set to that project, or testcase_id set to its pw_test_id — step 1's \`test\` block carries this test's pw_test_id.`;
   }
   const runScope = args.testrun_id
     ? `testrun_id='${quoteIdentifier(args.testrun_id)}'`

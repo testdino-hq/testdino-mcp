@@ -353,6 +353,7 @@ export const endpoints = {
     testcase_id?: string;
     testcase_name?: string;
     suite_file_path?: string;
+    playwright_project?: string;
     include_ai_insights?: boolean;
     testrun_id?: string;
   }): string => {
@@ -362,6 +363,7 @@ export const endpoints = {
       testcase_id,
       testcase_name,
       suite_file_path,
+      playwright_project,
       include_ai_insights,
       testrun_id,
     } = params;
@@ -374,6 +376,9 @@ export const endpoints = {
     }
     if (suite_file_path) {
       queryParams.append("suite_file_path", suite_file_path);
+    }
+    if (playwright_project) {
+      queryParams.append("playwright_project", playwright_project);
     }
     if (include_ai_insights) {
       queryParams.append("include_ai_insights", "true");
@@ -816,6 +821,7 @@ export const endpoints = {
     testcase_name?: string;
     baseline_run_id: string;
     suite_file_path?: string;
+    playwright_project?: string;
   }): string => {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;

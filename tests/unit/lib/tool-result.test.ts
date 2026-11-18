@@ -46,8 +46,9 @@ describe("toolResultFromCaptured — actionable errors", () => {
   it("adds the retry hint to 500/502/503/504, not to a 4xx", () => {
     for (const status of [500, 502, 503, 504]) {
       expect(
-        parse(toolResultFromCaptured(status, { error: { code: "UPSTREAM_ERROR" } }))
-          .hint,
+        parse(
+          toolResultFromCaptured(status, { error: { code: "UPSTREAM_ERROR" } })
+        ).hint,
         String(status)
       ).toBe(SERVER_ERROR_HINT);
     }
