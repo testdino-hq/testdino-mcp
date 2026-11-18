@@ -66,5 +66,8 @@ export const toolCardResources = CARD_TOOLS.map((tool) => ({
   uri: toolCardUri(tool),
   description: `Card view of the ${tool} tool's answer.`,
   mimeType: "text/html;profile=mcp-app",
-  _meta: { ui: { csp: {}, prefersBorder: false } },
+  _meta: {
+    ui: { csp: {}, prefersBorder: false },
+    "openai/widgetDomain": "https://mcp.testdino.com",
+  },
 }));

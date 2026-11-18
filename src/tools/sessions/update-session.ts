@@ -16,7 +16,7 @@ export const updateSessionTool = {
   name: "update_session",
   title: "Update Exploratory Session",
   description:
-    'Modify an existing exploratory session. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. Pass updates.status="closed" to close the session (same as the UI "Close session" button: freezes it, snaps state to the project\'s "Done" option). This is not reversible via MCP. Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
+    'Modify an existing exploratory session, or close it. Closing is permanent: send updates.status="closed" only when the user asks to close the session, never as part of another edit. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, mission, sessionType, config, environment, releaseId, assigneeUserId, state, estimate, tags, linkedIssues. Closing works like the UI "Close session" button: it freezes the session and snaps state to the project\'s "Done" option; MCP cannot reopen it. Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["exploratory","auth"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
@@ -42,6 +42,7 @@ export const updateSessionTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

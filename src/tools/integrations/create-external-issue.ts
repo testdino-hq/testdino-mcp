@@ -123,6 +123,7 @@ export const createExternalIssueTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: true,
   },
   execution: {
     taskSupport: "forbidden",

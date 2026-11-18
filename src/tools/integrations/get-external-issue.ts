@@ -57,6 +57,8 @@ export const getExternalIssueTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: true,
   },
   execution: {
     taskSupport: "forbidden",

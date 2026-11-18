@@ -51,6 +51,7 @@ export const createManualTestSuiteTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

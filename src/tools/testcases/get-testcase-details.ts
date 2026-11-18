@@ -25,7 +25,7 @@ export const getTestCaseDetailsTool = {
   name: "get_testcase_details",
   title: "Get Test Case Details",
   description:
-    'Get full details of a test case — errors, stack traces, steps, console logs, and artifacts. Use testcase_id (the Playwright pw_test_id) for the most precise lookup; it can be used alone for latest detail or paired with testrun_id for exact run-scoped detail. testcase_name resolves through test history; combine it with testrun_id to scope to specific run(s), otherwise the latest run is used. Always pass steps_filter="failed_only" when debugging — it drops unrelated passing setup/hook steps and keeps failed branches plus required parent context, cutting noise significantly. Every stored artifact comes back in `evidence[]` — trace, video, screenshots, and for a visual failure the expected/actual/diff images — each with its attempt index, a `url`, and an `expires_at`. Download what you need as soon as you receive it: the links are minutes-scale by design. If one has expired, call this tool again to mint fresh links rather than treating the artifact as missing. `traceDownloadUrl` points at the first FAILING attempt, which on a flaky test is not the last one.',
+    'Get full details of a test case — errors, stack traces, steps, console logs, and artifacts. Use testcase_id (the Playwright pw_test_id) for the most precise lookup; it can be used alone for latest detail or paired with testrun_id for exact run-scoped detail. testcase_name resolves through test history; combine it with testrun_id to scope to specific run(s), otherwise the latest run is used. Always pass steps_filter="failed_only" when debugging — it drops unrelated passing setup/hook steps and keeps failed branches plus required parent context, cutting noise significantly. Every stored artifact comes back in `evidence[]` — trace, video, screenshots, and for a visual failure the expected/actual/diff images — each with its attempt index, a `url`, and an `expires_at`. Download what you need as soon as you receive it: the links are minutes-scale by design. If one has expired, call this tool again to mint fresh links rather than treating the artifact as missing. `traceDownloadUrl` points at the first FAILING attempt, which on a flaky test is not the last one. A batch stops at about 100,000 characters: `warnings` says so and `remaining` lists each test left, with its testrun_id, to request next.',
   inputSchema: {
     type: "object",
     properties: {
@@ -36,7 +36,7 @@ export const getTestCaseDetailsTool = {
       testcase_id: {
         type: "string",
         description:
-          "Exact test case ID(s) — Playwright pw_test_id, comma-separated (max 50).",
+          "Exact test case ID(s) — Playwright pw_test_id, comma-separated (max 20).",
       },
       testcase_name: {
         type: "string",
@@ -94,6 +94,8 @@ export const getTestCaseDetailsTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",

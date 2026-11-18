@@ -1,6 +1,6 @@
 # TestDino MCP Server - Tools Documentation
 
-This guide covers every tool and prompt in the `@testdino/mcp` server. From 2.2.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` audit arguments.
+This guide covers every tool and prompt in the `@testdino/mcp` server. From 2.2.0 the package exposes exactly what the hosted TestDino MCP exposes — the same tools, parameters, descriptions, prompts and skills guide — and answers every call the way the hosted server does. The only package-only features are local-file conveniences: manual test case attachments given as local file paths (`create_manual_test_case`, and `updates.attachments.add` on `update_manual_test_case`), and the `markdownReportPath` / `writeMarkdown` / `outputPath` arguments of `submit_audit_report`.
 
 > **Platform Support**: The tools work with any MCP-compatible client. Setup is verified on **Cursor**, **Claude Desktop**, **VS Code**, and **JetBrains** IDEs. Paths below use Cursor's `.cursor/mcp.json` — substitute the equivalent file for your client.
 
@@ -153,7 +153,7 @@ The card reads the same `structuredContent` described above, so the text answer 
 
 ### Description
 
-Call `health` first in every session. It confirms that `TESTDINO_PAT` is accepted and returns your user ID, the token's expiry, and every organization and project the token is scoped to, by ID and name. Every other tool needs a `projectId`; this is where you get it. Match the project the user names against `projectName` and reuse its `projectId` for later calls.
+Call `health` when you need a `projectId` or `orgId` you don't have yet. It confirms that `TESTDINO_PAT` is accepted and returns your user ID, the token's expiry, and every organization and project the token is scoped to, by ID and name. Most tools take a `projectId` from this list; `get_org_details` takes an `orgId`. Match the project the user names against `projectName` and reuse its `projectId` for later calls.
 
 Each organization also carries your `role` there (owner, admin, member, billing or viewer). It is informational, not a permission check; the server enforces real permissions on every call. A token scoped to all projects of an organization shows `projects: { "allProjects": true }` with no names, so ask the user which `projectId` to use. A recently renamed organization or project can show its old name for up to 30 seconds.
 
@@ -200,8 +200,7 @@ No parameters.
     }
   ],
   "expiresAt": "2027-01-10T04:57:25.274Z",
-  "createdAt": "2026-10-12T04:57:25.274Z",
-  "_skills_guide": "Read the testdino://skills/guide resource (MCP resource) before making any tool calls. It contains tool selection rules, required parameter lists, decision trees, and the full TestDino audit protocol."
+  "createdAt": "2026-10-12T04:57:25.274Z"
 }
 ```
 
@@ -216,7 +215,6 @@ No parameters.
   - `role`: your role in that organization, or `null` if you are no longer a member
   - `projects`: either a list of `{ projectId, projectName }` (`projectName` may be `null`), or `{ "allProjects": true }` for an all-projects scope
 - `expiresAt`, `createdAt`: the token's expiry and creation time (ISO 8601), or `null` when `patValid` is `false`.
-- `_skills_guide`: a pointer to the `testdino://skills/guide` resource.
 
 ### Error Handling
 
@@ -1043,9 +1041,9 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 `debug_testcase` looks a test up in TestDino's test history (the last 90 days) and returns its identity, a summary of how it has behaved (failure, flaky and pass rates, streaks, error fingerprints, branches) and one row per run it executed in. It also returns `debugging_prompt`, the analysis procedure TestDino wants an agent to follow; read it before drawing conclusions.
 
-Use it to survey a pattern across many runs ("is this test flaky?", "how long has it been failing?"). If you are diagnosing one failure, call `get_debug_evidence` first: it carries the same `debugging_prompt` plus the flake verdict, the regression boundary and the artifact links. Come here afterwards for the full history or the stored AI suggestions.
+Use it to survey a pattern across many runs ("is this test flaky?", "how long has it been failing?"). If you are diagnosing one failure, call `get_debug_evidence` first: it carries the short debugging rules (the same `debugging_prompt` with `include_instructions: true`) plus the flake verdict, the regression boundary and the artifact links. Come here afterwards for the full history or the stored AI suggestions.
 
-Identify the test by `testcase_id` (its `pw_test_id`, exact) or by `testcase_name` (its title). A title can match several tests, such as the same test under several Playwright projects or the same title in several files; add `suite_file_path`, and if the call still returns `409 AMBIGUOUS_IDENTITY`, pick a candidate and call again with its `pw_test_id` as `testcase_id`.
+Identify the test by `testcase_id` (its `pw_test_id`, exact) or by `testcase_name` (its title). A title can match several tests, such as the same test under several Playwright projects or the same title in several files; add `playwright_project` and/or `suite_file_path`. If the call returns `409 AMBIGUOUS_IDENTITY`, its candidates name each Playwright project: call again with `playwright_project` set to the one you mean, or its `pw_test_id` as `testcase_id`.
 
 Set `include_ai_insights: true` to also get TestDino's stored AI analysis for this test under `ai_fixes`: recommendations and quick fixes. They target the most recent failing execution unless you pass `testrun_id` (which is used only for this). AI payloads are generated lazily: if a section reports `in_progress`, poll `get_ai_insights(testrun_id, testcase_id)` instead of calling this again. An `unavailable` section carries the upstream `statusCode`; a 5xx or timeout is worth one retry through `get_ai_insights`, a 4xx is final. When there is no failing or flaky execution to analyze, `ai_fixes` is `{ "status": "skipped", "reason": "..." }`.
 
@@ -1055,14 +1053,15 @@ Read-only.
 
 ### Parameters
 
-| Parameter             | Type    | Required | Allowed values | Description                                                                                                                                  |
-| --------------------- | ------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`           | string  | yes      |                | Project ID                                                                                                                                   |
-| `testcase_name`       | string  | no       |                | Test case name / title to debug. Required unless testcase_id is given.                                                                       |
-| `testcase_id`         | string  | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name and suite_file_path.                                                 |
-| `suite_file_path`     | string  | no       |                | Optional spec file path — disambiguates when several tests share the same title. Example: "tests/checkout.spec.ts".                          |
-| `include_ai_insights` | boolean | no       |                | Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set). |
-| `testrun_id`          | string  | no       |                | Only with include_ai_insights: fetch the AI analysis for this specific run instead of the most recent failure.                               |
+| Parameter             | Type    | Required | Allowed values | Description                                                                                                                                                                                            |
+| --------------------- | ------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `projectId`           | string  | yes      |                | Project ID                                                                                                                                                                                             |
+| `testcase_name`       | string  | no       |                | Test case name / title to debug. Required unless testcase_id is given.                                                                                                                                 |
+| `testcase_id`         | string  | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name and suite_file_path.                                                                                                           |
+| `suite_file_path`     | string  | no       |                | Optional spec file path — disambiguates when several tests share the same title in different files. A path with leading folders or only the file name also matches. Example: "tests/checkout.spec.ts". |
+| `playwright_project`  | string  | no       |                | Optional Playwright project name (from playwright.config, e.g. "chromium") — picks one test when the same title runs under several projects. Ignored with testcase_id.                                 |
+| `include_ai_insights` | boolean | no       |                | Attach AI recommendations + quick fixes for this test under `ai_fixes` (targets the most recent failing execution unless testrun_id is set).                                                           |
+| `testrun_id`          | string  | no       |                | Only with include_ai_insights: fetch the AI analysis for this specific run instead of the most recent failure.                                                                                         |
 
 ### Example Usage
 
@@ -1184,7 +1183,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/debug-testcase?testcase_id=...&testcase_name=...&suite_file_path=...&include_ai_insights=true&testrun_id=...` (only the arguments given are sent)
+- **Route**: `GET /api/mcp/:projectId/debug-testcase?testcase_id=...&testcase_name=...&suite_file_path=...&playwright_project=...&include_ai_insights=true&testrun_id=...` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ### Related
@@ -1199,7 +1198,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_debug_evidence
 
-**Purpose**: Start every failing-test investigation here: one call returns the flake verdict, the regression boundary and links to every stored artifact.
+**Purpose**: Start every failing-test investigation here: one call returns the flake verdict, the regression boundary and links to the stored artifacts except video and screenshots (`omitted_artifacts` names those; `get_testcase_details` links them).
 
 ### Description
 
@@ -1207,13 +1206,13 @@ For one test (by default in the most recent run that carries it), `get_debug_evi
 
 - **Flake verdict**: computed from the test's retry attempts, with each attempt's failure signature (same as `get_flake_verdict`).
 - **Regression boundary**: the last run the test passed and the first run it failed, so "why does this fail" becomes "what changed between these two runs".
-- **Artifacts**: short-lived download links for every stored artifact of the case: trace, screenshots, video, error context, and the expected / actual / diff images on a visual failure.
+- **Artifacts**: short-lived download links for the trace, error context, and the expected / actual / diff images on a visual failure. `omitted_artifacts` names what is stored but left out (video, screenshot); `get_testcase_details` links those.
 - **Environment**: branch, commit, author, CI provider, OS and browsers of that run.
-- **Instructions** (unless `include_instructions: false`): the debugging procedure (`debugging_prompt`, the same text `debug_testcase` returns) and a runbook for reading the Playwright trace.
+- **Rules**: `debugging_rules`, the short root-cause procedure. With `include_instructions: true`, the full procedure (`debugging_prompt`, the same text `debug_testcase` returns) and a runbook for reading the Playwright trace replace it.
 
 Read all of it before forming a hypothesis. The verdict says whether the failure repeats, never why. Artifact links expire within minutes: download what you need right away, and call the tool again for fresh links rather than treating an expired link as a missing artifact.
 
-Identify the test by `testcase_id` (its `pw_test_id`, preferred) or `testcase_name` (its full title). The instructions are identical on every call and about half the response, so set `include_instructions: false` once you have read them.
+Identify the test by `testcase_id` (its `pw_test_id`, preferred) or `testcase_name` (its full title). To debug several failures from one run, pass them in `testcase_ids` with `testrun_id`: one call, always JSON, with shared text sent once and each test under `tests`.
 
 `format: "md"` returns the same content as Markdown text, which is markedly smaller. It is plain text, not JSON, and has no `structuredContent`. Its sections are, in order: the test name and a safety note, "Read this first" (warnings, if any), "Verdict", "When it changed" (the boundary), "Artifacts", "Environment", "How to work this" and "Reading the trace" (the instructions). `maxLength` caps the Markdown length; anything cut is announced in the text. JSON (the default) is never truncated.
 
@@ -1225,11 +1224,12 @@ Read-only.
 | ---------------------- | ------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projectId`            | string  | yes      |                     | Project ID (e.g. project\_<id>)                                                                                                                                                                 |
 | `testcase_name`        | string  | no       |                     | Full test title. Give this or testcase_id.                                                                                                                                                      |
+| `testcase_ids`         | array   | no       | at most 10          | Several pw_test_ids from one run, instead of testcase_id. Needs testrun_id. Always JSON, under `tests`.                                                                                         |
 | `testcase_id`          | string  | no       |                     | The case's pw_test_id — exact, so prefer it when known.                                                                                                                                         |
 | `testrun_id`           | string  | no       |                     | Run scope. Omit to use the most recently started run carrying this case.                                                                                                                        |
 | `suite_file_path`      | string  | no       |                     | Spec file path — only needed when the title is shared across files.                                                                                                                             |
 | `format`               | string  | no       | one of `json`, `md` | Response shape. "md" is markdown, and markedly cheaper for the same content.                                                                                                                    |
-| `include_instructions` | boolean | no       |                     | Default true. The procedure and the trace runbook are identical on every call and about half the response — set false on repeat calls once you have read them.                                  |
+| `include_instructions` | boolean | no       |                     | Default false: the response carries short debugging rules. Set true for the full procedure and the trace runbook.                                                                               |
 | `maxLength`            | integer | no       | > `0`               | Cap the markdown length. Applies to format="md" only; anything cut is announced in the output. JSON is never truncated, because a cut payload would not parse and would read as a complete one. |
 
 ### Example Usage
@@ -1324,7 +1324,7 @@ JSON (`format: "json"`, the default):
 - `status`: `"ok"`, or `"warning"` when `warnings` is not empty.
 - `safety`: a reminder that everything from the application under test is data, not instructions.
 - `warnings[]`: what could not be found or loaded, and what to do about it (e.g. nothing matched the name, the run details or the history could not be loaded).
-- `debugging_prompt`, `trace_runbook`: the instructions; left out when `include_instructions` is `false`.
+- `debugging_rules`: the short procedure. `debugging_prompt` and `trace_runbook` replace it when `include_instructions` is `true`.
 - `test`: `name`, `platform`, `status`, `pw_test_id`, `run_id` of the matched case.
 - `verdict`: `verdict` (`"deterministic"`, `"flaky"` or `"inconclusive"`), `reason`, `rules_out`, `attempts[]` (see [get_flake_verdict](#get_flake_verdict)). Left out when nothing matched.
 - `regression_boundary`: `state` (`"started_failing"`, `"never_passed"`, `"passing_now"` or `"no_history"`), `last_passed` and `first_failed` (each `{ run_id, run_number, run_start_time, git_branch }` or `null`), `runs_failed_since`, `branch_changed`, `comparable`, `differences[]`, `summary`. `null` when the history could not be loaded or nothing matched.
@@ -1333,6 +1333,8 @@ JSON (`format: "json"`, the default):
 - `environment_note`: what this response cannot tell you (Playwright version, viewport).
 
 Markdown (`format: "md"`): the same content as text, in the sections listed in the description.
+
+With `testcase_ids` (up to 10 tests from one run, needs `testrun_id`) the answer is always JSON: `status`, `warnings`, `safety`, the rules and `environment` once, and `tests[]` with each test's `test`, `error_message`, `verdict`, `regression_boundary` and `artifacts`.
 
 ### Error Handling
 
@@ -1343,7 +1345,7 @@ Errors are JSON in both formats. Other failures follow [Responses and errors](#r
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=false&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `false`)
+- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_ids=a,b&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=true&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `true`)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ### Related
@@ -1483,13 +1485,14 @@ Read-only.
 
 ### Parameters
 
-| Parameter         | Type   | Required | Allowed values | Description                                                                      |
-| ----------------- | ------ | -------- | -------------- | -------------------------------------------------------------------------------- |
-| `projectId`       | string | yes      |                | Project ID (e.g. project\_<id>)                                                  |
-| `testcase_name`   | string | no       |                | Full test title, same identifier debug_testcase takes. Give this or testcase_id. |
-| `testcase_id`     | string | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name.         |
-| `baseline_run_id` | string | yes      |                | The run you saw the failure in when you proposed the fix                         |
-| `suite_file_path` | string | no       |                | Spec file path — only needed when the title is shared across files               |
+| Parameter            | Type   | Required | Allowed values | Description                                                                                                                        |
+| -------------------- | ------ | -------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId`          | string | yes      |                | Project ID (e.g. project\_<id>)                                                                                                    |
+| `testcase_name`      | string | no       |                | Full test title, same identifier debug_testcase takes. Give this or testcase_id.                                                   |
+| `testcase_id`        | string | no       |                | The test's pw_test_id — exact, never ambiguous. Wins over testcase_name.                                                           |
+| `baseline_run_id`    | string | yes      |                | The run you saw the failure in when you proposed the fix                                                                           |
+| `suite_file_path`    | string | no       |                | Spec file path — only needed when the title is shared across files                                                                 |
+| `playwright_project` | string | no       |                | Playwright project name (e.g. "chromium") — only needed when the same title runs under several projects. Ignored with testcase_id. |
 
 ### Example Usage
 
@@ -1563,7 +1566,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/verify-fix?testcase_id=...&testcase_name=...&baseline_run_id=...&suite_file_path=...` (only the arguments given are sent)
+- **Route**: `GET /api/mcp/:projectId/verify-fix?testcase_id=...&testcase_name=...&baseline_run_id=...&suite_file_path=...&playwright_project=...` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ---
@@ -1578,7 +1581,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 Returns the run's error clusters. Each cluster is one normalized error signature (a fingerprint), its error category, how many tests hit it, and those tests. Errors that are blank or cannot be fingerprinted go into a separate `unclustered` bucket. The result also carries a per-category rollup and the run's totals.
 
-Failed and timed-out tests cluster on their final-attempt error. Flaky tests cluster on the error they recovered from (the attempt before the passing retry). Categories are `assertion`, `timeout`, `element_not_found`, `network`, `filesystem` and `other`.
+Failed and timed-out tests cluster on their final-attempt error. Flaky tests cluster on the error they recovered from (the attempt before the passing retry). Categories are `assertion`, `timeout`, `element_not_found`, `network`, `filesystem`, `setup` (an e2e run that could not get started) and `other`.
 
 Use it to answer "what are the distinct failures in this run?" or "which error affected the most tests?". It covers one run only; it is far cheaper than paging every failed case with `list_testcase`. Typical flow: `list_testruns` → pick a `testrun_id` → `get_run_error_clusters`. Narrow with `status: "failed"` or `status: "flaky"` (default `"all"`).
 
@@ -1666,7 +1669,7 @@ Read-only.
   - `fingerprint`: the signature's hex id.
   - `template`: the normalized error shape the fingerprint is built from.
   - `example_message`: the raw error of the first member. Error text is Playwright's own and can contain ANSI colour codes.
-  - `error_category`: `assertion`, `element_not_found`, `timeout`, `network`, `filesystem` or `other`.
+  - `error_category`: `assertion`, `element_not_found`, `timeout`, `network`, `filesystem`, `setup` or `other`.
   - `test_count`: the true number of tests in the cluster (never capped).
   - `tests[]`: up to 200 members, each with `pw_test_id`, `title`, `title_path`, `status` (`failed` or `flaky`), `duration_ms`, `attempt_count`, `error_message`, `stacktrace`, `file_path`, `start_time`, `tags`, `platform`.
   - `tests_truncated`: `true` when `tests` was capped at 200.
@@ -1928,7 +1931,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_audit_report
 
-**Purpose**: Read TestDino Playwright audits: fetch the audit prompt and branch signals to start an audit, list past reports, or fetch one report.
+**Purpose**: Read TestDino Playwright audits: get the audit checklist and branch signals to start an audit, list past reports, or fetch one report.
 
 ### Description
 
@@ -1936,7 +1939,7 @@ Read-only. One tool, three modes selected by `action`:
 
 | `action`  | Returns                                                                                                                                                                   |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `context` | The server-curated audit prompt, branch signals (recent runs, top failing / flaky / slow tests), CI suggestions and the last audit on that branch. Step 1 of an audit.    |
+| `context` | The audit checklist, branch signals (recent runs, top failing / flaky / slow tests), CI suggestions and the last audit on that branch. Step 1 of an audit.                |
 | `list`    | Previously submitted reports, paginated, optionally filtered by `branch`. Reports come without their content (`findings`, `recommendations`, `markdownReport` are empty). |
 | `get`     | One saved report by `reportId`, with its full content.                                                                                                                    |
 
@@ -1947,22 +1950,20 @@ The audit flow is only for an explicit request that names TestDino ("run a TestD
 **Local package only**:
 
 - When `branch` is omitted, the package fills it from `git branch --show-current`, run in `TESTDINO_MCP_WORKSPACE` (or the process working directory). The branch is sent for `context` only; `list` sends only an explicit `branch`.
-- `writeMarkdown` and `outputPath` apply to `action="get"`: when `writeMarkdown` is true and the report has markdown, the package also saves it to `outputPath` (default `TEST-AUDIT.md`). `outputPath` must be a relative path inside `TESTDINO_MCP_WORKSPACE` (or the working directory). The outcome is added to the body as `localReportWrite`. The hosted MCP does not take these arguments.
+- The tool is read-only and never writes a file. To keep a report locally, save its `markdownReport` yourself, or pass `writeMarkdown` to `submit_audit_report`.
 
 Deleting a report is not possible through MCP; use the TestDino web UI.
 
 ### Parameters
 
-| Parameter       | Type    | Required | Allowed values                  | Description                                                                                                                        |
-| --------------- | ------- | -------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `projectId`     | string  | yes      |                                 | Project ID (required)                                                                                                              |
-| `action`        | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (fetch audit prompt + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId). |
-| `branch`        | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter.  |
-| `reportId`      | string  | no       |                                 | Report ID. Required for action='get'.                                                                                              |
-| `limit`         | integer | no       | > `0`                           | Page size for action='list'.                                                                                                       |
-| `page`          | integer | no       | > `0`                           | Page number for action='list'.                                                                                                     |
-| `writeMarkdown` | boolean | no       |                                 | Local package only: when true and action is "get", also save the report to a local file.                                           |
-| `outputPath`    | string  | no       |                                 | Local package only: where to save it, relative to TESTDINO_MCP_WORKSPACE (or the working directory). Default TEST-AUDIT.md.        |
+| Parameter   | Type    | Required | Allowed values                  | Description                                                                                                                       |
+| ----------- | ------- | -------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `projectId` | string  | yes      |                                 | Project ID (required)                                                                                                             |
+| `action`    | string  | yes      | one of `context`, `list`, `get` | Read mode: 'context' (audit checklist + branch signals to start), 'list' (browse past reports), 'get' (one report by reportId).   |
+| `branch`    | string  | no       |                                 | Git branch. For action='context', the branch to audit (required unless detected from git). For action='list', an optional filter. |
+| `reportId`  | string  | no       |                                 | Report ID. Required for action='get'.                                                                                             |
+| `limit`     | integer | no       | > `0`                           | Page size for action='list'.                                                                                                      |
+| `page`      | integer | no       | > `0`                           | Page number for action='list'.                                                                                                    |
 
 ### Example Usage
 
@@ -2019,9 +2020,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
   "arguments": {
     "projectId": "project_0000000000000000000a0001",
     "action": "get",
-    "reportId": "audit_0000000000000000000a0001",
-    "writeMarkdown": true,
-    "outputPath": "reports/TEST-AUDIT.md"
+    "reportId": "audit_0000000000000000000a0001"
   }
 }
 ```
@@ -2031,7 +2030,7 @@ The tool returns the body below as JSON text and as `structuredContent`.
 Every mode returns `{ success, message, data }`.
 
 - **`context`** (`message`: `Audit context retrieved successfully`): `data` has
-  - `prompt`: the audit instructions to follow.
+  - `prompt`: the audit checklist (what to check, the finding format and severity levels).
   - `branchSignals`: `branch` (or `null`), `totalRuns`, `recentRuns` (up to 10), `topFailingTests`, `topFlakyTests`, `topSlowTests`.
   - `ciSuggestions`: CI facts the score uses, or `{ "status": "unavailable" }` when they could not be read.
   - `lastAudit`: the latest report on this project and branch (same shape as a listed report, with slim `findings`), or `null`.
@@ -2039,8 +2038,6 @@ Every mode returns `{ success, message, data }`.
 - **`get`** (`message`: `Audit report retrieved`): `data` is one report.
 
 A report has: `_id`, `branch`, `scope`, `score`, `scoreBreakdown`, `ciSuggestions`, `createdAt`, `categoryVersion`, `findings`, `recommendations`, `overview`, `markdownReport`, `organization`, `project`, `reportName`, `requestedBy.displayName`, `target`, `categoryCounts`, `severityCounts`, `topCategories[]` (`category`, `count`, `label`, `description`), `highSeverityFindingsCount`, `findingsCount`, `recommendationCount`.
-
-With `writeMarkdown` (local package), the body also has `localReportWrite`: `{ "saved": true, "path": "<absolute path>" }`, or `{ "saved": false, "reason": "..." }` when the file could not be written (the read itself still succeeds).
 
 ### Error Handling
 
@@ -2068,7 +2065,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Description
 
-Write (creates a report; not destructive). The final step of the audit flow: call it only after `get_audit_report(action="context")` and after you have analyzed the local Playwright code and written the report. Requires write permission.
+Write (creates a report; not destructive). The last step of the audit flow, and it waits for the user: call it only after `get_audit_report(action="context")`, after you have analyzed the local Playwright code and written the report, and after the user has seen the findings and agreed to save them (or explicitly asked to save them). If they decline, it is not called and they are not asked again. It returns the score. Requires write permission.
 
 - **Do not compute a score.** TestDino derives it from the findings and returns it with a per-category `scoreBreakdown`. `score` is still accepted so older clients keep working, but it is ignored.
 - **`orgId` is required by the server.** Get it from `health`.
@@ -5436,13 +5433,13 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_trace_analysis
 
-**Purpose**: Debug a failing Playwright test from its `trace.zip`: get the runbook for the Playwright trace CLI and, for a hosted trace, a short-lived download URL.
+**Purpose**: See what happened inside a failing test: where trace analysis is on, facts read from its trace on the server; otherwise a runbook for the Playwright trace CLI and, for a hosted trace, a short-lived download URL.
 
 ### Description
 
-Returns a runbook (`skill`) that teaches the Playwright agent CLI protocol (`npx playwright trace …`: open → actions → action → snapshot → close) and how to report the root cause and fix. With `testcase_id` (the Playwright `pw_test_id`) it also resolves a short-lived signed download URL for that case's hosted trace; scope it with `testrun_id` to target a specific run. Without `testcase_id` you get only the runbook, for a `trace.zip` you already have locally.
+Returns a runbook (`skill`) that teaches the Playwright agent CLI protocol (`npx playwright trace …`: open → actions → action → snapshot → close) and how to report the root cause and fix. With `testcase_id` (the Playwright `pw_test_id`) it also resolves a short-lived signed download URL for that case's hosted trace; scope it with `testrun_id` to target a specific run. Without `testcase_id` you get only the runbook, for a `trace.zip` you already have locally. For an e2e test the trace is a markdown page, and the runbook says how to read it. Several failures from one run? Pass `testcase_ids` (up to 10) with `testrun_id`.
 
-The analysis runs on your machine: download the trace, run the CLI commands yourself (Playwright 1.59 or newer), then report what you found. TestDino does not fetch or parse the trace.
+Where trace analysis is on, the response carries facts read from the trace on the server, and `find` searches its actions and request file names without a download. Otherwise the analysis runs on your machine: download the trace, run the CLI commands yourself (Playwright 1.59 or newer), then report what you found.
 
 `trace_url` expires within minutes; download it immediately and call the tool again for a fresh one if it has expired. Traces are often captured only on retry, so a case's trace can be missing; `notes` then says so.
 
@@ -5452,11 +5449,13 @@ Read-only.
 
 ### Parameters
 
-| Parameter     | Type   | Required | Allowed values | Description                                                             |
-| ------------- | ------ | -------- | -------------- | ----------------------------------------------------------------------- |
-| `projectId`   | string | no       |                | Project ID — required to resolve the hosted trace download URL          |
-| `testcase_id` | string | no       |                | Playwright pw_test_id of the failing case whose hosted trace to resolve |
-| `testrun_id`  | string | no       |                | Optional run scope for testcase_id (single run)                         |
+| Parameter      | Type   | Required | Allowed values         | Description                                                                                   |
+| -------------- | ------ | -------- | ---------------------- | --------------------------------------------------------------------------------------------- |
+| `projectId`    | string | no       |                        | Project ID — required to resolve the hosted trace download URL                                |
+| `testcase_id`  | string | no       |                        | Playwright pw_test_id of the failing case whose hosted trace to resolve                       |
+| `testrun_id`   | string | no       |                        | Optional run scope for testcase_id (single run)                                               |
+| `testcase_ids` | array  | no       | at most 10             | Several pw_test_ids from one run, instead of testcase_id. Needs testrun_id.                   |
+| `find`         | string | no       | at most 200 characters | Plain text to search for in an analysed trace; \| means or. Needs testcase_id and testrun_id. |
 
 ### Example Usage
 
@@ -5493,6 +5492,9 @@ Read-only.
 - `trace_url`, `trace_expires_at`: the signed download URL and its expiry, or `null`.
 - `skill`: the Markdown runbook.
 - `notes[]`: why no hosted trace was resolved, when that happened (no downloadable trace for the case, or the case lookup failed with its status code). Use a local `trace.zip` then.
+- `analysis_status`, `analysis`, `retry_after_seconds`, `safety`: where trace analysis is on, the facts near the failure; while `analysis_status` is `processing`, call again after `retry_after_seconds`.
+- With `testcase_ids`: `safety`, `skill` and `playwright_min_version` once, and `tests[]` holding the rest per test.
+- With `find`: `safety` and `find` (what matched), plus `notes` when nothing was searched and `analysis_status` + `notes` while the analysis is still processing. No match never proves the text is absent from the trace.
 
 A failed trace lookup does not make the call fail; it shows up in `notes` with `trace_source: "local"`.
 
@@ -5504,7 +5506,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/get-trace-analysis?testcase_id=…&testrun_id=…` (only the IDs given are sent)
+- **Route**: `GET /api/mcp/:projectId/get-trace-analysis?testcase_id=…&testcase_ids=a,b&testrun_id=…&find=…` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ---

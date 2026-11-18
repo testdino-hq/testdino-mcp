@@ -45,6 +45,8 @@ export const getIntegrationStatusTool = {
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: true,
   },
   execution: {
     taskSupport: "forbidden",

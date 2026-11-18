@@ -58,6 +58,64 @@ All notable changes to `@testdino/mcp` are documented here.
   Cards never show emails, user ids, stack traces, logs, download links,
   shell commands, descriptions or steps. Text answers are unchanged.
 
+- **`testcase_ids`** on `get_debug_evidence` and `get_trace_analysis`: several
+  tests from one run in one call, with shared text sent once.
+- **`find`** on `get_trace_analysis`: search an analysed trace without a
+  download. It answers `not_available` until trace analysis is on.
+- **`playwright_project`** on `debug_testcase` and `verify_fix`: picks one
+  test when the same title runs under several Playwright projects. A `409
+AMBIGUOUS_IDENTITY` now says to call again with it.
+
+### Changed
+
+- **Every tool now says plainly whether it reads, changes or deletes data,
+  and whether it reaches outside TestDino.** `update_quarantine` and
+  `assign_test` are now marked as changes that can overwrite what someone
+  else set. Only `rerun_test`, `connect_integration`,
+  `get_integration_status`, `create_external_issue` and
+  `get_external_issue` are marked as reaching another system.
+- Every card names a ChatGPT widget origin (`openai/widgetDomain`), which
+  ChatGPT needs before an app with cards can be listed. Cards in Claude are
+  unchanged.
+- **`get_testcase_details` answers stay a readable size.** A batch stops at
+  about 100,000 characters and lists each test left to ask for, with its run
+  (`remaining`), instead of returning an answer too big for the AI tool to
+  read.
+- `get_run_details` now says what it returns: the run summary, not the list
+  of tests (use `list_testcase` for those).
+- **Errors say what to do.** A server error now carries a short hint (try
+  again; contact support if it keeps failing), and an error page from a
+  gateway is shown as a plain message instead of raw HTML.
+- **`health` no longer asks to be called first in every session**, and no
+  longer tells the AI tool to read the skills guide before any call. Call
+  it when you need a project or organization ID. The guide is still there
+  to open.
+- Clearer wording for the audit context and the `debug_testcase` debugging
+  checklist, the same as the hosted TestDino MCP.
+- **An audit is saved to TestDino only after you agree.** The AI tool shows
+  the findings and asks before calling `submit_audit_report`, unless you
+  explicitly asked it to save the audit. If you say no, it doesn't ask again.
+- **`list_testruns` says when it changed your request.** A `limit` other than
+  10, 25, 50 or 100 is rounded to the nearest, and a filter it can't use is
+  dropped; the answer now starts with `warnings` saying so, instead of
+  silently returning a different set.
+- `update_manual_run` and `update_session` now say first that closing a run
+  or session is permanent and only happens when you ask for it.
+- **`get_debug_evidence` is shorter by default.** It carries short debugging
+  rules, the real error message, and the trace and error-context links.
+  `include_instructions=true` returns the full procedure and the trace runbook.
+- `get_run_error_clusters` names the new `setup` category (an e2e run that
+  could not get started), and `get_trace_analysis` says `find` matches
+  requests by file name and that no match does not prove the text is absent.
+
+### Removed
+
+- **`get_audit_report` no longer saves a report to a file** (`writeMarkdown`
+  and `outputPath` are gone from it), so it stays read-only. A call that
+  still passes them works as before, except that nothing is saved. Save the
+  report's `markdownReport` yourself, or use `writeMarkdown` on
+  `submit_audit_report`, which is unchanged.
+
 ## 2.2.3
 
 ### Added

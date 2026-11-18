@@ -11,7 +11,7 @@ export const PROMPTS = [
   {
     name: "testdino_guide",
     description:
-      "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol. Read this before making any TestDino tool calls.",
+      "TestDino AI agent skills guide — tool selection rules, decision trees, workflow patterns, and the TestDino audit protocol.",
   },
   {
     name: "fix_run",

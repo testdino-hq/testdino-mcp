@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mkdtempSync, readFileSync, rmSync } from "fs";
+import { existsSync, mkdtempSync, rmSync } from "fs";
 import { join, relative } from "path";
 import {
   mockFetchSuccess,
@@ -8,7 +8,11 @@ import {
   getLastFetchOptions,
 } from "../../../helpers/mockFetch.js";
 import { createArgs, parseToolResponse } from "../../../helpers/mockTypes.js";
-import { handleGetAuditReport } from "../../../../src/tools/audits/get-audit-report.js";
+import {
+  getAuditReportTool,
+  handleGetAuditReport,
+} from "../../../../src/tools/audits/get-audit-report.js";
+import { compileValidators } from "../../../../src/lib/validate.js";
 
 describe("handleGetAuditReport", () => {
   afterEach(() => {
@@ -119,7 +123,8 @@ describe("handleGetAuditReport", () => {
     ).rejects.toThrow("reportId is required");
   });
 
-  it("writes the markdown to a local file when writeMarkdown=true on get", async () => {
+  // readOnlyHint: true must hold: a caller still sending the old writeMarkdown gets no file.
+  it("never writes a local file, even when an old caller passes writeMarkdown", async () => {
     const tempDir = mkdtempSync(join(process.cwd(), "tmp-audit-get-"));
     const outputPath = relative(process.cwd(), join(tempDir, "TEST-AUDIT.md"));
 
@@ -142,19 +147,27 @@ describe("handleGetAuditReport", () => {
         }) as never
       );
 
-      const savedContent = readFileSync(
-        join(process.cwd(), outputPath),
-        "utf-8"
-      );
-      expect(savedContent).toContain("# Test Audit");
-
+      expect(existsSync(join(process.cwd(), outputPath))).toBe(false);
       const parsed = parseToolResponse(result) as Record<string, unknown>;
-      const localReportWrite = parsed.localReportWrite as {
-        saved: boolean;
-      };
-      expect(localReportWrite.saved).toBe(true);
+      expect(parsed).not.toHaveProperty("localReportWrite");
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
+  });
+
+  // What a real caller hits first: the server validates before any handler runs.
+  it("accepts an old call that still passes writeMarkdown, and drops it", () => {
+    const validate = compileValidators([getAuditReportTool]).get(
+      "get_audit_report"
+    )!;
+    const args: Record<string, unknown> = {
+      projectId: "p",
+      action: "get",
+      reportId: "r",
+      writeMarkdown: true,
+      outputPath: "TEST-AUDIT.md",
+    };
+    expect(validate(args)).toBe(true);
+    expect(args).toEqual({ projectId: "p", action: "get", reportId: "r" });
   });
 });

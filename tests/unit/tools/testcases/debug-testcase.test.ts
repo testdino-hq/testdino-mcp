@@ -122,6 +122,19 @@ describe("handleDebugTestCase", () => {
     );
   });
 
+  it("should forward playwright_project into the request URL", async () => {
+    mockFetchSuccess({ historicalData: [] });
+
+    await handleDebugTestCase(
+      createArgs({
+        testcase_name: "Verify user login",
+        playwright_project: "chromium",
+      }) as never
+    );
+
+    expect(getLastFetchUrl()).toContain("playwright_project=chromium");
+  });
+
   it("should forward params through full handler pipeline", async () => {
     const mockData = {
       historicalData: [

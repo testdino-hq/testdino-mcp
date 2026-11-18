@@ -81,6 +81,16 @@ describe("handleVerifyFix", () => {
     expect(getLastFetchUrl()).toContain("suite_file_path=e2e%2Flogin.spec.ts");
   });
 
+  it("forwards playwright_project to pick one project's test", async () => {
+    mockFetchSuccess({ status: "fixed" });
+
+    await handleVerifyFix(
+      createArgs({ ...validArgs, playwright_project: "chromium" }) as never
+    );
+
+    expect(getLastFetchUrl()).toContain("playwright_project=chromium");
+  });
+
   // A title shared by several Playwright projects answers 409; only the pw_test_id names one test.
   it("verifies a test named by testcase_id alone", async () => {
     mockFetchSuccess({ status: "fixed" });

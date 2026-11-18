@@ -353,6 +353,7 @@ export const endpoints = {
     testcase_id?: string;
     testcase_name?: string;
     suite_file_path?: string;
+    playwright_project?: string;
     include_ai_insights?: boolean;
     testrun_id?: string;
   }): string => {
@@ -362,6 +363,7 @@ export const endpoints = {
       testcase_id,
       testcase_name,
       suite_file_path,
+      playwright_project,
       include_ai_insights,
       testrun_id,
     } = params;
@@ -374,6 +376,9 @@ export const endpoints = {
     }
     if (suite_file_path) {
       queryParams.append("suite_file_path", suite_file_path);
+    }
+    if (playwright_project) {
+      queryParams.append("playwright_project", playwright_project);
     }
     if (include_ai_insights) {
       queryParams.append("include_ai_insights", "true");
@@ -764,16 +769,20 @@ export const endpoints = {
   },
 
   /**
-   * Get the Playwright trace-analysis runbook plus a signed hosted-trace URL.
+   * Get the server-side trace analysis, or the trace-CLI runbook plus a signed hosted-trace URL.
    * GET /api/mcp/:projectId/get-trace-analysis
    * @param params.projectId - Required: Project ID (path param on this surface)
    * @param params.testcase_id - Optional: pw_test_id whose hosted trace to resolve
+   * @param params.testcase_ids - Optional: up to 10 pw_test_ids from one run, comma-joined; needs testrun_id
    * @param params.testrun_id - Optional: run scope for testcase_id
+   * @param params.find - Optional: text to search in one analysed trace
    */
   getTraceAnalysis: (params: {
     projectId: string;
     testcase_id?: string;
+    testcase_ids?: string;
     testrun_id?: string;
+    find?: string;
   }): string => {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;
@@ -807,6 +816,7 @@ export const endpoints = {
    * @param params.testcase_name - Optional: full test title; give this or testcase_id
    * @param params.baseline_run_id - Required: the run the failure was seen in
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
+   * @param params.playwright_project - Optional: Playwright project name when the title runs under several
    */
   verifyFix: (params: {
     projectId: string;
@@ -814,6 +824,7 @@ export const endpoints = {
     testcase_name?: string;
     baseline_run_id: string;
     suite_file_path?: string;
+    playwright_project?: string;
   }): string => {
     const baseUrl = getBaseUrl();
     const { projectId, ...queryParams } = params;
@@ -827,16 +838,18 @@ export const endpoints = {
    * @param params.projectId - Required: Project ID
    * @param params.testcase_name - Optional: full test title; give this or testcase_id
    * @param params.testcase_id - Optional: pw_test_id (exact, preferred)
+   * @param params.testcase_ids - Optional: up to 10 pw_test_ids from one run, comma-joined; needs testrun_id
    * @param params.testrun_id - Optional: run scope
    * @param params.suite_file_path - Optional: spec file path when the title is shared across files
    * @param params.format - Optional: "json" (default) or "md"
-   * @param params.include_instructions - Optional: string "true"/"false" (default true)
+   * @param params.include_instructions - Optional: "true" for the full procedure and trace runbook; sent only when true
    * @param params.maxLength - Optional: markdown cap, format="md" only
    */
   getDebugEvidence: (params: {
     projectId: string;
     testcase_name?: string;
     testcase_id?: string;
+    testcase_ids?: string;
     testrun_id?: string;
     suite_file_path?: string;
     format?: "json" | "md";

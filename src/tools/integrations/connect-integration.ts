@@ -39,6 +39,7 @@ export const connectIntegrationTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
+    openWorldHint: true,
   },
   execution: {
     taskSupport: "forbidden",

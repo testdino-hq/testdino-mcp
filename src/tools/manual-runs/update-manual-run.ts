@@ -16,7 +16,7 @@ export const updateManualRunTool = {
   name: "update_manual_run",
   title: "Update Manual Test Run",
   description:
-    'Modify an existing manual test run. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. Pass updates.status="closed" to close the run (same as the UI "Close run" button: freezes it, snapshots remaining cases, snaps state to the project\'s "Done" option). This is not reversible via MCP. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
+    'Modify an existing manual test run, or close it. Closing is permanent: send updates.status="closed" only when the user asks to close the run, never as part of another edit. Send only fields you want to change inside the updates object. Requires write permission. Allowed fields: name, note, environment, releaseId, state, forecast, tags, linkedIssues, links, selectionMode. Closing works like the UI "Close run" button: it freezes the run, snapshots remaining cases and snaps state to the project\'s "Done" option; MCP cannot reopen it. Closed runs are read-only except for releaseId (so a run can be re-attached to a different release). Files cannot be added over MCP — tell the user to use the TestDino UI. IMPORTANT: updates.tags must be a JSON array of strings — e.g. ["smoke","regression"] — NOT a comma-separated string.',
   inputSchema: {
     type: "object",
     properties: {
@@ -42,6 +42,7 @@ export const updateManualRunTool = {
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
+    openWorldHint: false,
   },
   execution: {
     taskSupport: "forbidden",
