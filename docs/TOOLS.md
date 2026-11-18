@@ -1041,7 +1041,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 `debug_testcase` looks a test up in TestDino's test history (the last 90 days) and returns its identity, a summary of how it has behaved (failure, flaky and pass rates, streaks, error fingerprints, branches) and one row per run it executed in. It also returns `debugging_prompt`, the analysis procedure TestDino wants an agent to follow; read it before drawing conclusions.
 
-Use it to survey a pattern across many runs ("is this test flaky?", "how long has it been failing?"). If you are diagnosing one failure, call `get_debug_evidence` first: it carries the same `debugging_prompt` plus the flake verdict, the regression boundary and the artifact links. Come here afterwards for the full history or the stored AI suggestions.
+Use it to survey a pattern across many runs ("is this test flaky?", "how long has it been failing?"). If you are diagnosing one failure, call `get_debug_evidence` first: it carries the short debugging rules (the same `debugging_prompt` with `include_instructions: true`) plus the flake verdict, the regression boundary and the artifact links. Come here afterwards for the full history or the stored AI suggestions.
 
 Identify the test by `testcase_id` (its `pw_test_id`, exact) or by `testcase_name` (its title). A title can match several tests, such as the same test under several Playwright projects or the same title in several files; add `playwright_project` and/or `suite_file_path`. If the call returns `409 AMBIGUOUS_IDENTITY`, its candidates name each Playwright project: call again with `playwright_project` set to the one you mean, or its `pw_test_id` as `testcase_id`.
 
@@ -1198,7 +1198,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_debug_evidence
 
-**Purpose**: Start every failing-test investigation here: one call returns the flake verdict, the regression boundary and links to every stored artifact.
+**Purpose**: Start every failing-test investigation here: one call returns the flake verdict, the regression boundary and links to the stored artifacts except video and screenshots (`omitted_artifacts` names those; `get_testcase_details` links them).
 
 ### Description
 
@@ -1334,6 +1334,8 @@ JSON (`format: "json"`, the default):
 
 Markdown (`format: "md"`): the same content as text, in the sections listed in the description.
 
+With `testcase_ids` (up to 10 tests from one run, needs `testrun_id`) the answer is always JSON: `status`, `warnings`, `safety`, the rules and `environment` once, and `tests[]` with each test's `test`, `error_message`, `verdict`, `regression_boundary` and `artifacts`.
+
 ### Error Handling
 
 - **Nothing matched the name** — not an error: `status` is `"warning"`, `verdict` is absent and `warnings` explains that nothing matched. Use the test's own title without the describe block in front of it, or get the exact title or `pw_test_id` from `list_testcase`.
@@ -1343,7 +1345,7 @@ Errors are JSON in both formats. Other failures follow [Responses and errors](#r
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=true&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `true`)
+- **Route**: `GET /api/mcp/:projectId/get-debug-evidence?testcase_id=...&testcase_ids=a,b&testcase_name=...&testrun_id=...&suite_file_path=...&format=md&include_instructions=true&maxLength=...` (only the arguments given are sent; `format` only when `"md"`, `include_instructions` only when `true`)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ### Related
@@ -5431,11 +5433,11 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ## get_trace_analysis
 
-**Purpose**: Debug a failing Playwright test from its `trace.zip`: get the runbook for the Playwright trace CLI and, for a hosted trace, a short-lived download URL.
+**Purpose**: See what happened inside a failing test: where trace analysis is on, facts read from its trace on the server; otherwise a runbook for the Playwright trace CLI and, for a hosted trace, a short-lived download URL.
 
 ### Description
 
-Returns a runbook (`skill`) that teaches the Playwright agent CLI protocol (`npx playwright trace …`: open → actions → action → snapshot → close) and how to report the root cause and fix. With `testcase_id` (the Playwright `pw_test_id`) it also resolves a short-lived signed download URL for that case's hosted trace; scope it with `testrun_id` to target a specific run. Without `testcase_id` you get only the runbook, for a `trace.zip` you already have locally.
+Returns a runbook (`skill`) that teaches the Playwright agent CLI protocol (`npx playwright trace …`: open → actions → action → snapshot → close) and how to report the root cause and fix. With `testcase_id` (the Playwright `pw_test_id`) it also resolves a short-lived signed download URL for that case's hosted trace; scope it with `testrun_id` to target a specific run. Without `testcase_id` you get only the runbook, for a `trace.zip` you already have locally. For an e2e test the trace is a markdown page, and the runbook says how to read it. Several failures from one run? Pass `testcase_ids` (up to 10) with `testrun_id`.
 
 Where trace analysis is on, the response carries facts read from the trace on the server, and `find` searches its actions and request file names without a download. Otherwise the analysis runs on your machine: download the trace, run the CLI commands yourself (Playwright 1.59 or newer), then report what you found.
 
@@ -5490,6 +5492,9 @@ Read-only.
 - `trace_url`, `trace_expires_at`: the signed download URL and its expiry, or `null`.
 - `skill`: the Markdown runbook.
 - `notes[]`: why no hosted trace was resolved, when that happened (no downloadable trace for the case, or the case lookup failed with its status code). Use a local `trace.zip` then.
+- `analysis_status`, `analysis`, `retry_after_seconds`, `safety`: where trace analysis is on, the facts near the failure; while `analysis_status` is `processing`, call again after `retry_after_seconds`.
+- With `testcase_ids`: `safety`, `skill` and `playwright_min_version` once, and `tests[]` holding the rest per test.
+- With `find`: `safety` and `find` (what matched), plus `notes` when nothing was searched and `analysis_status` + `notes` while the analysis is still processing. No match never proves the text is absent from the trace.
 
 A failed trace lookup does not make the call fail; it shows up in `notes` with `trace_source: "local"`.
 
@@ -5501,7 +5506,7 @@ Other failures follow [Responses and errors](#responses-and-errors).
 
 ### Technical Details
 
-- **Route**: `GET /api/mcp/:projectId/get-trace-analysis?testcase_id=…&testrun_id=…` (only the IDs given are sent)
+- **Route**: `GET /api/mcp/:projectId/get-trace-analysis?testcase_id=…&testcase_ids=a,b&testrun_id=…&find=…` (only the arguments given are sent)
 - **Authentication**: Bearer PAT from `TESTDINO_PAT`
 
 ---

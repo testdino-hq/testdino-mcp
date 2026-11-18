@@ -1,5 +1,5 @@
 {
-  "source": "hosted MCP on staging, tools whose schema matches hosted-catalogue.json",
+  "source": "hosted MCP on staging, tools whose schema matches hosted-catalogue.json testcase_ids and find limits (nullable arrays and strings) captured from microservices master @ c26673114 (TDV2-1144).",
   "cases": [
     {
       "label": "required string",
@@ -500,6 +500,61 @@
         "projectId": ""
       },
       "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_pull_requests: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 1 character(s)\",\n    \"path\": [\n      \"projectId\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "testcase_ids over 10",
+      "tool": "get_debug_evidence",
+      "arguments": {
+        "projectId": "project_x",
+        "testrun_id": "r",
+        "testcase_ids": [
+          "pw-0",
+          "pw-1",
+          "pw-2",
+          "pw-3",
+          "pw-4",
+          "pw-5",
+          "pw-6",
+          "pw-7",
+          "pw-8",
+          "pw-9",
+          "pw-10"
+        ]
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_debug_evidence: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 10,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at most 10 element(s)\",\n    \"path\": [\n      \"testcase_ids\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "testcase_ids over 10, nullable",
+      "tool": "get_trace_analysis",
+      "arguments": {
+        "projectId": "project_x",
+        "testrun_id": "r",
+        "testcase_ids": [
+          "pw-0",
+          "pw-1",
+          "pw-2",
+          "pw-3",
+          "pw-4",
+          "pw-5",
+          "pw-6",
+          "pw-7",
+          "pw-8",
+          "pw-9",
+          "pw-10"
+        ]
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_trace_analysis: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 10,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at most 10 element(s)\",\n    \"path\": [\n      \"testcase_ids\"\n    ]\n  }\n]"
+    },
+    {
+      "label": "find over 200, nullable",
+      "tool": "get_trace_analysis",
+      "arguments": {
+        "projectId": "project_x",
+        "testrun_id": "r",
+        "testcase_id": "pw-1",
+        "find": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "text": "MCP error -32602: Input validation error: Invalid arguments for tool get_trace_analysis: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 200,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at most 200 character(s)\",\n    \"path\": [\n      \"find\"\n    ]\n  }\n]"
     }
   ]
 }
